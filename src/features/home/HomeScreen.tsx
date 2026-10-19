@@ -4,7 +4,7 @@ import { ScrollView, StyleSheet } from 'react-native';
 import { useTabBarClearance } from '@/src/components/navigation/tabBarLayout';
 import { AppText, Screen, TicketCard } from '@/src/components/ui';
 import { getAffirmationOfTheDay } from '@/src/data/affirmations';
-import { spacing } from '@/src/theme';
+import { colors, font, layout } from '@/src/theme';
 
 import { BalanceCard } from './BalanceCard';
 import { FavoritesRow } from './FavoritesRow';
@@ -24,10 +24,11 @@ export function HomeScreen() {
       >
         <HomeHeader />
         <BalanceCard />
-        <TicketCard testID="home-affirmation">
-          <AppText variant="caption" tone="onLightMuted">
-            {t('affirmationTitle')}
-          </AppText>
+        <TicketCard
+          testID="home-affirmation"
+          variant="affirmation"
+          tab={t('affirmationTitle')}
+        >
           <AppText variant="bodyStrong" style={styles.affirmation}>
             {t(affirmationKey)}
           </AppText>
@@ -41,10 +42,12 @@ export function HomeScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    padding: spacing.xl,
-    gap: spacing.xl,
+    paddingHorizontal: layout.screenX,
+    gap: layout.gap,
   },
   affirmation: {
-    marginTop: spacing.sm,
+    ...font(17, 'semiBold'),
+    lineHeight: Math.round(17 * 1.35),
+    color: colors.navy800,
   },
 });

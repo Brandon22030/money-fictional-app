@@ -1,6 +1,6 @@
 {
-  "fictionalBalance": "Fictional balance - simulation",
-  "balanceLabel": "Available balance",
+  "fictionalBalance": "Fictional - simulation",
+  "balanceLabel": "Total balance",
   "today": "today",
   "receive": "Receive",
   "send": "Send",
@@ -8,8 +8,9 @@
   "menu": "Settings",
   "editBalance": "Edit balance",
   "affirmationTitle": "Affirmation of the day",
-  "favorites": "Favorites",
+  "favorites": "Sources of abundance",
   "recent": "Latest intentions",
   "seeAll": "See all",
-  "empty": "No intentions yet"
+  "empty": "No intentions yet",
+  "todayLabel": "Today"
 }

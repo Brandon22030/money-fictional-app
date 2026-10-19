@@ -1,20 +1,24 @@
-import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { AmountText, AppText, GlassView, NavyCard, Pill } from '@/src/components/ui';
+import { AmountText, AppText, Icon, NavyCard, Pill, type IconName } from '@/src/components/ui';
 import { VoiceButton } from '@/src/components/voice/VoiceButton';
+import { getVisualFixture } from '@/src/dev/visualFixture';
 import { dailyDelta } from '@/src/domain/stats';
+import type { Currency, Language } from '@/src/config/locale';
 import { formatMoney, getLocaleTag } from '@/src/domain/money';
 import { useBalanceParts } from '@/src/store/selectors';
 import { useAppStore } from '@/src/store/useAppStore';
-import { colors, radius, spacing } from '@/src/theme';
+import { colors, font } from '@/src/theme';
+
+const NBSP = '\u00A0';
+const NARROW_NBSP = /\u202F/g;
 
 type ActionButtonProps = {
   testID: string;
-  icon: keyof typeof Feather.glyphMap;
+  icon: IconName;
   label: string;
   onPress: () => void;
 };
@@ -28,12 +32,21 @@ function ActionButton({ testID, icon, label, onPress }: ActionButtonProps) {
       onPress={onPress}
       style={({ pressed }) => [styles.action, pressed ? styles.pressed : null]}
     >
-      <Feather name={icon} size={20} color={colors.textOnDark} />
-      <AppText variant="caption" tone="onDark">
+      <Icon name={icon} size={24} color={colors.textOnDark} />
+      <AppText variant="caption" tone="onDark" style={styles.actionLabel}>
         {label}
       </AppText>
     </Pressable>
   );
+}
+
+// Daily amount without decimals, rounded to the nearest unit.
+function wholeUnits(minor: number, currency: Currency, language: Language): string {
+  const { decimals } = formatMoney(0, currency, language);
+  const scale = decimals ? 10 ** (decimals.length - 1) : 1;
+  const parts = formatMoney(Math.round(minor / scale) * scale, currency, language);
+  const integer = parts.integer.replace(NARROW_NBSP, NBSP);
+  return parts.suffix ? `${integer}${NBSP}${parts.suffix}` : integer;
 }
 
 export function BalanceCard() {
@@ -47,7 +60,7 @@ export function BalanceCard() {
   const language = useAppStore((state) => state.language);
 
   const delta = useMemo(
-    () => dailyDelta(userTransactions, balanceMinor, new Date()),
+    () => getVisualFixture()?.dailyDelta ?? dailyDelta(userTransactions, balanceMinor, new Date()),
     [userTransactions, balanceMinor],
   );
   const sign = delta.amountMinor < 0 ? '-' : '+';
@@ -56,18 +69,28 @@ export function BalanceCard() {
       new Intl.NumberFormat(getLocaleTag(language), {
         style: 'percent',
         signDisplay: 'always',
-        maximumFractionDigits: 1,
+        maximumFractionDigits: 2,
       }),
     [language],
   );
   const percentLabel = percentFormat.format(delta.percent / 100);
-  const amountLabel = `${sign}${formatMoney(Math.abs(delta.amountMinor), currency, language).full}`;
+  const amountLabel = `${sign}${wholeUnits(Math.abs(delta.amountMinor), currency, language)}`;
 
   return (
-    <NavyCard>
-      <AppText variant="caption" tone="onDarkMuted">
-        {t('balanceLabel')}
-      </AppText>
+    <NavyCard contentStyle={styles.card}>
+      <View testID="home-balance-label-row" style={styles.labelRow}>
+        <AppText variant="caption" tone="onDarkMuted" style={styles.label}>
+          {t('balanceLabel')}
+        </AppText>
+        <AppText
+          variant="caption"
+          tone="onDarkMuted"
+          testID="home-fictional-notice"
+          style={styles.notice}
+        >
+          {t('fictionalBalance')}
+        </AppText>
+      </View>
       <Pressable
         testID="home-balance"
         accessibilityRole="button"
@@ -82,23 +105,30 @@ export function BalanceCard() {
           suffix={parts.suffix}
         />
       </Pressable>
-      <AppText variant="caption" tone="onDark" testID="home-fictional-notice" style={styles.notice}>
-        {t('fictionalBalance')}
-      </AppText>
       <View style={styles.pills}>
-        <Pill testID="home-delta-percent" label={percentLabel} />
-        <Pill testID="home-delta-amount" label={`${amountLabel} ${t('today')}`} />
+        <Pill
+          testID="home-delta-percent"
+          label={percentLabel}
+          icon={delta.amountMinor < 0 ? 'down' : 'up'}
+          color={colors.accentSoft}
+          style={styles.pill}
+        />
+        <Pill
+          testID="home-delta-amount"
+          label={`${amountLabel} ${t('today')}`}
+          style={styles.pill}
+        />
       </View>
-      <GlassView borderRadius={radius.md} style={styles.actions}>
+      <View style={styles.actions}>
         <ActionButton
           testID="home-receive"
-          icon="arrow-down-left"
+          icon="down"
           label={t('receive')}
           onPress={() => router.push({ pathname: '/keypad', params: { mode: 'receive' } })}
         />
         <ActionButton
           testID="home-send"
-          icon="arrow-up-right"
+          icon="send"
           label={t('send')}
           onPress={() => router.push({ pathname: '/keypad', params: { mode: 'send' } })}
         />
@@ -108,37 +138,58 @@ export function BalanceCard() {
           currency={currency}
           language={language}
         />
-      </GlassView>
+      </View>
     </NavyCard>
   );
 }
 
 const styles = StyleSheet.create({
-  amount: {
-    marginTop: spacing.xs,
+  card: {
+    padding: 22,
+  },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  label: {
+    ...font(13, 'medium'),
   },
   notice: {
-    marginTop: spacing.xs,
-    marginBottom: spacing.md,
+    ...font(11, 'semiBold'),
     letterSpacing: 0.4,
+  },
+  amount: {
+    marginTop: 4,
   },
   pills: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
+    gap: 8,
+    marginTop: 12,
+  },
+  // The mockup pill measures 31 px: its 16.4 px line box rounds up where RN rounds the line height down.
+  pill: {
+    paddingVertical: 6.5,
   },
   actions: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    padding: spacing.xs,
+    gap: 10,
+    marginTop: 20,
   },
   action: {
+    flex: 1,
+    height: 76,
+    borderRadius: 22,
     alignItems: 'center',
-    gap: spacing.xs,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: colors.glassFill,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+  },
+  actionLabel: {
+    ...font(12, 'semiBold'),
   },
   pressed: {
     opacity: 0.7,
