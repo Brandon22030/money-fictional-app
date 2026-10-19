@@ -107,7 +107,8 @@ function isTransaction(value: unknown): value is Transaction {
     INTENTION_KINDS.includes(value.kind as IntentionKind) &&
     typeof value.labelKey === 'string' &&
     typeof value.amountMinor === 'number' &&
-    Number.isFinite(value.amountMinor) &&
+    Number.isInteger(value.amountMinor) &&
+    value.amountMinor > 0 &&
     typeof value.createdAt === 'string' &&
     !Number.isNaN(new Date(value.createdAt).getTime()) &&
     (value.labelParams === undefined || isRecord(value.labelParams))

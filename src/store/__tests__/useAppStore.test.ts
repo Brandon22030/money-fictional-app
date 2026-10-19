@@ -211,6 +211,21 @@ describe('rehydration safety', () => {
     expect(state.userTransactions.map((tx) => tx.id)).toEqual(['ok']);
   });
 
+  it('drops rehydrated intentions whose amount is not a positive integer', async () => {
+    const tx = (id: string, amountMinor: number) => ({
+      id,
+      kind: 'pay',
+      labelKey: 'content:intentions.pay',
+      amountMinor,
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    const state = await rehydrateWith({
+      currency: 'XOF',
+      userTransactions: [tx('ok', 1), tx('negative', -50), tx('zero', 0), tx('fraction', 1.5)],
+    });
+    expect(state.userTransactions.map((item) => item.id)).toEqual(['ok']);
+  });
+
   it('keeps the current state when the payload is not an object', async () => {
     const before = useAppStore.getState();
     const state = await rehydrateWith(null);
