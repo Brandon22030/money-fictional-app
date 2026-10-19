@@ -1,1 +1,16 @@
-{}
+{
+  "title": "My card",
+  "actions": {
+    "flip": "Flip",
+    "set": "Edit balance",
+    "pay": "Pay",
+    "withdraw": "Withdraw",
+    "newNumber": "New number"
+  },
+  "newNumber": {
+    "title": "New number",
+    "message": "Generate a new fictional card number? The old one will be replaced.",
+    "cancel": "Cancel",
+    "confirm": "Generate"
+  }
+}
