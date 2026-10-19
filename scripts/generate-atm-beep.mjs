@@ -60,9 +60,15 @@ const tmp = mkdtempSync(join(tmpdir(), 'atm-beep-'));
 try {
   const wav = join(tmp, 'atm-beep.wav');
   writeFileSync(wav, wavBuffer(synthesize()));
-  execFileSync('afconvert', [
-    '-f', 'm4af', '-d', 'aac', '-b', '96000', wav, join(root, 'assets/sounds/atm-beep.m4a'),
-  ]);
+  try {
+    execFileSync('afconvert', [
+      '-f', 'm4af', '-d', 'aac', '-b', '96000', wav, join(root, 'assets/sounds/atm-beep.m4a'),
+    ]);
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+    console.error('afconvert not found: macOS required to encode the beep (assets/sounds/atm-beep.m4a).');
+    process.exitCode = 1;
+  }
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }
