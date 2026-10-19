@@ -5,8 +5,11 @@
 // CHROMIUM_PATH=<chromium binary, optional> \
 // VISUAL_WEB_DIR=<web export dir, optional, default per-worktree in the OS tmp dir> \
 // node scripts/visual/capture.mjs [--skip-export] [--viewport=375x667] [--screens=home,history]
+//   [--worst[=XOF|EUR|USD]] [--holder=<name>] [--out-dir=<dir>]
 //
-// Output: .agents/tasks/MFA-004/shots/{mockup,app,compare}-<screen>.png
+// Output: .agents/tasks/MFA-004/shots/{mockup,app,compare}-<screen>.png (or --out-dir)
+// --worst: worst-case state (26 wide-letter holder, maximum balance, huge intentions); only the
+// app is captured, to app-<screen>-worst-<currency>[@<w>x<h>].png (no mockup to compare with).
 // With a viewport other than the mockup one (390x844), only the app is captured, to
 // app-<screen>@<width>x<height>.png (no mockup to compare with).
 import { execFileSync } from 'node:child_process';
@@ -19,7 +22,7 @@ import { extname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(fileURLToPath(new URL('../..', import.meta.url)));
-const outDir = join(root, '.agents/tasks/MFA-004/shots');
+const outDir = resolve(argValue('out-dir') ?? join(root, '.agents/tasks/MFA-004/shots'));
 const worktreeHash = createHash('sha1').update(process.cwd()).digest('hex').slice(0, 8);
 const webDir = process.env.VISUAL_WEB_DIR || join(tmpdir(), `mfa004-web-${worktreeHash}`);
 const mockupUrl = `file://${join(root, 'docs/mockup/index.html')}`;
@@ -38,8 +41,16 @@ function parseViewport(value) {
 }
 
 const viewport = parseViewport(argValue('viewport'));
-const isMockupViewport = viewport.width === MOCKUP_VIEWPORT.width && viewport.height === MOCKUP_VIEWPORT.height;
-const appSuffix = isMockupViewport ? '' : `@${viewport.width}x${viewport.height}`;
+const worstArg = process.argv.find((a) => a === '--worst' || a.startsWith('--worst='));
+const worstCurrency = worstArg ? (worstArg.split('=')[1] ?? 'XOF') : undefined;
+if (worstCurrency && !['XOF', 'EUR', 'USD'].includes(worstCurrency)) {
+  throw new Error(`Invalid --worst=${worstCurrency}, expected XOF, EUR or USD`);
+}
+const isMockupViewport =
+  !worstCurrency && viewport.width === MOCKUP_VIEWPORT.width && viewport.height === MOCKUP_VIEWPORT.height;
+const appSuffix = `${worstCurrency ? `-worst-${worstCurrency}` : ''}${
+  viewport.width === MOCKUP_VIEWPORT.width && viewport.height === MOCKUP_VIEWPORT.height ? '' : `@${viewport.width}x${viewport.height}`
+}`;
 const scale = 2;
 
 // Fixed clock: "today" is 19 Oct 2026 (mockup content), so the day-based content matches.
@@ -52,12 +63,16 @@ const ALL_SCREENS = [
   { name: 'card-back', frame: 2, route: '/card', action: { click: '[data-testid="action-flip"]', wait: 1200 } },
   { name: 'abundance', frame: 3, route: '/abundance' },
   { name: 'keypad-send', frame: 4, route: '/keypad?mode=send&contact=gratitude', clicks: ['keypad-2', 'keypad-5', 'keypad-0'] },
+  { name: 'keypad-max', frame: 4, route: '/keypad?mode=send&contact=gratitude' },
   { name: 'history', frame: 5, route: '/history' },
   { name: 'settings', frame: 6, route: '/settings' },
 ];
 
 const screenFilter = argValue('screens')?.split(',');
-const SCREENS = screenFilter ? ALL_SCREENS.filter((s) => screenFilter.includes(s.name)) : ALL_SCREENS;
+// keypad-max (keypad opened on the balance without typing) only exists for the worst-case captures.
+const SCREENS = (screenFilter ? ALL_SCREENS.filter((s) => screenFilter.includes(s.name)) : ALL_SCREENS).filter(
+  (s) => worstCurrency || s.name !== 'keypad-max',
+);
 
 // Same demo data as the mockup (balance 186 420,50 EUR, card 8402 1587 3306 9914).
 const DEMO_STATE = {
@@ -68,6 +83,19 @@ const DEMO_STATE = {
     holderName: 'ÉLISE ADJOVI',
     card: { number: '8402158733069914', expiry: '10/30', cvv: '417' },
     userTransactions: [],
+  },
+  version: 1,
+};
+
+// Worst case: MAX_BALANCE_MINOR of src/config/locale.ts (99 999 999 999,99 in a 2-decimals
+// currency, 9 999 999 999 999 FCFA), a 26-character holder of wide letters.
+const WORST_BALANCE_MINOR = 99_999_999_999_99;
+const WORST_STATE = {
+  state: {
+    ...DEMO_STATE.state,
+    balanceMinor: WORST_BALANCE_MINOR,
+    currency: worstCurrency,
+    holderName: argValue('holder') ?? 'WWWWWWWWWWWWWWWWWWWWWWWWWW',
   },
   version: 1,
 };
@@ -94,6 +122,16 @@ const VISUAL_FIXTURE = {
     { in: 88, out: 38 },
   ],
 };
+
+// Same fixture with huge amounts, for the pills and the tickets in the worst case.
+function worstFixture() {
+  const big = WORST_BALANCE_MINOR / 2;
+  return {
+    ...VISUAL_FIXTURE,
+    transactions: VISUAL_FIXTURE.transactions.map((tx) => ({ ...tx, amountMinor: big })),
+    dailyDelta: { amountMinor: big, percent: 4.73 },
+  };
+}
 
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.ttf': 'font/ttf', '.svg': 'image/svg+xml', '.ico': 'image/x-icon' };
 
@@ -134,7 +172,10 @@ async function captureApp(browser, origin) {
   for (const s of SCREENS) {
     const ctx = await browser.newContext({ viewport, deviceScaleFactor: scale, locale: 'fr-FR' });
     await ctx.clock.setFixedTime(new Date(FIXED_TIME));
-    await ctx.addInitScript((state) => localStorage.setItem('abonda-store-v1', JSON.stringify(state)), DEMO_STATE);
+    await ctx.addInitScript(
+      (state) => localStorage.setItem('abonda-store-v1', JSON.stringify(state)),
+      worstCurrency ? WORST_STATE : DEMO_STATE,
+    );
     await ctx.addInitScript((fixture) => {
       const transactions = fixture.transactions.map(({ at, ...tx }, index) => ({
         ...tx,
@@ -142,7 +183,7 @@ async function captureApp(browser, origin) {
         createdAt: new Date(at).toISOString(),
       }));
       globalThis.__ABONDA_VISUAL_FIXTURE__ = { ...fixture, transactions };
-    }, VISUAL_FIXTURE);
+    }, worstCurrency ? worstFixture() : VISUAL_FIXTURE);
     const page = await ctx.newPage();
     await page.goto(origin + s.route, { waitUntil: 'networkidle' });
     await page.evaluate(() => document.fonts.ready);

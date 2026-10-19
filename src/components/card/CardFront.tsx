@@ -19,6 +19,38 @@ export const CARD_FACE_PADDING = { top: 20, horizontal: 22, bottom: 30 } as cons
 /** Distance of the fictional mention box from the bottom edge of the card (calibrated on the mockup). */
 const FICTIONAL_BOTTOM = 8;
 
+/** Smallest scale the balance may shrink to (native) before it stops being comfortably legible. */
+export const BALANCE_MIN_FONT_SCALE = 0.6;
+
+const BALANCE_FONT_SIZE = 13;
+const BALANCE_LETTER_SPACING = 0.8;
+const BALANCE_MIN_FONT_SIZE = 9;
+/** Longest balance label (characters) shown at full size; "186 420,50 €" has 12. */
+const BALANCE_FULL_SIZE_CHARS = 17;
+/** Width (px) the balance may take next to the holder name and the expiry on the narrowest card. */
+const BALANCE_BUDGET_WIDTH = 125;
+/** Tighter tracking for the long labels, which would not fit with the regular one. */
+const BALANCE_TIGHT_LETTER_SPACING = 0.2;
+/** Average glyph width of the semiBold digits, as a fraction of the font size. */
+const BALANCE_GLYPH_RATIO = 0.55;
+
+/**
+ * Typography of the balance: 13 px up to 17 characters, then smaller (down to 9) and tighter so
+ * that the largest balances ("9 999 999 999 999 FCFA") fit next to the expiry. This holds on
+ * every platform; `adjustsFontSizeToFit` only completes it on native.
+ */
+export function balanceTypography(label: string): { fontSize: number; letterSpacing: number } {
+  if (label.length <= BALANCE_FULL_SIZE_CHARS) {
+    return { fontSize: BALANCE_FONT_SIZE, letterSpacing: BALANCE_LETTER_SPACING };
+  }
+  const fitted =
+    (BALANCE_BUDGET_WIDTH / label.length - BALANCE_TIGHT_LETTER_SPACING) / BALANCE_GLYPH_RATIO;
+  return {
+    fontSize: Math.min(BALANCE_FONT_SIZE, Math.max(BALANCE_MIN_FONT_SIZE, fitted)),
+    letterSpacing: BALANCE_TIGHT_LETTER_SPACING,
+  };
+}
+
 export type CardFrontProps = {
   holderName: string;
   cardNumber: string;
@@ -45,21 +77,36 @@ export function CardFront({ holderName, cardNumber, expiry, balanceLabel, brandM
         {formatCardNumber(cardNumber)}
       </Text>
       <View style={styles.bottom}>
-        <View>
+        <View testID="card-holder-box" style={styles.holder}>
           <Text style={styles.label}>{t('holder')}</Text>
           <Text testID="card-holder" style={styles.value} numberOfLines={1}>
             {holderName}
           </Text>
         </View>
-        <View>
+        <View testID="card-expiry-box" style={styles.expiry}>
           <Text style={styles.label}>{t('validThru')}</Text>
-          <Text testID="card-expiry" style={[styles.value, { fontVariant: numbers.fontVariant }]}>
+          <Text
+            testID="card-expiry"
+            style={[styles.value, { fontVariant: numbers.fontVariant }]}
+            numberOfLines={1}
+          >
             {expiry}
           </Text>
         </View>
         <View style={styles.balance}>
-          <Text style={styles.label}>{t('balance')}</Text>
-          <Text testID="card-balance" style={[styles.value, { fontVariant: numbers.fontVariant }]}>
+          <Text style={styles.label} numberOfLines={1}>
+            {t('balance')}
+          </Text>
+          <Text
+            testID="card-balance"
+            style={[
+              styles.value,
+              { fontVariant: numbers.fontVariant, ...balanceTypography(balanceLabel) },
+            ]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={BALANCE_MIN_FONT_SCALE}
+          >
             {balanceLabel}
           </Text>
         </View>
@@ -82,7 +129,11 @@ const styles = StyleSheet.create({
     color: cardText.main,
   },
   bottom: { flexDirection: 'row', alignItems: 'flex-end', gap: 20, marginBottom: 1 },
-  balance: { marginLeft: 'auto', alignItems: 'flex-end' },
+  // Bottom row priority: the balance (and its label) keeps its width, sized by balanceTypography;
+  // the holder name gives way first (ellipsis), the expiry keeps its width.
+  holder: { flexShrink: 1, minWidth: 0 },
+  expiry: { flexShrink: 0 },
+  balance: { flexShrink: 0, marginLeft: 'auto', alignItems: 'flex-end' },
   label: { ...font(8, 'regular'), letterSpacing: 1.4, color: cardText.label, marginBottom: 4 },
   value: { ...font(13, 'semiBold'), letterSpacing: 0.8, color: cardText.main },
   // C2: 11 px / semiBold / pearl kept for legibility, position of the mockup (absolute, bottom 10).

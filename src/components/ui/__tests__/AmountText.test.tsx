@@ -36,3 +36,14 @@ describe('AmountText', () => {
     expect(screen.getByTestId('amount-suffix')).toHaveTextContent('€');
   });
 });
+
+describe('AmountText overflow', () => {
+  it('stays on one line and shrinks to fit its container', async () => {
+    await render(<AmountText integer="9 999 999 999 999" suffix="FCFA" size={52} />);
+
+    const text = screen.getByTestId('amount-text');
+    expect(text.props.numberOfLines).toBe(1);
+    expect(text.props.adjustsFontSizeToFit).toBe(true);
+    expect(text.props.minimumFontScale).toBeLessThanOrEqual(0.35);
+  });
+});
