@@ -7,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
   TAB_BAR_CLEARANCE,
   TAB_BAR_HEIGHT,
+  TAB_ITEM_SIZE,
   tabBarBottom,
   useTabBarClearance,
 } from '@/src/components/navigation/tabBarLayout';
@@ -26,10 +27,17 @@ describe('tab bar clearance', () => {
     expect(TAB_BAR_CLEARANCE).toBeGreaterThan(TAB_BAR_HEIGHT);
   });
 
-  it('adds the bottom safe area inset like the tab bar does', async () => {
+  it('keeps the mockup dimensions', () => {
+    expect(TAB_ITEM_SIZE).toBe(52);
+    expect(TAB_BAR_HEIGHT).toBe(68);
+    expect(tabBarBottom(0)).toBe(22);
+  });
+
+  it('follows the tab bar bottom offset derived from the safe area inset', async () => {
     const withInset = await renderHook(() => useTabBarClearance(), { wrapper: wrapperWithBottomInset(34) });
-    expect(withInset.result.current).toBe(34 + TAB_BAR_CLEARANCE);
-    expect(tabBarBottom(34)).toBe(34);
+    expect(withInset.result.current).toBe(tabBarBottom(34) + TAB_BAR_CLEARANCE);
+    expect(tabBarBottom(34)).toBe(22);
+    expect(tabBarBottom(60)).toBe(48);
 
     const noInset = await renderHook(() => useTabBarClearance(), { wrapper: wrapperWithBottomInset(0) });
     expect(noInset.result.current).toBe(tabBarBottom(0) + TAB_BAR_CLEARANCE);
