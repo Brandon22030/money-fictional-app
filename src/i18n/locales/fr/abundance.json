@@ -1,15 +1,16 @@
 {
   "title": "Abondance",
-  "balanceCaption": "Solde fictif",
+  "balanceCaption": "solde en {{symbol}}",
   "kinds": {
     "receive": "Reçu",
     "send": "Envoyé",
     "pay": "Payé",
     "withdraw": "Retiré"
   },
-  "barsTitle": "6 derniers mois",
+  "barsTitle": "Mois par mois",
   "legend": {
     "received": "Reçu",
     "given": "Donné"
-  }
+  },
+  "legendItem": "{{label}} {{percent}} %"
 }

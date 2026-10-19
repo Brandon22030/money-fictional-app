@@ -1,15 +1,16 @@
 {
   "title": "Abundance",
-  "balanceCaption": "Fictional balance",
+  "balanceCaption": "balance in {{symbol}}",
   "kinds": {
     "receive": "Received",
     "send": "Sent",
     "pay": "Paid",
     "withdraw": "Withdrawn"
   },
-  "barsTitle": "Last 6 months",
+  "barsTitle": "Month by month",
   "legend": {
     "received": "Received",
     "given": "Given"
-  }
+  },
+  "legendItem": "{{label}} {{percent}}%"
 }

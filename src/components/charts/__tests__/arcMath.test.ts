@@ -18,6 +18,14 @@ describe('arcMath', () => {
     expect(segments[2].fraction).toBe(0.5);
   });
 
+  it('leaves a gap between segments without moving the label angle', () => {
+    const [first, second] = computeSegments([1, 1], 0.012);
+    expect(first.startAngle).toBeCloseTo(2.16);
+    expect(first.endAngle).toBeCloseTo(177.84);
+    expect(second.startAngle).toBeCloseTo(182.16);
+    expect(first.midAngle).toBe(90);
+  });
+
   it('returns no segment for empty, zero or invalid data', () => {
     expect(computeSegments([])).toEqual([]);
     expect(computeSegments([0, 0])).toEqual([]);
