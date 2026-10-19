@@ -1,1 +1,16 @@
-{}
+{
+  "title": "Ma carte",
+  "actions": {
+    "flip": "Retourner",
+    "set": "Modifier le solde",
+    "pay": "Payer",
+    "withdraw": "Retirer",
+    "newNumber": "Nouveau numéro"
+  },
+  "newNumber": {
+    "title": "Nouveau numéro",
+    "message": "Générer un nouveau numéro de carte fictif ? L'ancien sera remplacé.",
+    "cancel": "Annuler",
+    "confirm": "Générer"
+  }
+}
