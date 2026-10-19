@@ -17,7 +17,14 @@ export function Pill({ label, icon, color = colors.textOnDark, style, testID }: 
   return (
     <View testID={testID} style={[styles.pill, style]}>
       {icon ? <Icon name={icon} size={14} color={color} /> : null}
-      <AppText variant="caption" tone="onDark" style={[styles.label, { color }]}>
+      <AppText
+        variant="caption"
+        tone="onDark"
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.6}
+        style={[styles.label, { color }]}
+      >
         {label}
       </AppText>
     </View>
@@ -27,6 +34,7 @@ export function Pill({ label, icon, color = colors.textOnDark, style, testID }: 
 const styles = StyleSheet.create({
   pill: {
     alignSelf: 'flex-start',
+    maxWidth: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
@@ -38,6 +46,7 @@ const styles = StyleSheet.create({
     borderColor: colors.glassBorder,
   },
   label: {
+    flexShrink: 1,
     ...font(12, 'semiBold'),
     fontVariant: numbers.fontVariant,
   },

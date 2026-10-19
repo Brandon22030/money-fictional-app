@@ -2,6 +2,9 @@ import { Text, View, type StyleProp, type TextStyle, type ViewStyle } from 'reac
 
 import { colors, font, fontSize, numbers } from '@/src/theme';
 
+/** Smallest scale the amount may shrink to (native) so the largest balance still fits one line. */
+export const AMOUNT_MIN_FONT_SCALE = 0.3;
+
 export type AmountTextProps = {
   integer: string;
   decimals?: string;
@@ -33,7 +36,13 @@ export function AmountText({
       accessibilityLabel={`${integer}${decimals ?? ''}${suffix ? ` ${suffix}` : ''}`}
       style={style}
     >
-      <Text style={base}>
+      <Text
+        testID="amount-text"
+        style={base}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={AMOUNT_MIN_FONT_SCALE}
+      >
         <Text testID="amount-integer" style={{ color: colors.textOnDark }}>
           {integer}
         </Text>

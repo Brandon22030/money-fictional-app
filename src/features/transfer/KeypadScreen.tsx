@@ -153,7 +153,13 @@ export function KeypadScreen() {
             style={styles.amount}
           />
           {mode === 'set' ? null : (
-            <AppText tone="onDarkMuted" style={styles.available}>
+            <AppText
+              tone="onDarkMuted"
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.6}
+              style={styles.available}
+            >
               {t('available', { amount: available })}
             </AppText>
           )}
