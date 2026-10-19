@@ -10,14 +10,23 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.abonda.app"
+      "bundleIdentifier": "com.abonda.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.abonda.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/brand/adaptive-icon.png",
         "backgroundColor": "#0B1F40"
-      }
+      },
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -26,8 +35,9 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/brand/splash.png",
-          "resizeMode": "cover",
+          "image": "./assets/brand/logo-mark.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
           "backgroundColor": "#0B1F40"
         }
       ]
