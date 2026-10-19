@@ -1,1 +1,6 @@
-{}
+{
+  "title": "Historique",
+  "searchPlaceholder": "Rechercher un libellé ou un montant",
+  "searchLabel": "Rechercher dans l'historique",
+  "empty": "Aucune intention ne correspond à votre recherche."
+}
