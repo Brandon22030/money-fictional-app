@@ -49,6 +49,14 @@ describe('TabBar', () => {
     expect(screen.queryByText('Accueil')).toBeNull();
   });
 
+  it.each([
+    [2, 'Abondance'],
+    [3, 'Historique'],
+  ])('never truncates the active label %s', async (index, label) => {
+    await render(<TabBar {...makeProps(index).props} />);
+    expect(screen.getByText(label).props.numberOfLines).toBeUndefined();
+  });
+
   it('emits tabPress then navigates to the pressed inactive tab', async () => {
     const { props, emit, navigate } = makeProps(0);
     await render(<TabBar {...props} />);
