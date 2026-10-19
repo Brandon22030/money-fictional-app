@@ -23,8 +23,9 @@ describe('affirmations', () => {
 });
 
 describe('demo transactions', () => {
+  // Mid-month, every demo day is reached; early-month behavior is covered in intentions.test.ts.
   it('spreads about 12 intentions over 6 months, none in the future', () => {
-    const now = new Date(2026, 9, 2, 8, 0);
+    const now = new Date(2026, 9, 19, 8, 0);
     const list = getDemoTransactions('EUR', now);
     expect(list).toHaveLength(12);
     expect(new Set(list.map((tx) => tx.createdAt.slice(0, 7))).size).toBeGreaterThanOrEqual(6);

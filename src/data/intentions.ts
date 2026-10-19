@@ -28,7 +28,12 @@ const DEMO_INTENTIONS: DemoIntention[] = [
 export function getDemoTransactions(currency: Currency, now: Date = new Date()): Transaction[] {
   return DEMO_INTENTIONS.map((item, index) => {
     const planned = new Date(now.getFullYear(), now.getMonth() - item.monthsAgo, item.day, 12, 0, 0);
-    const createdAt = planned.getTime() > now.getTime() ? now : planned;
+    // Early in the month a demo day can still be ahead: show it one month earlier rather
+    // than at `now`, so demo data never counts in today's figures.
+    const createdAt =
+      planned.getTime() > now.getTime()
+        ? new Date(now.getFullYear(), now.getMonth() - item.monthsAgo - 1, item.day, 12, 0, 0)
+        : planned;
     return {
       id: `demo-${index + 1}`,
       kind: item.kind,

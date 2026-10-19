@@ -8,7 +8,7 @@ import { AmountText, AppText, GlassView, NavyCard, Pill } from '@/src/components
 import { VoiceButton } from '@/src/components/voice/VoiceButton';
 import { dailyDelta } from '@/src/domain/stats';
 import { formatMoney } from '@/src/domain/money';
-import { useAllTransactions, useBalanceParts } from '@/src/store/selectors';
+import { useBalanceParts } from '@/src/store/selectors';
 import { useAppStore } from '@/src/store/useAppStore';
 import { colors, radius, spacing } from '@/src/theme';
 
@@ -40,14 +40,15 @@ export function BalanceCard() {
   const { t } = useTranslation('home');
   const router = useRouter();
   const parts = useBalanceParts();
-  const transactions = useAllTransactions();
+  // Only the user's own intentions move today's figures; demo data is illustrative.
+  const userTransactions = useAppStore((state) => state.userTransactions);
   const balanceMinor = useAppStore((state) => state.balanceMinor);
   const currency = useAppStore((state) => state.currency);
   const language = useAppStore((state) => state.language);
 
   const delta = useMemo(
-    () => dailyDelta(transactions, balanceMinor, new Date()),
-    [transactions, balanceMinor],
+    () => dailyDelta(userTransactions, balanceMinor, new Date()),
+    [userTransactions, balanceMinor],
   );
   const sign = delta.amountMinor < 0 ? '-' : '+';
   const percentLabel = `${sign}${Math.abs(delta.percent).toFixed(1)} %`;
