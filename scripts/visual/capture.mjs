@@ -3,19 +3,23 @@
 //
 // PLAYWRIGHT_PATH=<dir containing node_modules/playwright> \
 // CHROMIUM_PATH=<chromium binary, optional> \
+// VISUAL_WEB_DIR=<web export dir, optional, default per-worktree in the OS tmp dir> \
 // node scripts/visual/capture.mjs [--skip-export]
 //
 // Output: .agents/tasks/MFA-004/shots/{mockup,app,compare}-<screen>.png
 import { execSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { createReadStream, existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
+import { tmpdir } from 'node:os';
 import { extname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const outDir = join(root, '.agents/tasks/MFA-004/shots');
-const webDir = '/tmp/mfa004-web';
+const worktreeHash = createHash('sha1').update(process.cwd()).digest('hex').slice(0, 8);
+const webDir = process.env.VISUAL_WEB_DIR || join(tmpdir(), `mfa004-web-${worktreeHash}`);
 const mockupUrl = `file://${join(root, 'docs/mockup/index.html')}`;
 const viewport = { width: 390, height: 844 };
 const scale = 2;
