@@ -1,1 +1,6 @@
-{}
+{
+  "separator": ".",
+  "digit": "{{digit}}",
+  "decimal": "Decimal point",
+  "backspace": "Delete"
+}
