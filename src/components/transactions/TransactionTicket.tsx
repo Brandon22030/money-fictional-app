@@ -1,13 +1,11 @@
-import type { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/src/components/ui/AppText';
+import { getLocaleTag } from '@/src/domain/money';
 import type { IntentionKind } from '@/src/domain/types';
 import { colors, font, numbers, shadows, ticket } from '@/src/theme';
-
-export type FeatherIconName = keyof typeof Feather.glyphMap;
 
 export type TransactionTicketProps = {
   title: string;
@@ -21,12 +19,8 @@ export type TransactionTicketProps = {
   kindLabel?: string;
   /** Day shown under the time, defaults to the short date without year. */
   dayLabel?: string;
-  /** Ignored: the mockup tab shows the type label only. Kept until callers drop it. */
-  icon?: FeatherIconName;
   testID?: string;
 };
-
-const INTL_LOCALES = { fr: 'fr-FR', en: 'en-US' } as const;
 
 export function TransactionTicket({
   title,
@@ -40,7 +34,7 @@ export function TransactionTicket({
   testID,
 }: TransactionTicketProps) {
   const { t } = useTranslation('transactions');
-  const intlLocale = INTL_LOCALES[locale];
+  const intlLocale = getLocaleTag(locale);
   const time = date.toLocaleTimeString(intlLocale, {
     hour: '2-digit',
     minute: '2-digit',
@@ -60,7 +54,7 @@ export function TransactionTicket({
       testID={testID}
       style={styles.wrap}
       accessible
-      accessibilityLabel={`${title}, ${t(`direction.${direction}`)}, ${signedAmount}, ${day} ${time}`}
+      accessibilityLabel={`${title}, ${tabLabel}, ${signedAmount}, ${day} ${time}`}
     >
       <View style={styles.card}>
         <LinearGradient

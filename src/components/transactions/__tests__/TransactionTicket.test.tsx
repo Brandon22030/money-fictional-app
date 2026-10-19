@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react-native';
+import { act, render, screen } from '@testing-library/react-native';
 import { StyleSheet } from 'react-native';
 
 import { TransactionTicket } from '@/src/components/transactions/TransactionTicket';
@@ -64,12 +64,16 @@ describe('TransactionTicket', () => {
       />,
     );
     expect(screen.getByText('Payé')).toBeTruthy();
-    await i18n.changeLanguage('en');
+    await act(async () => {
+      await i18n.changeLanguage('en');
+    });
     await rerender(
       <TransactionTicket title="A" amountLabel="1" direction="in" date={DATE} locale="en" />,
     );
     expect(screen.getByText('Received')).toBeTruthy();
-    await i18n.changeLanguage('fr');
+    await act(async () => {
+      await i18n.changeLanguage('fr');
+    });
     await rerender(
       <TransactionTicket
         title="A"
@@ -99,6 +103,48 @@ describe('TransactionTicket', () => {
     expect(screen.getByTestId('t').props.accessibilityLabel).toBe(
       "Gratitude, Reçu, +2 500,00 €, Aujourd'hui 14:30",
     );
+  });
+
+  it.each([
+    ['pay', 'Payé'],
+    ['withdraw', 'Retiré'],
+  ] as const)(
+    'reads the %s type label, not the direction, in the accessibility label',
+    async (kind, label) => {
+      await render(
+        <TransactionTicket
+          testID="t"
+          title="Projet de rêve financé"
+          amountLabel="1 200,00 €"
+          direction="out"
+          kind={kind}
+          dayLabel="18 oct."
+          date={DATE}
+          locale="fr"
+        />,
+      );
+      expect(screen.getByTestId('t').props.accessibilityLabel).toBe(
+        `Projet de rêve financé, ${label}, -1 200,00 €, 18 oct. 14:30`,
+      );
+      expect(screen.getByTestId('t').props.accessibilityLabel).not.toContain('Envoyé');
+    },
+  );
+
+  it('reads a custom kindLabel in the accessibility label', async () => {
+    await render(
+      <TransactionTicket
+        testID="t"
+        title="A"
+        amountLabel="1"
+        direction="out"
+        kind="pay"
+        kindLabel="Réglé"
+        dayLabel="Hier"
+        date={DATE}
+        locale="fr"
+      />,
+    );
+    expect(screen.getByTestId('t').props.accessibilityLabel).toBe('A, Réglé, -1, Hier 14:30');
   });
 });
 

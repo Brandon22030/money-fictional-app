@@ -1,8 +1,4 @@
 {
-  "direction": {
-    "in": "Reçu",
-    "out": "Envoyé"
-  },
   "kind": {
     "receive": "Reçu",
     "send": "Envoyé",
