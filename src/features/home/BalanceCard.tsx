@@ -7,7 +7,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { AmountText, AppText, GlassView, NavyCard, Pill } from '@/src/components/ui';
 import { VoiceButton } from '@/src/components/voice/VoiceButton';
 import { dailyDelta } from '@/src/domain/stats';
-import { formatMoney } from '@/src/domain/money';
+import { formatMoney, getLocaleTag } from '@/src/domain/money';
 import { useBalanceParts } from '@/src/store/selectors';
 import { useAppStore } from '@/src/store/useAppStore';
 import { colors, radius, spacing } from '@/src/theme';
@@ -51,7 +51,16 @@ export function BalanceCard() {
     [userTransactions, balanceMinor],
   );
   const sign = delta.amountMinor < 0 ? '-' : '+';
-  const percentLabel = `${sign}${Math.abs(delta.percent).toFixed(1)} %`;
+  const percentFormat = useMemo(
+    () =>
+      new Intl.NumberFormat(getLocaleTag(language), {
+        style: 'percent',
+        signDisplay: 'always',
+        maximumFractionDigits: 1,
+      }),
+    [language],
+  );
+  const percentLabel = percentFormat.format(delta.percent / 100);
   const amountLabel = `${sign}${formatMoney(Math.abs(delta.amountMinor), currency, language).full}`;
 
   return (
