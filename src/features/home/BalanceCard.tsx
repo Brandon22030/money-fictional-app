@@ -7,7 +7,7 @@ import { AmountText, AppText, Icon, NavyCard, Pill, type IconName } from '@/src/
 import { VoiceButton } from '@/src/components/voice/VoiceButton';
 import { getVisualFixture } from '@/src/dev/visualFixture';
 import { dailyDelta } from '@/src/domain/stats';
-import type { Currency, Language } from '@/src/config/locale';
+import { CURRENCIES, type Currency, type Language } from '@/src/config/locale';
 import { formatMoney, getLocaleTag } from '@/src/domain/money';
 import { useBalanceParts } from '@/src/store/selectors';
 import { useAppStore } from '@/src/store/useAppStore';
@@ -40,13 +40,17 @@ function ActionButton({ testID, icon, label, onPress }: ActionButtonProps) {
   );
 }
 
-// Daily amount without decimals, rounded to the nearest unit.
-function wholeUnits(minor: number, currency: Currency, language: Language): string {
-  const { decimals } = formatMoney(0, currency, language);
-  const scale = decimals ? 10 ** (decimals.length - 1) : 1;
-  const parts = formatMoney(Math.round(minor / scale) * scale, currency, language);
+/**
+ * Signed daily amount without decimals, rounded to the nearest unit. The sign follows the
+ * rounded value, so an amount that rounds to zero reads "+0", never "-0".
+ */
+export function signedWholeUnits(minor: number, currency: Currency, language: Language): string {
+  const scale = 10 ** CURRENCIES[currency].decimals;
+  const roundedAbs = Math.round(Math.abs(minor) / scale) * scale;
+  const sign = minor < 0 && roundedAbs > 0 ? '-' : '+';
+  const parts = formatMoney(roundedAbs, currency, language);
   const integer = parts.integer.replace(NARROW_NBSP, NBSP);
-  return parts.suffix ? `${integer}${NBSP}${parts.suffix}` : integer;
+  return `${sign}${parts.suffix ? `${integer}${NBSP}${parts.suffix}` : integer}`;
 }
 
 export function BalanceCard() {
@@ -63,7 +67,6 @@ export function BalanceCard() {
     () => getVisualFixture()?.dailyDelta ?? dailyDelta(userTransactions, balanceMinor, new Date()),
     [userTransactions, balanceMinor],
   );
-  const sign = delta.amountMinor < 0 ? '-' : '+';
   const percentFormat = useMemo(
     () =>
       new Intl.NumberFormat(getLocaleTag(language), {
@@ -74,7 +77,7 @@ export function BalanceCard() {
     [language],
   );
   const percentLabel = percentFormat.format(delta.percent / 100);
-  const amountLabel = `${sign}${wholeUnits(Math.abs(delta.amountMinor), currency, language)}`;
+  const amountLabel = signedWholeUnits(delta.amountMinor, currency, language);
 
   return (
     <NavyCard contentStyle={styles.card}>

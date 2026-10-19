@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react-native';
 import Svg from 'react-native-svg';
 
-import { BalanceCard } from '@/src/features/home/BalanceCard';
+import { BalanceCard, signedWholeUnits } from '@/src/features/home/BalanceCard';
 import { toMinor } from '@/src/domain/money';
 import i18n from '@/src/i18n';
 import { useAppStore } from '@/src/store/useAppStore';
@@ -113,3 +113,38 @@ describe('BalanceCard pills and actions', () => {
     expect(screen.getByTestId('home-voice')).toHaveTextContent('Écouter');
   });
 });
+
+describe('BalanceCard daily amount', () => {
+  const nbsp = (text: string) => text.replace(/[\u00A0\u202F]/g, ' ');
+
+  it.each([
+    [-40, 'EUR', 'fr', '+0 €'],
+    [40, 'EUR', 'fr', '+0 €'],
+    [-49, 'EUR', 'fr', '+0 €'],
+    [-50, 'EUR', 'fr', '-1 €'],
+    [-160, 'EUR', 'fr', '-2 €'],
+    [841200, 'EUR', 'fr', '+8 412 €'],
+    [-5, 'XOF', 'fr', '-5 FCFA'],
+    [0, 'XOF', 'fr', '+0 FCFA'],
+    [-149, 'USD', 'en', '-$1'],
+  ] as const)('formats %p minor %s (%s) as %p', (minor, currency, language, expected) => {
+    expect(nbsp(signedWholeUnits(minor, currency, language))).toBe(expected);
+  });
+
+  it('never shows -0 when the day loss rounds to zero', async () => {
+    jest.useFakeTimers({ now: new Date(2026, 9, 19, 9, 0), advanceTimers: true });
+    try {
+      await i18n.changeLanguage('fr');
+      useAppStore.getState().resetAll();
+      useAppStore.getState().setLanguage('fr');
+      useAppStore.getState().setCurrency('EUR');
+      useAppStore.getState().setBalance(toMinor(1000, 'EUR'));
+      useAppStore.getState().applyIntention('pay', 40);
+      await render(<BalanceCard />);
+      expect(screen.getByTestId('home-delta-amount')).toHaveTextContent(/^\+0\s€\saujourd/);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+});
+
