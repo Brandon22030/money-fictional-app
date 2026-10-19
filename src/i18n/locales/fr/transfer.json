@@ -11,7 +11,7 @@
       "subtitle": "Accueillez ce qui arrive vers vous"
     },
     "send": {
-      "title": "Envoyer",
+      "title": "Envoyer de la gratitude",
       "subtitle": "Offrez avec joie"
     },
     "pay": {
@@ -23,7 +23,9 @@
       "subtitle": "Prenez ce dont vous avez besoin"
     }
   },
-  "contact": "Pour {{name}}",
+  "contact": "Vers : {{name}}",
+  "contactPrefix": "Vers :",
+  "available": "Solde disponible : {{amount}}",
   "insufficient": "Ce montant dépasse votre solde actuel. Essayez un montant un peu plus doux.",
   "tooLarge": "Ce montant dépasse le plafond de la simulation. Essayez un montant un peu plus doux."
 }

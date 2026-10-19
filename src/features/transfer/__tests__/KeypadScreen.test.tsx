@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
 import { MAX_BALANCE_MINOR } from "@/src/config/locale";
+import { formatMoney } from "@/src/domain/money";
 import i18n from "@/src/i18n";
 import { useAppStore } from "@/src/store/useAppStore";
 
@@ -38,6 +39,7 @@ describe("KeypadScreen", () => {
     mockParams = {};
     await i18n.changeLanguage("fr");
     useAppStore.getState().resetAll();
+    useAppStore.getState().setLanguage("fr");
     useAppStore.getState().setCurrency("XOF");
     useAppStore.getState().setBalance(10000);
   });
@@ -46,7 +48,10 @@ describe("KeypadScreen", () => {
     mockParams = { mode: "nope" };
     await render(<KeypadScreen />);
     expect(screen.getByText("Définir mon solde")).toBeTruthy();
-    expect(screen.getByTestId("keypad-amount").props.children).toBe("10000");
+    expect(screen.getByTestId("keypad-amount").props.accessibilityLabel).toBe(
+      `${formatMoney(10000, "XOF", "fr").integer} FCFA`,
+    );
+    expect(screen.queryByText(/Solde disponible/)).toBeNull();
   });
 
   it("set mode updates the balance and closes", async () => {
@@ -88,7 +93,10 @@ describe("KeypadScreen", () => {
       screen.getByTestId("keypad-validate").props.accessibilityState.disabled,
     ).toBe(true);
     expect(screen.getByTestId("keypad-contact")).toBeTruthy();
-    expect(screen.getByText("Pour Famille")).toBeTruthy();
+    expect(screen.getByTestId("keypad-contact").props.accessibilityLabel).toBe(
+      "Vers : Famille",
+    );
+    expect(screen.getByText("Famille")).toBeTruthy();
   });
 
   it("records a favorite as a shared-with intention keyed by its id", async () => {
@@ -155,7 +163,9 @@ describe("KeypadScreen", () => {
     for (let i = 0; i < 5; i += 1) {
       await fireEvent.press(screen.getByTestId("keypad-backspace"));
     }
-    expect(screen.getByTestId("keypad-amount").props.children).toBe("0");
+    expect(screen.getByTestId("keypad-amount").props.accessibilityLabel).toBe(
+      "0 FCFA",
+    );
     expect(
       screen.getByTestId("keypad-validate").props.accessibilityState.disabled,
     ).toBe(false);
@@ -164,18 +174,37 @@ describe("KeypadScreen", () => {
     expect(mockBack).toHaveBeenCalled();
   });
 
+  it("shows the send title, the available balance and the amount as the mockup", async () => {
+    useAppStore.getState().setCurrency("EUR");
+    useAppStore.getState().setBalance(18642050);
+    mockParams = { mode: "send", contact: "gratitude" };
+    await render(<KeypadScreen />);
+    expect(screen.getByTestId("keypad-title")).toHaveTextContent(
+      "Envoyer de la gratitude",
+    );
+    expect(
+      screen.getByText(
+        `Solde disponible : ${formatMoney(18642050, "EUR", "fr").full}`,
+      ),
+    ).toBeTruthy();
+    await typeDigits(["2", "5", "0"]);
+    expect(screen.getByTestId("amount-integer")).toHaveTextContent("250");
+    expect(screen.getByTestId("amount-decimals")).toHaveTextContent(",00");
+    expect(screen.getByTestId("amount-suffix")).toHaveTextContent("€");
+    expect(screen.getByText("FICTIF - SIMULATION")).toBeTruthy();
+  });
+
   it("places the currency symbol like formatMoney", async () => {
     mockParams = { mode: "receive" };
     await render(<KeypadScreen />);
-    expect(screen.getByTestId("keypad-symbol-suffix").props.children).toBe(" FCFA");
-    expect(screen.queryByTestId("keypad-symbol-prefix")).toBeNull();
+    expect(screen.getByTestId("amount-suffix")).toHaveTextContent("FCFA");
     screen.unmount();
 
     useAppStore.getState().setLanguage("en");
     useAppStore.getState().setCurrency("USD");
     await i18n.changeLanguage("en");
     await render(<KeypadScreen />);
-    expect(screen.getByTestId("keypad-symbol-prefix").props.children).toBe("$");
-    expect(screen.queryByTestId("keypad-symbol-suffix")).toBeNull();
+    expect(screen.getByTestId("amount-integer")).toHaveTextContent("$0");
+    expect(screen.queryByTestId("amount-suffix")).toBeNull();
   });
 });
