@@ -4,12 +4,15 @@ import { useId } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
-import { blur, glass, radius, shadow } from '@/src/theme';
+import { glass, radius, shadow } from '@/src/theme';
 
 export type NavyCardProps = ViewProps & {
   style?: StyleProp<ViewStyle>;
   contentStyle?: StyleProp<ViewStyle>;
 };
+
+// Backdrop blur of the mockup `.glass` (16px), calibrated against the web capture.
+const CSS_BACKDROP_BLUR = 16;
 
 function Highlight() {
   const id = `navy-highlight-${useId().replace(/:/g, '')}`;
@@ -31,7 +34,7 @@ export function NavyCard({ style, contentStyle, children, ...rest }: NavyCardPro
   return (
     <View {...rest} style={[styles.shadow, style]}>
       <View style={styles.card}>
-        <BlurView intensity={16} tint="light" style={StyleSheet.absoluteFill} />
+        <BlurView intensity={CSS_BACKDROP_BLUR} tint="light" style={StyleSheet.absoluteFill} />
         <LinearGradient
           colors={[...glass.colors]}
           start={glass.start}
