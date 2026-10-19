@@ -110,7 +110,8 @@ mkdirSync(join(here, 'explorations'), { recursive: true });
 explorations.forEach((name, i) => {
   const id = `${'abc'[i]}-${name}`;
   files[`explorations/${id}.svg`] = svg(1024, 1024, iconBody(emblems[name], 232));
-  shots.push([`explorations/${id}.svg`, `explorations/${id}.png`, 1024, 1024, true]);
+  // Only the validated direction (b-coin) keeps a PNG export; the others stay as SVG sources.
+  if (name === 'coin') shots.push([`explorations/${id}.svg`, `explorations/${id}.png`, 1024, 1024, true]);
 });
 
 const em = emblems[FINAL];
@@ -136,7 +137,6 @@ shots.push(
   ['splash.svg', 'splash.png', 1284, 2778, false],
   ['icon-full.svg', 'favicon.png', 48, 48, false],
   ['logo-mark.svg', 'logo-mark.png', 256, 256, true],
-  ['logo.svg', 'explorations/final-preview.png', 1024, 1024, true],
 );
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
 for (const [src, out, w, h, transparent] of shots) {
