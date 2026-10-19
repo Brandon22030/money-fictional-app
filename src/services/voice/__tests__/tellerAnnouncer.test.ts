@@ -80,10 +80,16 @@ describe('tellerAnnouncer', () => {
       language: 'en',
       t,
     });
+    // Let announceBalance get past provider.stop() so the beep is really in progress.
+    for (let i = 0; i < 10 && (playBeep as jest.Mock).mock.calls.length === 0; i += 1) {
+      await Promise.resolve();
+    }
+    expect(playBeep).toHaveBeenCalledTimes(1);
     await stopAnnouncement();
     release();
     await pending;
 
+    expect(playBeep).toHaveBeenCalledTimes(1);
     expect(events).toEqual(['stop', 'stop']);
     expect(events.some((event) => event.startsWith('speak'))).toBe(false);
   });
