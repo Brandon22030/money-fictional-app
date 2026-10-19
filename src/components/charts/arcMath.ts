@@ -20,8 +20,11 @@ export function polarToCartesian(cx: number, cy: number, r: number, angleDeg: nu
   return { x: cx + r * Math.sin(rad), y: cy - r * Math.cos(rad) };
 }
 
-/** Converts values to consecutive angular segments; invalid or non positive values are skipped from the total. */
-export function computeSegments(values: number[]): ArcSegment[] {
+/**
+ * Converts values to consecutive angular segments; invalid or non positive values are skipped from the total.
+ * `gapFraction` (share of the full turn) is removed between segments, half on each side; midAngle is unchanged.
+ */
+export function computeSegments(values: number[], gapFraction = 0): ArcSegment[] {
   const safe = values.map((v) => (Number.isFinite(v) && v > 0 ? v : 0));
   const total = safe.reduce((sum, v) => sum + v, 0);
   if (total <= 0) return [];
@@ -29,15 +32,16 @@ export function computeSegments(values: number[]): ArcSegment[] {
   let cursor = 0;
   return safe.map((value, index) => {
     const fraction = value / total;
-    const startAngle = cursor * FULL_TURN;
+    const rawStart = cursor * FULL_TURN;
     cursor += fraction;
-    const endAngle = cursor * FULL_TURN;
+    const rawEnd = cursor * FULL_TURN;
+    const inset = fraction > 0 ? Math.min((gapFraction * FULL_TURN) / 2, (rawEnd - rawStart) / 2) : 0;
     return {
       index,
       fraction,
-      startAngle,
-      endAngle,
-      midAngle: (startAngle + endAngle) / 2,
+      startAngle: rawStart + inset,
+      endAngle: rawEnd - inset,
+      midAngle: (rawStart + rawEnd) / 2,
     };
   });
 }
