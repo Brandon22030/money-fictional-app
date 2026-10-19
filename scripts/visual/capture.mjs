@@ -46,6 +46,10 @@ const worstCurrency = worstArg ? (worstArg.split('=')[1] ?? 'XOF') : undefined;
 if (worstCurrency && !['XOF', 'EUR', 'USD'].includes(worstCurrency)) {
   throw new Error(`Invalid --worst=${worstCurrency}, expected XOF, EUR or USD`);
 }
+const holderArg = argValue('holder');
+if (holderArg !== undefined && holderArg.trim() === '') {
+  throw new Error('Empty --holder=, expected --holder=<name> (omit it for the default worst-case holder)');
+}
 const isMockupViewport =
   !worstCurrency && viewport.width === MOCKUP_VIEWPORT.width && viewport.height === MOCKUP_VIEWPORT.height;
 const appSuffix = `${worstCurrency ? `-worst-${worstCurrency}` : ''}${
@@ -95,7 +99,7 @@ const WORST_STATE = {
     ...DEMO_STATE.state,
     balanceMinor: WORST_BALANCE_MINOR,
     currency: worstCurrency,
-    holderName: argValue('holder') ?? 'WWWWWWWWWWWWWWWWWWWWWWWWWW',
+    holderName: holderArg ?? 'WWWWWWWWWWWWWWWWWWWWWWWWWW',
   },
   version: 1,
 };
