@@ -34,9 +34,11 @@ jest.mock('expo-blur', () => {
 jest.mock('react-native-reanimated', () => require('react-native-reanimated/mock'));
 require('react-native-reanimated/mock').useReducedMotion = jest.fn(() => false);
 
-// RNTL 13 (the version matching expo-router 57 `renderRouter`) fires events synchronously, while
-// the tests are written against the async RNTL API: `await fireEvent.press(...)` must also flush
-// the async work started by the handler (state updates, resolved promises) before asserting.
+// RNTL 13 (the version matching expo-router 57 `renderRouter`) renders and fires events
+// synchronously, while the tests are written against the async RNTL API: `await render(...)` and
+// `await fireEvent.press(...)` must also flush the async work started by the mount or the handler
+// (state updates such as font loading in @expo/vector-icons, resolved promises) before asserting.
+// TODO(SDK 58): remove these wrappers when moving back to RNTL 14.
 jest.mock('@testing-library/react-native', () => {
   const rntl = jest.requireActual('@testing-library/react-native');
   const flush = () => rntl.act(async () => undefined);
@@ -59,15 +61,21 @@ jest.mock('@testing-library/react-native', () => {
   // Copy descriptors so live bindings such as `screen` stay live.
   return Object.defineProperties({}, {
     ...Object.getOwnPropertyDescriptors(rntl),
+    // Writable so that renderRouter can run on the synchronous render (see below).
+    render: { value: wrap(rntl.render), enumerable: true, writable: true },
     fireEvent: { value: fireEvent, enumerable: true },
   });
 });
 
 // renderRouter renders synchronously with RNTL 13: flush the async startup work (store
 // hydration, navigation state) so that `await renderRouter(...)` resolves on a settled tree.
+// Internally it calls `render` on the (mocked) RNTL module and decorates the returned object,
+// so it must run on the synchronous RNTL render, not on the async wrapper above.
+// TODO(SDK 58): remove this wrapper when moving back to RNTL 14.
 jest.mock('expo-router/testing-library', () => {
   const actual = jest.requireActual('expo-router/testing-library');
-  const { act } = jest.requireActual('@testing-library/react-native');
+  const rntl = jest.requireActual('@testing-library/react-native');
+  const rntlMock = require('@testing-library/react-native');
   return Object.defineProperties(
     {},
     {
@@ -75,8 +83,15 @@ jest.mock('expo-router/testing-library', () => {
       renderRouter: {
         enumerable: true,
         value: async (...args: unknown[]) => {
-          const result = actual.renderRouter(...args);
-          await act(async () => undefined);
+          const asyncRender = rntlMock.render;
+          rntlMock.render = rntl.render;
+          let result;
+          try {
+            result = actual.renderRouter(...args);
+          } finally {
+            rntlMock.render = asyncRender;
+          }
+          await rntl.act(async () => undefined);
           return result;
         },
       },

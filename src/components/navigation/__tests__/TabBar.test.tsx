@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
 
 import { TabBar } from '@/src/components/navigation/TabBar';
@@ -25,6 +25,20 @@ describe('TabBar', () => {
     await i18n.changeLanguage('fr');
   });
 
+  // Each TabItem starts a 260 ms Animated.timing on mount, driven by requestAnimationFrame
+  // (a setTimeout in tests). Drive it with fake timers and run it to completion inside act,
+  // so that its Animated.View updates never land outside act after the test.
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    act(() => {
+      jest.runAllTimers();
+    });
+    jest.useRealTimers();
+  });
+
   it('renders five tabs with the active one selected and labelled', async () => {
     await render(<TabBar {...makeProps(1).props} />);
     expect(screen.getAllByRole('tab')).toHaveLength(5);
@@ -48,9 +62,14 @@ describe('TabBar', () => {
   });
 
   it('does not navigate when the active tab is pressed', async () => {
-    const { props, navigate } = makeProps(3);
+    const { props, emit, navigate } = makeProps(3);
     await render(<TabBar {...props} />);
     await fireEvent.press(screen.getByTestId('tab-history'));
+    expect(emit).toHaveBeenCalledWith({
+      type: 'tabPress',
+      target: 'history-k',
+      canPreventDefault: true,
+    });
     expect(navigate).not.toHaveBeenCalled();
   });
 
