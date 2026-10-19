@@ -58,6 +58,11 @@ function cancelPause(): void {
 /**
  * The announcement only runs in the foreground: when the app goes to the background it is
  * stopped, so the voice never keeps talking (and looping) behind another app.
+ *
+ * "inactive" is deliberately ignored (Control Center, notification shade, app switcher). On iOS
+ * a phone call can leave the app only inactive: the loop then keeps running, but the system
+ * interrupts the audio session, so the beep and the voice are silenced until the call ends.
+ * If the call moves the app to the background, the announcement stops as usual.
  */
 function watchAppState(): void {
   appStateSubscription?.remove();
