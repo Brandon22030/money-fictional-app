@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     letterSpacing: 2.2,
     color: cardText.main,
   },
-  bottom: { flexDirection: 'row', alignItems: 'flex-end', gap: 20 },
+  bottom: { flexDirection: 'row', alignItems: 'flex-end', gap: 20, marginBottom: 1 },
   balance: { marginLeft: 'auto', alignItems: 'flex-end' },
   label: { ...font(8, 'regular'), letterSpacing: 1.4, color: cardText.label, marginBottom: 4 },
   value: { ...font(13, 'semiBold'), letterSpacing: 0.8, color: cardText.main },

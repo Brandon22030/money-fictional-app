@@ -186,6 +186,7 @@ const styles = StyleSheet.create({
   },
   version: {
     marginTop: 7,
+    marginBottom: 10.5,
   },
   resetButton: {
     marginTop: 8,
@@ -204,7 +205,6 @@ const styles = StyleSheet.create({
   },
   about: {
     paddingTop: 18,
-    paddingBottom: 10.5,
     paddingHorizontal: 20,
     gap: 6,
   },

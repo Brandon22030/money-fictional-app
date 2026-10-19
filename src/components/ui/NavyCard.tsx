@@ -18,7 +18,7 @@ function Highlight() {
   const id = `navy-highlight-${useId().replace(/:/g, '')}`;
 
   return (
-    <Svg style={StyleSheet.absoluteFill} pointerEvents="none">
+    <Svg width="100%" height="100%" style={StyleSheet.absoluteFill} pointerEvents="none">
       <Defs>
         <RadialGradient id={id} cx="85%" cy="-10%" rx="120%" ry="70%">
           <Stop offset="0" stopColor={glass.highlight} />

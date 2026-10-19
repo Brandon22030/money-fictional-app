@@ -71,7 +71,7 @@ export function VoiceButton({
         pressed ? styles.pressed : null,
       ]}
     >
-      <View style={styles.content}>
+      <View style={[styles.content, isTile ? styles.tileContent : null]}>
         {isTile ? (
           <LinearGradient
             colors={glass.colors}
@@ -80,11 +80,14 @@ export function VoiceButton({
             style={StyleSheet.absoluteFill}
           />
         ) : null}
-        {speaking ? (
-          <Feather name="square" size={24} color={iconColor} />
-        ) : (
-          <Icon name="volume" size={24} color={iconColor} />
-        )}
+        {/* View wrapper: on web a bare svg would paint under the absolute gradient. */}
+        <View>
+          {speaking ? (
+            <Feather name="square" size={24} color={iconColor} />
+          ) : (
+            <Icon name="volume" size={24} color={iconColor} />
+          )}
+        </View>
         <AppText variant="caption" tone="onDark" style={styles.label}>
           {label}
         </AppText>
@@ -103,7 +106,7 @@ const styles = StyleSheet.create({
     height: 76,
     backgroundColor: colors.glassFill,
     borderWidth: 1,
-    borderColor: glass.borderColor,
+    borderColor: colors.glassBorder,
   },
   tile: {
     height: 84,
@@ -116,8 +119,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     borderRadius: 22,
+  },
+  tileContent: {
     overflow: 'hidden',
-    borderWidth: 1,
+    borderWidth: glass.borderWidth,
     borderColor: glass.borderColor,
   },
   label: {

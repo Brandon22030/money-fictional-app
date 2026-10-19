@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     gap: layout.gap,
   },
   title: {
-    paddingTop: 6,
+    paddingTop: 7,
     paddingHorizontal: 4,
   },
   ring: {
