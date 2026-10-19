@@ -10,6 +10,7 @@ import { HOLDER_NAME_MAX_LENGTH, useAppStore } from '@/src/store/useAppStore';
 import { colors, font, layout } from '@/src/theme';
 
 import { SegmentedControl, type SegmentedOption } from './SegmentedControl';
+import { SwitchRow } from './SwitchRow';
 
 const CURRENCY_ORDER: Currency[] = ['EUR', 'XOF', 'USD'];
 const LANGUAGE_ORDER: Language[] = ['fr', 'en'];
@@ -23,6 +24,7 @@ export function SettingsScreen() {
   const currency = useAppStore((state) => state.currency);
   const language = useAppStore((state) => state.language);
   const holderName = useAppStore((state) => state.holderName);
+  const repeatAnnouncement = useAppStore((state) => state.repeatAnnouncement);
   const [holderDraft, setHolderDraft] = useState<string | null>(null);
   const bottomClearance = useTabBarClearance();
 
@@ -107,6 +109,15 @@ export function SettingsScreen() {
               {`${holderValue.length} / ${HOLDER_NAME_MAX_LENGTH}`}
             </AppText>
           </View>
+
+          <SwitchRow
+            testID="settings-repeat"
+            label={t('repeat.title')}
+            hint={t('repeat.hint')}
+            help={t('repeat.help')}
+            value={repeatAnnouncement}
+            onChange={(next) => useAppStore.getState().setRepeatAnnouncement(next)}
+          />
 
           <Pressable
             testID="settings-reset"

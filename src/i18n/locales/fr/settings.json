@@ -16,6 +16,11 @@
     "placeholder": "Nom sur la carte",
     "hint": "26 caractères maximum, en majuscules."
   },
+  "repeat": {
+    "title": "Répéter l'annonce",
+    "hint": "Répète l'annonce du solde, avec une courte pause, jusqu'à ce que vous appuyiez sur Arrêter.",
+    "help": "Appuyez sur Arrêter pour couper la boucle."
+  },
   "reset": {
     "button": "Réinitialiser",
     "description": "Remet le solde, la carte et l'historique à zéro.",

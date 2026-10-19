@@ -335,3 +335,45 @@ describe('setLanguage and the default holder', () => {
     expect(useAppStore.getState().language).toBe('en');
   });
 });
+
+describe('repeat announcement', () => {
+  async function rehydrateWith(state: unknown) {
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ state, version: 1 }));
+    await useAppStore.persist.rehydrate();
+    return useAppStore.getState();
+  }
+
+  it('is off by default, can be toggled, and is persisted', async () => {
+    expect(useAppStore.getState().repeatAnnouncement).toBe(false);
+    useAppStore.getState().setRepeatAnnouncement(true);
+    expect(useAppStore.getState().repeatAnnouncement).toBe(true);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const raw = JSON.parse((await AsyncStorage.getItem(STORAGE_KEY)) as string);
+    expect(raw.state.repeatAnnouncement).toBe(true);
+  });
+
+  it('goes back to off on reset', () => {
+    useAppStore.getState().setRepeatAnnouncement(true);
+    useAppStore.getState().resetAll();
+    expect(useAppStore.getState().repeatAnnouncement).toBe(false);
+  });
+
+  it('rehydrates version 1 data saved before the field existed with the default', async () => {
+    useAppStore.setState({ repeatAnnouncement: true });
+    let state = await rehydrateWith({ currency: 'XOF', balanceMinor: 5 });
+    expect(state.repeatAnnouncement).toBe(true);
+    useAppStore.setState({ repeatAnnouncement: false });
+    state = await rehydrateWith({ currency: 'XOF', balanceMinor: 5 });
+    expect(state.repeatAnnouncement).toBe(false);
+  });
+
+  it('restores a saved value and ignores a corrupted one', async () => {
+    let state = await rehydrateWith({ currency: 'XOF', repeatAnnouncement: true });
+    expect(state.repeatAnnouncement).toBe(true);
+    useAppStore.setState({ repeatAnnouncement: false });
+    for (const corrupted of ['true', 1, null, {}]) {
+      state = await rehydrateWith({ currency: 'XOF', repeatAnnouncement: corrupted });
+      expect(state.repeatAnnouncement).toBe(false);
+    }
+  });
+});
