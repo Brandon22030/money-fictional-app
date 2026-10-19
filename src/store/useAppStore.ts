@@ -19,6 +19,11 @@ export type IntentionOptions = { labelKey?: string; labelParams?: Record<string,
 
 export const HOLDER_NAME_MAX_LENGTH = 26;
 
+/** Only the most recent user intentions are kept, to bound the persisted payload. */
+export const MAX_USER_TRANSACTIONS = 500;
+
+export const STORE_VERSION = 1;
+
 type AppData = {
   balanceMinor: number;
   currency: Currency;
@@ -69,6 +74,80 @@ function rescale(minor: number, from: Currency, to: Currency): number {
   return toMinor(fromMinor(minor, from), to);
 }
 
+const INTENTION_KINDS: readonly IntentionKind[] = ['receive', 'send', 'pay', 'withdraw'];
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isCurrency(value: unknown): value is Currency {
+  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(CURRENCIES, value);
+}
+
+function isLanguage(value: unknown): value is Language {
+  return value === 'fr' || value === 'en';
+}
+
+function isCard(value: unknown): value is Card {
+  return (
+    isRecord(value) &&
+    typeof value.number === 'string' &&
+    /^\d{16}$/.test(value.number) &&
+    typeof value.expiry === 'string' &&
+    /^(0[1-9]|1[0-2])\/\d{2}$/.test(value.expiry) &&
+    typeof value.cvv === 'string' &&
+    /^\d{3}$/.test(value.cvv)
+  );
+}
+
+function isTransaction(value: unknown): value is Transaction {
+  return (
+    isRecord(value) &&
+    typeof value.id === 'string' &&
+    INTENTION_KINDS.includes(value.kind as IntentionKind) &&
+    typeof value.labelKey === 'string' &&
+    typeof value.amountMinor === 'number' &&
+    Number.isFinite(value.amountMinor) &&
+    typeof value.createdAt === 'string' &&
+    !Number.isNaN(new Date(value.createdAt).getTime()) &&
+    (value.labelParams === undefined || isRecord(value.labelParams))
+  );
+}
+
+/**
+ * Validates persisted data field by field and falls back to the in-memory defaults for
+ * anything missing or corrupted. Amounts depend on the currency precision, so an unknown
+ * currency also discards the balance and the user intentions.
+ */
+export function mergePersisted<T extends AppData>(persisted: unknown, current: T): T {
+  if (!isRecord(persisted)) return current;
+
+  const currencyValid = isCurrency(persisted.currency);
+  const language = isLanguage(persisted.language) ? persisted.language : current.language;
+  const balanceMinor =
+    currencyValid && typeof persisted.balanceMinor === 'number' && Number.isFinite(persisted.balanceMinor)
+      ? clampBalance(persisted.balanceMinor)
+      : current.balanceMinor;
+  const userTransactions =
+    currencyValid && Array.isArray(persisted.userTransactions)
+      ? persisted.userTransactions.filter(isTransaction).slice(0, MAX_USER_TRANSACTIONS)
+      : current.userTransactions;
+  const holderName =
+    typeof persisted.holderName === 'string' && persisted.holderName.trim() !== ''
+      ? persisted.holderName.slice(0, HOLDER_NAME_MAX_LENGTH)
+      : defaultHolderName(language);
+
+  return {
+    ...current,
+    currency: currencyValid ? (persisted.currency as Currency) : current.currency,
+    language,
+    balanceMinor,
+    holderName,
+    card: isCard(persisted.card) ? persisted.card : current.card,
+    userTransactions,
+  };
+}
+
 let transactionCounter = 0;
 
 function nextTransactionId(): string {
@@ -105,7 +184,10 @@ export const useAppStore = create<AppState>()(
           amountMinor,
           createdAt: new Date().toISOString(),
         };
-        set({ balanceMinor: nextBalance, userTransactions: [transaction, ...userTransactions] });
+        set({
+          balanceMinor: nextBalance,
+          userTransactions: [transaction, ...userTransactions].slice(0, MAX_USER_TRANSACTIONS),
+        });
         return { ok: true };
       },
 
@@ -122,7 +204,13 @@ export const useAppStore = create<AppState>()(
         });
       },
 
-      setLanguage: (language) => set({ language }),
+      setLanguage: (language) => {
+        const { language: previous, holderName } = get();
+        if (previous === language) return;
+        // A holder name left at the default follows the language; a custom one is kept.
+        const followsDefault = holderName === defaultHolderName(previous);
+        set({ language, ...(followsDefault ? { holderName: defaultHolderName(language) } : {}) });
+      },
 
       setHolderName: (name) => {
         const cleaned = name.trim().toUpperCase().slice(0, HOLDER_NAME_MAX_LENGTH).trim();
@@ -135,7 +223,11 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'abonda-store-v1',
+      version: STORE_VERSION,
       storage: createJSONStorage(() => AsyncStorage),
+      // Version 0 data has the same shape; validation happens in merge.
+      migrate: (persisted) => persisted as AppData,
+      merge: (persisted, current) => mergePersisted(persisted, current),
       partialize: (state): AppData => ({
         balanceMinor: state.balanceMinor,
         currency: state.currency,

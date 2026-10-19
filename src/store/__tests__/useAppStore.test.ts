@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { MAX_BALANCE_MINOR } from '@/src/config/locale';
 import { isLuhnValid } from '@/src/domain/card';
-import { useAppStore } from '@/src/store/useAppStore';
+import { MAX_USER_TRANSACTIONS, useAppStore } from '@/src/store/useAppStore';
 
 const STORAGE_KEY = 'abonda-store-v1';
 
@@ -139,5 +139,135 @@ describe('currency, card and reset', () => {
     const state = useAppStore.getState();
     expect(state.userTransactions).toHaveLength(0);
     expect(state.balanceMinor).toBeGreaterThanOrEqual(1_000_000);
+  });
+});
+
+describe('rehydration safety', () => {
+  async function rehydrateWith(state: unknown, version = 1) {
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ state, version }));
+    await useAppStore.persist.rehydrate();
+    return useAppStore.getState();
+  }
+
+  it('persists with version 1', async () => {
+    useAppStore.getState().setBalance(77);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const raw = JSON.parse((await AsyncStorage.getItem(STORAGE_KEY)) as string);
+    expect(raw.version).toBe(1);
+  });
+
+  it('migrates version 0 data unchanged', async () => {
+    const card = useAppStore.getState().card;
+    const state = await rehydrateWith(
+      { balanceMinor: 321, currency: 'XOF', language: 'en', holderName: 'ADA', card, userTransactions: [] },
+      0,
+    );
+    expect(state).toMatchObject({ balanceMinor: 321, currency: 'XOF', language: 'en', holderName: 'ADA' });
+  });
+
+  it('falls back to defaults for an unknown currency', async () => {
+    const before = useAppStore.getState();
+    const state = await rehydrateWith({ currency: 'GBP' });
+    expect(state.currency).toBe(before.currency);
+    expect(state.balanceMinor).toBe(before.balanceMinor);
+    expect(state.card).toEqual(before.card);
+    expect(state.hasHydrated).toBe(true);
+  });
+
+  it('drops an unknown currency together with the amounts expressed in it', async () => {
+    const before = useAppStore.getState();
+    const state = await rehydrateWith({
+      currency: 'GBP',
+      balanceMinor: 5,
+      userTransactions: [
+        { id: 'a', kind: 'receive', labelKey: 'k', amountMinor: 5, createdAt: '2026-01-01T00:00:00.000Z' },
+      ],
+    });
+    expect(state.balanceMinor).toBe(before.balanceMinor);
+    expect(state.userTransactions).toEqual(before.userTransactions);
+  });
+
+  it('repairs corrupted fields one by one', async () => {
+    const before = useAppStore.getState();
+    const state = await rehydrateWith({
+      currency: 'EUR',
+      language: 'de',
+      balanceMinor: 'lots',
+      holderName: 42,
+      card: { number: 'abc', expiry: '13/99', cvv: 1 },
+      userTransactions: [
+        { id: 'ok', kind: 'pay', labelKey: 'content:intentions.pay', amountMinor: 10, createdAt: '2026-01-01T00:00:00.000Z' },
+        { id: 'bad-kind', kind: 'steal', labelKey: 'x', amountMinor: 10, createdAt: '2026-01-01T00:00:00.000Z' },
+        { id: 'bad-amount', kind: 'pay', labelKey: 'x', amountMinor: null, createdAt: '2026-01-01T00:00:00.000Z' },
+        'garbage',
+      ],
+    });
+    expect(state.currency).toBe('EUR');
+    expect(state.language).toBe(before.language);
+    expect(state.balanceMinor).toBe(before.balanceMinor);
+    expect(state.card).toEqual(before.card);
+    expect(state.holderName).toBe(useAppStore.getState().holderName);
+    expect(state.holderName.length).toBeGreaterThan(0);
+    expect(state.userTransactions.map((tx) => tx.id)).toEqual(['ok']);
+  });
+
+  it('keeps the current state when the payload is not an object', async () => {
+    const before = useAppStore.getState();
+    const state = await rehydrateWith(null);
+    expect(state.balanceMinor).toBe(before.balanceMinor);
+    expect(state.currency).toBe(before.currency);
+  });
+
+  it('clamps a rehydrated balance and caps rehydrated intentions', async () => {
+    const tx = (i: number) => ({
+      id: `t${i}`,
+      kind: 'receive',
+      labelKey: 'content:intentions.receive',
+      amountMinor: 1,
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    const state = await rehydrateWith({
+      currency: 'XOF',
+      balanceMinor: MAX_BALANCE_MINOR * 10,
+      userTransactions: Array.from({ length: MAX_USER_TRANSACTIONS + 20 }, (_, i) => tx(i)),
+    });
+    expect(state.balanceMinor).toBe(MAX_BALANCE_MINOR);
+    expect(state.userTransactions).toHaveLength(MAX_USER_TRANSACTIONS);
+    expect(state.userTransactions[0]?.id).toBe('t0');
+  });
+});
+
+describe('user intentions cap', () => {
+  it(`keeps only the ${MAX_USER_TRANSACTIONS} most recent intentions`, () => {
+    const { applyIntention } = useAppStore.getState();
+    for (let i = 0; i < MAX_USER_TRANSACTIONS + 5; i += 1) {
+      expect(applyIntention('receive', 1)).toEqual({ ok: true });
+    }
+    const { userTransactions, balanceMinor } = useAppStore.getState();
+    expect(userTransactions).toHaveLength(MAX_USER_TRANSACTIONS);
+    expect(balanceMinor).toBe(1000 + MAX_USER_TRANSACTIONS + 5);
+    applyIntention('pay', 3, { labelKey: 'content:intentions.coffee' });
+    expect(useAppStore.getState().userTransactions[0]?.labelKey).toBe('content:intentions.coffee');
+    expect(useAppStore.getState().userTransactions).toHaveLength(MAX_USER_TRANSACTIONS);
+  });
+});
+
+describe('setLanguage and the default holder', () => {
+  it('translates a holder name left at the default', () => {
+    useAppStore.getState().setLanguage('fr');
+    useAppStore.getState().setHolderName('');
+    expect(useAppStore.getState().holderName).toBe('TITULAIRE ABONDA');
+    useAppStore.getState().setLanguage('en');
+    expect(useAppStore.getState().holderName).toBe('ABONDA HOLDER');
+    useAppStore.getState().setLanguage('fr');
+    expect(useAppStore.getState().holderName).toBe('TITULAIRE ABONDA');
+  });
+
+  it('keeps a custom holder name', () => {
+    useAppStore.getState().setLanguage('fr');
+    useAppStore.getState().setHolderName('Ada');
+    useAppStore.getState().setLanguage('en');
+    expect(useAppStore.getState().holderName).toBe('ADA');
+    expect(useAppStore.getState().language).toBe('en');
   });
 });
