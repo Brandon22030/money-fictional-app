@@ -1,7 +1,7 @@
-import { LinearGradient } from "expo-linear-gradient";
-import type { BottomTabBarProps } from "expo-router/js-tabs";
-import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
+import { LinearGradient } from 'expo-linear-gradient';
+import type { BottomTabBarProps } from 'expo-router/js-tabs';
+import { useTranslation } from 'react-i18next';
+import { useEffect, useState } from 'react';
 import {
   Animated,
   Easing,
@@ -9,22 +9,22 @@ import {
   StyleSheet,
   Text,
   View,
-} from "react-native";
+} from 'react-native';
 
-import { Icon, type IconName } from "@/src/components/ui/Icon";
-import { colors, font, glass, radius, shadows } from "@/src/theme";
+import { Icon, type IconName } from '@/src/components/ui/Icon';
+import { colors, font, glass, radius, shadows } from '@/src/theme';
 
-import { TAB_BAR_HEIGHT, TAB_ITEM_SIZE, tabBarBottom } from "./tabBarLayout";
+import { TAB_BAR_HEIGHT, TAB_ITEM_SIZE, tabBarBottom } from './tabBarLayout';
 
-const ICON_INACTIVE = "rgba(255,255,255,0.85)";
-const SUBTLE_FILL = "rgba(255,255,255,0.1)";
+const ICON_INACTIVE = 'rgba(255,255,255,0.85)';
+const SUBTLE_FILL = 'rgba(255,255,255,0.1)';
 
 const TABS: Record<string, { icon: IconName; labelKey: string }> = {
-  index: { icon: "home", labelKey: "tabs.home" },
-  card: { icon: "card", labelKey: "tabs.card" },
-  abundance: { icon: "pie", labelKey: "tabs.abundance" },
-  history: { icon: "clock", labelKey: "tabs.history" },
-  settings: { icon: "sliders", labelKey: "tabs.settings" },
+  index: { icon: 'home', labelKey: 'tabs.home' },
+  card: { icon: 'card', labelKey: 'tabs.card' },
+  abundance: { icon: 'pie', labelKey: 'tabs.abundance' },
+  history: { icon: 'clock', labelKey: 'tabs.history' },
+  settings: { icon: 'sliders', labelKey: 'tabs.settings' },
 };
 
 type TabItemProps = {
@@ -75,7 +75,7 @@ function TabItem({ testID, label, icon, focused, onPress }: TabItemProps) {
 }
 
 export function TabBar({ state, navigation, insets }: BottomTabBarProps) {
-  const { t } = useTranslation("nav");
+  const { t } = useTranslation('nav');
 
   return (
     <View style={[styles.bar, { bottom: tabBarBottom(insets.bottom) }]}>
@@ -92,11 +92,11 @@ export function TabBar({ state, navigation, insets }: BottomTabBarProps) {
             key={route.key}
             testID={`tab-${route.name}`}
             label={tab ? t(tab.labelKey) : route.name}
-            icon={tab?.icon ?? "home"}
+            icon={tab?.icon ?? 'home'}
             focused={state.index === index}
             onPress={() => {
               const event = navigation.emit({
-                type: "tabPress",
+                type: 'tabPress',
                 target: route.key,
                 canPreventDefault: true,
               });
@@ -113,13 +113,13 @@ export function TabBar({ state, navigation, insets }: BottomTabBarProps) {
 
 const styles = StyleSheet.create({
   bar: {
-    position: "absolute",
+    position: 'absolute',
     left: 16,
     right: 16,
     height: TAB_BAR_HEIGHT,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 6,
     paddingHorizontal: 8,
     borderRadius: 35,
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     ...shadows.tabBar,
   },
   gradient: {
-    position: "absolute",
+    position: 'absolute',
     top: 0,
     right: 0,
     bottom: 0,
@@ -143,15 +143,15 @@ const styles = StyleSheet.create({
   item: {
     height: TAB_ITEM_SIZE,
     borderRadius: radius.pill,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
     borderWidth: 1,
   },
   itemActive: {
     backgroundColor: colors.accent,
-    borderColor: "rgba(255,255,255,0.35)",
+    borderColor: 'rgba(255,255,255,0.35)',
     paddingHorizontal: 18,
     ...shadows.activeTab,
   },
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   label: {
-    ...font(14, "bold"),
+    ...font(14, 'bold'),
     color: colors.navy900,
     flexShrink: 0,
   },
