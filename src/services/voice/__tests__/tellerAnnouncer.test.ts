@@ -1,8 +1,10 @@
 import { AppState } from 'react-native';
 
-import { playBeep, stopBeep } from '@/src/services/voice/beep';
+import { playAtmBeep, playCashCounter, stopBeep } from '@/src/services/voice/beep';
 import {
   announceBalance,
+  BEEP_TO_VOICE_MS,
+  COUNTER_TO_BEEP_MS,
   LOOP_PAUSE_MS,
   getVoiceProvider,
   setVoiceProvider,
@@ -12,7 +14,8 @@ import type { VoiceProvider } from '@/src/services/voice';
 import { useAnnouncementState } from '@/src/services/voice/announcementState';
 
 jest.mock('@/src/services/voice/beep', () => ({
-  playBeep: jest.fn(),
+  playCashCounter: jest.fn(),
+  playAtmBeep: jest.fn(),
   stopBeep: jest.fn(),
 }));
 
@@ -31,117 +34,217 @@ function makeProvider(events: string[]): VoiceProvider {
   };
 }
 
+const SEQUENCE_MS = COUNTER_TO_BEEP_MS + BEEP_TO_VOICE_MS;
+const params = (language: 'fr' | 'en' = 'en') => ({
+  read: () => ({ amountMinor: 100, currency: 'USD' as const, language }),
+  t,
+});
+const settle = async () => {
+  for (let i = 0; i < 20; i += 1) await Promise.resolve();
+};
+const deferred = () => {
+  let release: () => void = () => undefined;
+  const promise = new Promise<void>((resolve) => (release = resolve));
+  return { promise, release: () => release() };
+};
+
 describe('tellerAnnouncer', () => {
-  afterEach(() => {
+  let events: string[];
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    events = [];
+    (playCashCounter as jest.Mock).mockImplementation(async () => {
+      events.push('counter');
+    });
+    (playAtmBeep as jest.Mock).mockImplementation(async () => {
+      events.push('beep');
+    });
+  });
+
+  afterEach(async () => {
+    await stopAnnouncement();
     setVoiceProvider(null);
+    jest.useRealTimers();
+    jest.restoreAllMocks();
     jest.clearAllMocks();
   });
 
-  it('finishes the beep before speaking, through the injected provider', async () => {
-    const events: string[] = [];
+  it('plays counter, silence, beep, silence, then the voice, each step after the previous', async () => {
     const provider = makeProvider(events);
     setVoiceProvider(provider);
-    (playBeep as jest.Mock).mockImplementation(async () => {
-      await Promise.resolve();
-      events.push('beep done');
+    // Mark the silences by recording the fake clock in each event.
+    const at = () => Date.now();
+    const start = at();
+    (playCashCounter as jest.Mock).mockImplementation(async () => {
+      events.push(`counter@${at() - start}`);
+    });
+    (playAtmBeep as jest.Mock).mockImplementation(async () => {
+      events.push(`beep@${at() - start}`);
+    });
+    (provider.speak as jest.Mock).mockImplementation(async (text: string) => {
+      events.push(`speak@${at() - start} ${text}`);
     });
 
-    await announceBalance({
-      read: () => ({ amountMinor: 125050, currency: 'EUR', language: 'fr' }),
-      t,
-    });
+    const pending = announceBalance(params('fr'));
+    await jest.advanceTimersByTimeAsync(COUNTER_TO_BEEP_MS + BEEP_TO_VOICE_MS);
+    await pending;
 
     expect(getVoiceProvider()).toBe(provider);
-    expect(events).toEqual(['stop', 'beep done', 'speak announce:1250 euros et 50 centimes:fr']);
-    expect(provider.speak).toHaveBeenCalledWith(expect.any(String), {
-      language: 'fr',
-    });
+    expect(COUNTER_TO_BEEP_MS).toBe(150);
+    expect(BEEP_TO_VOICE_MS).toBe(250);
+    expect(events).toEqual([
+      'stop',
+      'counter@0',
+      `beep@${COUNTER_TO_BEEP_MS}`,
+      `speak@${COUNTER_TO_BEEP_MS + BEEP_TO_VOICE_MS} announce:1 dollar:fr`,
+    ]);
+    expect(provider.speak).toHaveBeenCalledWith(expect.any(String), { language: 'fr' });
   });
 
-  it('still speaks when the beep fails', async () => {
-    const events: string[] = [];
+  it('starts the beep only when the counter ends, and the voice only when the beep ends', async () => {
     setVoiceProvider(makeProvider(events));
-    (playBeep as jest.Mock).mockRejectedValue(new Error('no audio'));
+    const counter = deferred();
+    const beep = deferred();
+    (playCashCounter as jest.Mock).mockReturnValue(counter.promise);
+    (playAtmBeep as jest.Mock).mockReturnValue(beep.promise);
 
-    await announceBalance({
-      read: () => ({ amountMinor: 100, currency: 'USD', language: 'en' }),
-      t,
-    });
+    const pending = announceBalance(params());
+    await jest.advanceTimersByTimeAsync(5000);
+    expect(playAtmBeep).not.toHaveBeenCalled();
+
+    counter.release();
+    await jest.advanceTimersByTimeAsync(COUNTER_TO_BEEP_MS - 1);
+    expect(playAtmBeep).not.toHaveBeenCalled();
+    await jest.advanceTimersByTimeAsync(1);
+    expect(playAtmBeep).toHaveBeenCalledTimes(1);
+
+    await jest.advanceTimersByTimeAsync(5000);
+    expect(events.some((event) => event.startsWith('speak'))).toBe(false);
+
+    beep.release();
+    await jest.advanceTimersByTimeAsync(BEEP_TO_VOICE_MS - 1);
+    expect(events.some((event) => event.startsWith('speak'))).toBe(false);
+    await jest.advanceTimersByTimeAsync(1);
+    await pending;
+    expect(events.at(-1)).toBe('speak announce:1 dollar:en');
+  });
+
+  it('still plays the rest of the sequence when a sound fails', async () => {
+    setVoiceProvider(makeProvider(events));
+    (playCashCounter as jest.Mock).mockRejectedValue(new Error('no audio'));
+    (playAtmBeep as jest.Mock).mockRejectedValue(new Error('no audio'));
+
+    const pending = announceBalance(params());
+    await jest.advanceTimersByTimeAsync(COUNTER_TO_BEEP_MS + BEEP_TO_VOICE_MS);
+    await pending;
 
     expect(events).toEqual(['stop', 'speak announce:1 dollar:en']);
   });
 
-  it('does not speak when stopped during the beep', async () => {
-    const events: string[] = [];
-    setVoiceProvider(makeProvider(events));
-    let release: () => void = () => undefined;
-    (playBeep as jest.Mock).mockReturnValue(new Promise<void>((resolve) => (release = resolve)));
-
-    const pending = announceBalance({
-      read: () => ({ amountMinor: 100, currency: 'USD', language: 'en' }),
-      t,
-    });
-    // Let announceBalance get past provider.stop() so the beep is really in progress.
-    for (let i = 0; i < 10 && (playBeep as jest.Mock).mock.calls.length === 0; i += 1) {
-      await Promise.resolve();
-    }
-    expect(playBeep).toHaveBeenCalledTimes(1);
-    await stopAnnouncement();
-    release();
-    await pending;
-
-    expect(playBeep).toHaveBeenCalledTimes(1);
-    expect(events).toEqual(['stop', 'stop']);
-    expect(events.some((event) => event.startsWith('speak'))).toBe(false);
-  });
-
-  it('stops the previous speech before speaking again', async () => {
-    const events: string[] = [];
+  it('stops the previous speech before the sequence', async () => {
     const provider = makeProvider(events);
     setVoiceProvider(provider);
-    (playBeep as jest.Mock).mockResolvedValue(undefined);
 
-    await announceBalance({
-      read: () => ({ amountMinor: 100, currency: 'USD', language: 'en' }),
-      t,
-    });
+    const pending = announceBalance(params());
+    await jest.advanceTimersByTimeAsync(COUNTER_TO_BEEP_MS + BEEP_TO_VOICE_MS);
+    await pending;
 
     const stopOrder = (provider.stop as jest.Mock).mock.invocationCallOrder[0];
-    const speakOrder = (provider.speak as jest.Mock).mock.invocationCallOrder[0];
-    expect(stopOrder).toBeLessThan(speakOrder as number);
+    const counterOrder = (playCashCounter as jest.Mock).mock.invocationCallOrder[0];
+    expect(stopOrder).toBeLessThan(counterOrder as number);
   });
 
-  it('interrupts the beep in progress when stopped', async () => {
-    setVoiceProvider(makeProvider([]));
-    await stopAnnouncement();
-    expect(stopBeep).toHaveBeenCalledTimes(1);
-  });
+  describe('stopping', () => {
+    it('during the counter: nothing else starts', async () => {
+      setVoiceProvider(makeProvider(events));
+      const counter = deferred();
+      (playCashCounter as jest.Mock).mockReturnValue(counter.promise);
+      const pending = announceBalance(params());
+      await settle();
+      await stopAnnouncement();
+      counter.release();
+      await jest.advanceTimersByTimeAsync(5000);
+      await pending;
 
-  it('stops without rejecting when the voice provider fails to stop', async () => {
-    const provider = makeProvider([]);
-    provider.stop = jest.fn(async () => {
-      throw new Error('stop failed');
+      expect(stopBeep).toHaveBeenCalled();
+      expect(playAtmBeep).not.toHaveBeenCalled();
+      expect(events.some((event) => event.startsWith('speak'))).toBe(false);
+      expect(jest.getTimerCount()).toBe(0);
     });
-    setVoiceProvider(provider);
-    const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
 
-    await expect(stopAnnouncement()).resolves.toBeUndefined();
-    expect(stopBeep).toHaveBeenCalledTimes(1);
-    expect(useAnnouncementState.getState().active).toBe(false);
-    expect(warn).toHaveBeenCalledWith('Stopping the voice failed', expect.any(Error));
-    warn.mockRestore();
+    it('during the silence after the counter: no beep, no voice', async () => {
+      setVoiceProvider(makeProvider(events));
+      const pending = announceBalance(params());
+      await jest.advanceTimersByTimeAsync(COUNTER_TO_BEEP_MS / 2);
+      await stopAnnouncement();
+      await jest.advanceTimersByTimeAsync(5000);
+      await pending;
+
+      expect(playAtmBeep).not.toHaveBeenCalled();
+      expect(events.some((event) => event.startsWith('speak'))).toBe(false);
+      expect(jest.getTimerCount()).toBe(0);
+    });
+
+    it('during the beep: the voice never starts', async () => {
+      setVoiceProvider(makeProvider(events));
+      const beep = deferred();
+      (playAtmBeep as jest.Mock).mockReturnValue(beep.promise);
+      const pending = announceBalance(params());
+      await jest.advanceTimersByTimeAsync(COUNTER_TO_BEEP_MS);
+      expect(playAtmBeep).toHaveBeenCalledTimes(1);
+      await stopAnnouncement();
+      beep.release();
+      await jest.advanceTimersByTimeAsync(5000);
+      await pending;
+
+      expect(events.some((event) => event.startsWith('speak'))).toBe(false);
+      expect(jest.getTimerCount()).toBe(0);
+    });
+
+    it('during the silence after the beep: the voice never starts', async () => {
+      setVoiceProvider(makeProvider(events));
+      const pending = announceBalance(params());
+      await jest.advanceTimersByTimeAsync(COUNTER_TO_BEEP_MS + BEEP_TO_VOICE_MS / 2);
+      expect(playAtmBeep).toHaveBeenCalledTimes(1);
+      await stopAnnouncement();
+      await jest.advanceTimersByTimeAsync(5000);
+      await pending;
+
+      expect(events.some((event) => event.startsWith('speak'))).toBe(false);
+      expect(jest.getTimerCount()).toBe(0);
+      expect(useAnnouncementState.getState().active).toBe(false);
+    });
+
+    it('interrupts the sound in progress even when idle', async () => {
+      setVoiceProvider(makeProvider([]));
+      await stopAnnouncement();
+      expect(stopBeep).toHaveBeenCalledTimes(1);
+    });
+
+    it('without rejecting when the voice provider fails to stop', async () => {
+      const provider = makeProvider([]);
+      provider.stop = jest.fn(async () => {
+        throw new Error('stop failed');
+      });
+      setVoiceProvider(provider);
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+      await expect(stopAnnouncement()).resolves.toBeUndefined();
+      expect(stopBeep).toHaveBeenCalledTimes(1);
+      expect(useAnnouncementState.getState().active).toBe(false);
+      expect(warn).toHaveBeenCalledWith('Stopping the voice failed', expect.any(Error));
+    });
   });
 
   it('announces once and goes inactive when the loop is off', async () => {
     setVoiceProvider(makeProvider([]));
-    (playBeep as jest.Mock).mockResolvedValue(undefined);
-    const pending = announceBalance({
-      read: () => ({ amountMinor: 100, currency: 'USD', language: 'en' }),
-      t,
-    });
+    const pending = announceBalance(params());
     expect(useAnnouncementState.getState().active).toBe(true);
+    await jest.advanceTimersByTimeAsync(SEQUENCE_MS);
     await pending;
-    expect(playBeep).toHaveBeenCalledTimes(1);
+    expect(playCashCounter).toHaveBeenCalledTimes(1);
+    expect(playAtmBeep).toHaveBeenCalledTimes(1);
     expect(useAnnouncementState.getState().active).toBe(false);
   });
 
@@ -151,21 +254,16 @@ describe('tellerAnnouncer', () => {
       throw new Error('no voice');
     });
     setVoiceProvider(provider);
-    (playBeep as jest.Mock).mockResolvedValue(undefined);
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
 
-    await expect(
-      announceBalance({
-        read: () => ({ amountMinor: 100, currency: 'USD', language: 'en' }),
-        t,
-      }),
-    ).resolves.toBeUndefined();
+    const pending = announceBalance(params());
+    await jest.advanceTimersByTimeAsync(SEQUENCE_MS);
+    await expect(pending).resolves.toBeUndefined();
     expect(useAnnouncementState.getState().active).toBe(false);
     warn.mockRestore();
   });
 
   describe('loop', () => {
-    let events: string[];
     let balance: number;
     let appStateHandler: (state: string) => void;
     const removeAppState = jest.fn();
@@ -176,18 +274,12 @@ describe('tellerAnnouncer', () => {
         t,
         loop: true,
       });
-    const settle = async () => {
-      for (let i = 0; i < 20; i += 1) await Promise.resolve();
-    };
+    // One full cycle: both silences, the sounds and the voice being instant.
+    const cycle = () => jest.advanceTimersByTimeAsync(SEQUENCE_MS);
 
     beforeEach(() => {
-      jest.useFakeTimers();
-      events = [];
       balance = 100;
       setVoiceProvider(makeProvider(events));
-      (playBeep as jest.Mock).mockImplementation(async () => {
-        events.push('beep');
-      });
       jest.spyOn(AppState, 'addEventListener').mockImplementation(((
         _type: string,
         handler: (state: string) => void,
@@ -197,39 +289,37 @@ describe('tellerAnnouncer', () => {
       }) as never);
     });
 
-    afterEach(async () => {
-      await stopAnnouncement();
-      jest.useRealTimers();
-      jest.restoreAllMocks();
-      removeAppState.mockClear();
-    });
+    afterEach(() => removeAppState.mockClear());
 
-    it('chains cycles separated by the pause, with the balance read again each time', async () => {
+    it('replays the whole sequence at every cycle, with the balance read again each time', async () => {
       void start();
-      await settle();
-      expect(events).toEqual(['stop', 'beep', 'speak announce:1 dollar:en']);
+      await cycle();
+      expect(events).toEqual(['stop', 'counter', 'beep', 'speak announce:1 dollar:en']);
       expect(useAnnouncementState.getState().active).toBe(true);
 
       // Still inside the pause: nothing new yet.
       await jest.advanceTimersByTimeAsync(LOOP_PAUSE_MS - 1);
-      expect(playBeep).toHaveBeenCalledTimes(1);
+      expect(playCashCounter).toHaveBeenCalledTimes(1);
 
       balance = 250;
       await jest.advanceTimersByTimeAsync(1);
-      await settle();
-      expect(playBeep).toHaveBeenCalledTimes(2);
-      expect(events.at(-1)).toBe('speak announce:2 dollars and 50 cents:en');
+      await cycle();
+      expect(events.slice(4)).toEqual([
+        'stop',
+        'counter',
+        'beep',
+        'speak announce:2 dollars and 50 cents:en',
+      ]);
       expect(useAnnouncementState.getState().active).toBe(true);
     });
 
     it('stops during the pause without starting another cycle', async () => {
       void start();
-      await settle();
+      await cycle();
       await jest.advanceTimersByTimeAsync(500);
       await stopAnnouncement();
       await jest.advanceTimersByTimeAsync(LOOP_PAUSE_MS * 3);
-      await settle();
-      expect(playBeep).toHaveBeenCalledTimes(1);
+      expect(playCashCounter).toHaveBeenCalledTimes(1);
       expect(useAnnouncementState.getState().active).toBe(false);
       expect(jest.getTimerCount()).toBe(0);
     });
@@ -242,7 +332,7 @@ describe('tellerAnnouncer', () => {
       setVoiceProvider(provider);
 
       const pending = start();
-      await settle();
+      await cycle();
       expect(provider.speak).toHaveBeenCalledTimes(1);
       await stopAnnouncement();
       await pending;
@@ -252,30 +342,32 @@ describe('tellerAnnouncer', () => {
       expect(useAnnouncementState.getState().active).toBe(false);
     });
 
-    it('stops during the beep: the voice never starts', async () => {
-      let release: () => void = () => undefined;
-      (playBeep as jest.Mock).mockReturnValue(new Promise<void>((resolve) => (release = resolve)));
-      const pending = start();
-      await settle();
+    it('stops during the counter of the second cycle', async () => {
+      void start();
+      await cycle();
+      await jest.advanceTimersByTimeAsync(LOOP_PAUSE_MS);
+      const counter = deferred();
+      (playCashCounter as jest.Mock).mockReturnValue(counter.promise);
+      await jest.advanceTimersByTimeAsync(0);
       await stopAnnouncement();
-      release();
-      await pending;
-      expect(events.some((event) => event.startsWith('speak'))).toBe(false);
+      counter.release();
+      await jest.advanceTimersByTimeAsync(LOOP_PAUSE_MS * 3);
+      expect(playAtmBeep).toHaveBeenCalledTimes(1);
       expect(jest.getTimerCount()).toBe(0);
     });
 
     it('does not stack cycles when started again while looping', async () => {
       void start();
-      await settle();
+      await cycle();
       void start();
-      await settle();
+      await cycle();
       await jest.advanceTimersByTimeAsync(LOOP_PAUSE_MS);
-      await settle();
+      await cycle();
       // Two starts played one cycle each, then only the second loop continued.
-      expect(playBeep).toHaveBeenCalledTimes(3);
+      expect(playCashCounter).toHaveBeenCalledTimes(3);
       await jest.advanceTimersByTimeAsync(LOOP_PAUSE_MS);
-      await settle();
-      expect(playBeep).toHaveBeenCalledTimes(4);
+      await cycle();
+      expect(playCashCounter).toHaveBeenCalledTimes(4);
     });
 
     it('reads the loop setting before every cycle and ends when it turns off', async () => {
@@ -285,17 +377,16 @@ describe('tellerAnnouncer', () => {
         t,
         loop: () => repeat,
       });
-      await settle();
+      await cycle();
       await jest.advanceTimersByTimeAsync(LOOP_PAUSE_MS);
-      await settle();
-      expect(playBeep).toHaveBeenCalledTimes(2);
+      await cycle();
+      expect(playCashCounter).toHaveBeenCalledTimes(2);
 
       // Turned off during the pause: no new cycle once the pause ends.
       await jest.advanceTimersByTimeAsync(LOOP_PAUSE_MS / 2);
       repeat = false;
       await jest.advanceTimersByTimeAsync(LOOP_PAUSE_MS * 3);
-      await settle();
-      expect(playBeep).toHaveBeenCalledTimes(2);
+      expect(playCashCounter).toHaveBeenCalledTimes(2);
       expect(useAnnouncementState.getState().active).toBe(false);
       expect(jest.getTimerCount()).toBe(0);
     });
@@ -307,7 +398,9 @@ describe('tellerAnnouncer', () => {
       });
       setVoiceProvider(provider);
       const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
-      await start();
+      const pending = start();
+      await cycle();
+      await pending;
       expect(warn).toHaveBeenCalledWith('Balance announcement failed', expect.any(Error));
       expect(useAnnouncementState.getState().active).toBe(false);
       await jest.advanceTimersByTimeAsync(LOOP_PAUSE_MS * 2);
@@ -317,7 +410,7 @@ describe('tellerAnnouncer', () => {
 
     it('stops when the app goes to the background but not when it becomes inactive', async () => {
       void start();
-      await settle();
+      await cycle();
       appStateHandler('inactive');
       appStateHandler('active');
       expect(useAnnouncementState.getState().active).toBe(true);
@@ -327,7 +420,7 @@ describe('tellerAnnouncer', () => {
       expect(useAnnouncementState.getState().active).toBe(false);
       expect(stopBeep).toHaveBeenCalled();
       await jest.advanceTimersByTimeAsync(LOOP_PAUSE_MS * 2);
-      expect(playBeep).toHaveBeenCalledTimes(1);
+      expect(playCashCounter).toHaveBeenCalledTimes(1);
       expect(removeAppState).toHaveBeenCalled();
     });
   });

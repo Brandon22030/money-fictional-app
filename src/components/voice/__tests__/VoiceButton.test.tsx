@@ -3,19 +3,37 @@ import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { VoiceButton } from '@/src/components/voice/VoiceButton';
 import i18n from '@/src/i18n';
 import { useAppStore } from '@/src/store/useAppStore';
-import { LOOP_PAUSE_MS, setVoiceProvider, stopAnnouncement } from '@/src/services/voice';
+import {
+  BEEP_TO_VOICE_MS,
+  COUNTER_TO_BEEP_MS,
+  LOOP_PAUSE_MS,
+  setVoiceProvider,
+  stopAnnouncement,
+} from '@/src/services/voice';
 import type { VoiceProvider } from '@/src/services/voice';
 
 jest.mock('@/src/services/voice/beep', () => ({
-  playBeep: jest.fn(async () => undefined),
+  playCashCounter: jest.fn(async () => undefined),
+  playAtmBeep: jest.fn(async () => undefined),
   stopBeep: jest.fn(),
 }));
+
+// The sounds are mocked (instant), so only the two silences of the sequence remain before the voice.
+const SILENCES_MS = COUNTER_TO_BEEP_MS + BEEP_TO_VOICE_MS;
+
+async function press(testID: string) {
+  await fireEvent.press(screen.getByTestId(testID));
+  await act(async () => {
+    await jest.advanceTimersByTimeAsync(SILENCES_MS);
+  });
+}
 
 describe('VoiceButton', () => {
   let finishSpeech: () => void = () => undefined;
   let provider: VoiceProvider;
 
   beforeEach(async () => {
+    jest.useFakeTimers();
     await i18n.changeLanguage('fr');
     useAppStore.getState().resetAll();
     useAppStore.setState({
@@ -43,20 +61,20 @@ describe('VoiceButton', () => {
       await stopAnnouncement();
     });
     setVoiceProvider(null);
+    jest.useRealTimers();
   });
 
   it('announces on press and stops on a second press', async () => {
     await render(<VoiceButton testID="voice" />);
-    const button = screen.getByTestId('voice');
 
-    await fireEvent.press(button);
+    await press('voice');
     expect(provider.speak).toHaveBeenCalledWith(
       'Votre solde bancaire actuel est de 1250 euros et 50 centimes',
       { language: 'fr' },
     );
     expect(screen.getByLabelText('Arrêter')).toBeTruthy();
 
-    await fireEvent.press(screen.getByTestId('voice'));
+    await press('voice');
     expect(provider.stop).toHaveBeenCalled();
     expect(screen.getByLabelText('Écouter')).toBeTruthy();
   });
@@ -91,7 +109,7 @@ describe('VoiceButton', () => {
       language: 'en',
     });
     await render(<VoiceButton testID="voice" variant="tile" />);
-    await fireEvent.press(screen.getByTestId('voice'));
+    await press('voice');
     expect(provider.speak).toHaveBeenCalledWith('Your current bank balance is 1 dollar', {
       language: 'en',
     });
@@ -114,11 +132,11 @@ describe('VoiceButton', () => {
     provider.stop = jest.fn(async () => undefined);
 
     await render(<VoiceButton testID="voice" />);
-    await fireEvent.press(screen.getByTestId('voice'));
+    await press('voice');
     expect(screen.getByLabelText('Arrêter')).toBeTruthy();
-    await fireEvent.press(screen.getByTestId('voice'));
+    await press('voice');
     expect(screen.getByLabelText('Écouter')).toBeTruthy();
-    await fireEvent.press(screen.getByTestId('voice'));
+    await press('voice');
     expect(screen.getByLabelText('Arrêter')).toBeTruthy();
     expect(pending).toHaveLength(2);
 
@@ -140,17 +158,17 @@ describe('VoiceButton', () => {
         <VoiceButton testID="card" variant="tile" />
       </>,
     );
-    await fireEvent.press(screen.getByTestId('home'));
+    await press('home');
     expect(screen.getAllByLabelText('Arrêter')).toHaveLength(2);
 
-    await fireEvent.press(screen.getByTestId('card'));
+    await press('card');
     expect(screen.getAllByLabelText('Écouter')).toHaveLength(2);
     expect(provider.stop).toHaveBeenCalled();
   });
 
   it('keeps announcing when the button unmounts, and a new one shows Stop', async () => {
     const first = await render(<VoiceButton testID="voice" />);
-    await fireEvent.press(screen.getByTestId('voice'));
+    await press('voice');
     await first.unmount();
     expect(provider.speak).toHaveBeenCalledTimes(1);
 
@@ -161,13 +179,11 @@ describe('VoiceButton', () => {
   describe('with the repeat switch on', () => {
     beforeEach(() => {
       useAppStore.getState().setRepeatAnnouncement(true);
-      jest.useFakeTimers();
     });
-    afterEach(() => jest.useRealTimers());
 
     it('loops with the current balance until Stop is pressed', async () => {
       await render(<VoiceButton testID="voice" />);
-      await fireEvent.press(screen.getByTestId('voice'));
+      await press('voice');
       expect(provider.speak).toHaveBeenCalledTimes(1);
 
       await act(async () => {
@@ -177,7 +193,7 @@ describe('VoiceButton', () => {
 
       await act(async () => {
         useAppStore.getState().setBalance(300);
-        await jest.advanceTimersByTimeAsync(LOOP_PAUSE_MS);
+        await jest.advanceTimersByTimeAsync(LOOP_PAUSE_MS + SILENCES_MS);
       });
       expect(provider.speak).toHaveBeenCalledTimes(2);
       expect(provider.speak).toHaveBeenLastCalledWith(
@@ -185,7 +201,7 @@ describe('VoiceButton', () => {
         { language: 'fr' },
       );
 
-      await fireEvent.press(screen.getByTestId('voice'));
+      await press('voice');
       expect(screen.getByLabelText('Écouter')).toBeTruthy();
       await act(async () => {
         await jest.advanceTimersByTimeAsync(LOOP_PAUSE_MS * 3);
@@ -198,7 +214,7 @@ describe('VoiceButton', () => {
       ['the app is reset', () => useAppStore.getState().resetAll()],
     ])('ends the loop when %s during the pause', async (_name, change) => {
       await render(<VoiceButton testID="voice" />);
-      await fireEvent.press(screen.getByTestId('voice'));
+      await press('voice');
       await act(async () => {
         finishSpeech();
       });
