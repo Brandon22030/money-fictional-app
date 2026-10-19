@@ -1,23 +1,23 @@
-import { useRouter } from "expo-router";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { Alert, ScrollView, StyleSheet, View } from "react-native";
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 
-import { BankCard } from "@/src/components/card";
-import { AppText, Screen } from "@/src/components/ui";
-import { VoiceButton } from "@/src/components/voice/VoiceButton";
-import { useBalanceParts } from "@/src/store/selectors";
-import { useAppStore } from "@/src/store/useAppStore";
-import { spacing } from "@/src/theme";
+import { BankCard } from '@/src/components/card';
+import { AppText, Screen } from '@/src/components/ui';
+import { VoiceButton } from '@/src/components/voice/VoiceButton';
+import { useBalanceParts } from '@/src/store/selectors';
+import { useAppStore } from '@/src/store/useAppStore';
+import { spacing } from '@/src/theme';
 
-import { ActionTile } from "./ActionTile";
-import { GoldLogo } from "./GoldLogo";
+import { ActionTile } from './ActionTile';
+import { GoldLogo } from './GoldLogo';
 
 /** Keeps the grid clear of the floating tab bar. */
 const TAB_BAR_CLEARANCE = 120;
 
 export function CardScreen() {
-  const { t } = useTranslation("cardScreen");
+  const { t } = useTranslation('cardScreen');
   const router = useRouter();
   const [flipped, setFlipped] = useState(false);
 
@@ -33,16 +33,16 @@ export function CardScreen() {
   const goTo = (mode: string) => () => router.push({ pathname: '/keypad', params: { mode } });
 
   const confirmNewNumber = () => {
-    Alert.alert(t("newNumber.title"), t("newNumber.message"), [
-      { text: t("newNumber.cancel"), style: "cancel" },
-      { text: t("newNumber.confirm"), onPress: regenerateCard },
+    Alert.alert(t('newNumber.title'), t('newNumber.message'), [
+      { text: t('newNumber.cancel'), style: 'cancel' },
+      { text: t('newNumber.confirm'), onPress: regenerateCard },
     ]);
   };
 
   return (
     <Screen testID="screen-card">
       <ScrollView contentContainerStyle={styles.content}>
-        <AppText variant="h2">{t("title")}</AppText>
+        <AppText variant="h2">{t('title')}</AppText>
         <BankCard
           testID="card-screen-card"
           holderName={holderName}
@@ -59,28 +59,28 @@ export function CardScreen() {
             <ActionTile
               testID="action-flip"
               icon="refresh-cw"
-              label={t("actions.flip")}
+              label={t('actions.flip')}
               onPress={toggleFlip}
             />
             <ActionTile
               testID="action-set"
               icon="edit-3"
-              label={t("actions.set")}
-              onPress={goTo("set")}
+              label={t('actions.set')}
+              onPress={goTo('set')}
             />
           </View>
           <View style={styles.row}>
             <ActionTile
               testID="action-pay"
               icon="credit-card"
-              label={t("actions.pay")}
-              onPress={goTo("pay")}
+              label={t('actions.pay')}
+              onPress={goTo('pay')}
             />
             <ActionTile
               testID="action-withdraw"
               icon="arrow-up-right"
-              label={t("actions.withdraw")}
-              onPress={goTo("withdraw")}
+              label={t('actions.withdraw')}
+              onPress={goTo('withdraw')}
             />
           </View>
           <View style={styles.row}>
@@ -96,7 +96,7 @@ export function CardScreen() {
             <ActionTile
               testID="action-new-number"
               icon="shuffle"
-              label={t("actions.newNumber")}
+              label={t('actions.newNumber')}
               onPress={confirmNewNumber}
             />
           </View>
@@ -113,6 +113,6 @@ const styles = StyleSheet.create({
     gap: spacing.xl,
   },
   grid: { gap: spacing.md },
-  row: { flexDirection: "row", gap: spacing.md },
-  cell: { flex: 1, justifyContent: "center" },
+  row: { flexDirection: 'row', gap: spacing.md },
+  cell: { flex: 1, justifyContent: 'center' },
 });

@@ -1,3 +1,3 @@
-import { KeypadScreen } from "@/src/features/transfer/KeypadScreen";
+import { KeypadScreen } from '@/src/features/transfer/KeypadScreen';
 
 export default KeypadScreen;

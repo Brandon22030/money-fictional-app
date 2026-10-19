@@ -1,28 +1,28 @@
-import { Feather } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Feather } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Pressable, StyleSheet, View } from 'react-native';
 
-import { NumericKeypad } from "@/src/components/keypad/NumericKeypad";
-import { useAmountInput } from "@/src/components/keypad/useAmountInput";
-import { AppText, Screen } from "@/src/components/ui";
-import { CURRENCIES } from "@/src/config/locale";
-import { findFavorite } from "@/src/data/favorites";
-import { isCurrencyPrefixed } from "@/src/domain/money";
-import type { IntentionKind } from "@/src/domain/types";
-import { useAppStore } from "@/src/store/useAppStore";
-import { colors, radius, spacing } from "@/src/theme";
+import { NumericKeypad } from '@/src/components/keypad/NumericKeypad';
+import { useAmountInput } from '@/src/components/keypad/useAmountInput';
+import { AppText, Screen } from '@/src/components/ui';
+import { CURRENCIES } from '@/src/config/locale';
+import { findFavorite } from '@/src/data/favorites';
+import { isCurrencyPrefixed } from '@/src/domain/money';
+import type { IntentionKind } from '@/src/domain/types';
+import { useAppStore } from '@/src/store/useAppStore';
+import { colors, radius, spacing } from '@/src/theme';
 
-export type KeypadMode = "set" | IntentionKind;
+export type KeypadMode = 'set' | IntentionKind;
 
-type Notice = "insufficient" | "tooLarge";
+type Notice = 'insufficient' | 'tooLarge';
 
-const MODES: KeypadMode[] = ["set", "receive", "send", "pay", "withdraw"];
+const MODES: KeypadMode[] = ['set', 'receive', 'send', 'pay', 'withdraw'];
 
 function parseMode(value: string | string[] | undefined): KeypadMode {
   const raw = Array.isArray(value) ? value[0] : value;
-  return MODES.find((mode) => mode === raw) ?? "set";
+  return MODES.find((mode) => mode === raw) ?? 'set';
 }
 
 function firstParam(value: string | string[] | undefined): string | undefined {
@@ -31,9 +31,9 @@ function firstParam(value: string | string[] | undefined): string | undefined {
 }
 
 export function KeypadScreen() {
-  const { t } = useTranslation("transfer");
-  const { t: tKeypad } = useTranslation("keypad");
-  const { t: tCommon } = useTranslation("common");
+  const { t } = useTranslation('transfer');
+  const { t: tKeypad } = useTranslation('keypad');
+  const { t: tCommon } = useTranslation('common');
   const router = useRouter();
   const params = useLocalSearchParams<{ mode?: string; contact?: string }>();
 
@@ -50,8 +50,8 @@ export function KeypadScreen() {
 
   const { display, minor, press } = useAmountInput({
     currency,
-    initialMinor: mode === "set" ? balanceMinor : 0,
-    decimalSeparator: tKeypad("separator"),
+    initialMinor: mode === 'set' ? balanceMinor : 0,
+    decimalSeparator: tKeypad('separator'),
   });
   const [notice, setNotice] = useState<Notice | null>(null);
 
@@ -60,7 +60,7 @@ export function KeypadScreen() {
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace("/");
+      router.replace('/');
     }
   };
 
@@ -70,11 +70,11 @@ export function KeypadScreen() {
   };
 
   // A balance of zero is a valid choice; an intention needs a positive amount.
-  const disabled = mode === "set" ? false : minor <= 0;
+  const disabled = mode === 'set' ? false : minor <= 0;
 
   const onValidate = () => {
     if (disabled) return;
-    if (mode === "set") {
+    if (mode === 'set') {
       setBalance(minor);
       close();
       return;
@@ -84,7 +84,7 @@ export function KeypadScreen() {
       minor,
       favorite
         ? {
-            labelKey: "content:intentions.sharedWith",
+            labelKey: 'content:intentions.sharedWith',
             labelParams: { contact: favorite.id },
           }
         : undefined,
@@ -92,7 +92,7 @@ export function KeypadScreen() {
     if (result.ok) {
       close();
     } else {
-      setNotice(result.reason === "insufficient" ? "insufficient" : "tooLarge");
+      setNotice(result.reason === 'insufficient' ? 'insufficient' : 'tooLarge');
     }
   };
 
@@ -105,7 +105,7 @@ export function KeypadScreen() {
         <Pressable
           testID="keypad-close"
           accessibilityRole="button"
-          accessibilityLabel={t("close")}
+          accessibilityLabel={t('close')}
           onPress={close}
           style={styles.close}
         >
@@ -122,7 +122,7 @@ export function KeypadScreen() {
         </AppText>
         {contactName ? (
           <AppText variant="bodyStrong" testID="keypad-contact">
-            {t("contact", { name: contactName })}
+            {t('contact', { name: contactName })}
           </AppText>
         ) : null}
       </View>
@@ -148,7 +148,7 @@ export function KeypadScreen() {
           <AppText
             variant="body"
             tone="onLightMuted"
-            testID={notice === "insufficient" ? "keypad-insufficient" : "keypad-too-large"}
+            testID={notice === 'insufficient' ? 'keypad-insufficient' : 'keypad-too-large'}
             accessibilityLiveRegion="polite"
             style={styles.message}
           >
@@ -166,18 +166,18 @@ export function KeypadScreen() {
       <Pressable
         testID="keypad-validate"
         accessibilityRole="button"
-        accessibilityLabel={t("validate")}
+        accessibilityLabel={t('validate')}
         accessibilityState={{ disabled }}
         disabled={disabled}
         onPress={onValidate}
         style={[styles.validate, disabled ? styles.validateDisabled : null]}
       >
         <AppText variant="bodyStrong" tone="onDark">
-          {t("validate")}
+          {t('validate')}
         </AppText>
       </Pressable>
       <AppText variant="caption" tone="onLightMuted" style={styles.notice}>
-        {tCommon("simulationNotice")}
+        {tCommon('simulationNotice')}
       </AppText>
     </Screen>
   );
@@ -185,48 +185,48 @@ export function KeypadScreen() {
 
 const styles = StyleSheet.create({
   screen: {
-    paddingHorizontal: spacing["2xl"],
-    paddingBottom: spacing["3xl"],
+    paddingHorizontal: spacing['2xl'],
+    paddingBottom: spacing['3xl'],
     gap: spacing.lg,
   },
   header: {
-    alignItems: "flex-end",
+    alignItems: 'flex-end',
   },
   close: {
     width: 40,
     height: 40,
     borderRadius: radius.pill,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: colors.glassLight,
   },
   titles: {
-    alignItems: "center",
+    alignItems: 'center',
     gap: spacing.xs,
   },
   amountRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'center',
   },
   messageSlot: {
     minHeight: 44,
-    justifyContent: "center",
+    justifyContent: 'center',
   },
   message: {
-    textAlign: "center",
+    textAlign: 'center',
   },
   validate: {
     height: 56,
     borderRadius: radius.pill,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: colors.navy800,
   },
   validateDisabled: {
     opacity: 0.4,
   },
   notice: {
-    textAlign: "center",
+    textAlign: 'center',
   },
 });
