@@ -54,7 +54,7 @@ npm start
 
 ## Régénérer les assets de marque
 
-Les icônes, le splash et le logo sont générés depuis des SVG par `assets/brand/build.mjs`, qui rend les PNG avec Playwright. Playwright n'est volontairement pas dans les `devDependencies` du projet : il faut le fournir à part.
+Les icônes, l'image du splash (`splash-icon.png`, le logo en 1024 px sur fond transparent, posé sur `#0B1F40` par `expo-splash-screen`) et le logo sont générés depuis des SVG par `assets/brand/build.mjs`, qui rend les PNG avec Playwright. Playwright n'est volontairement pas dans les `devDependencies` du projet : il faut le fournir à part.
 
 ```
 PLAYWRIGHT_PATH=<dossier contenant node_modules/playwright> \

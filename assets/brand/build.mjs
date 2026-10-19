@@ -120,10 +120,6 @@ files['icon-full.svg'] = svg(1024, 1024, iconBody(em, 0));
 // Emblem spans 640 units; the safe zone is 66 percent of 1024 (676px), so scale 1.0 fits.
 files['adaptive.svg'] = svg(1024, 1024, `<g transform="translate(512 512) scale(1.0)">${em}</g>`);
 files['logo-mark.svg'] = svg(256, 256, `<g transform="translate(128 128) scale(0.38)">${em}</g>`);
-files['splash.svg'] = svg(1284, 2778, `<rect width="1284" height="2778" fill="url(#bg2)"/>
-<g transform="translate(642 1250) scale(1.15)">${em}</g>
-<text x="642" y="1820" text-anchor="middle" font-family="Manrope, Inter, system-ui, sans-serif" font-size="120" font-weight="700" fill="#0F2A55">Abonda</text>`,
-  `<linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EAF3FC"/><stop offset="0.55" stop-color="#B9D3EE"/><stop offset="1" stop-color="#7DB8F0"/></linearGradient>`);
 // Flat gold monogram for use on the navy card (no squircle).
 files['logo-gold.svg'] = svg(256, 256, `<g transform="translate(128 128) scale(0.8)">
 <path d="${aPath(-112, 100, 94, 30)}" fill="none" stroke="url(#gold)" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
@@ -134,7 +130,8 @@ for (const [name, content] of Object.entries(files)) writeFileSync(join(here, na
 shots.push(
   ['icon-full.svg', 'icon.png', 1024, 1024, false],
   ['adaptive.svg', 'adaptive-icon.png', 1024, 1024, true],
-  ['splash.svg', 'splash.png', 1284, 2778, false],
+  // Splash: the logo mark rendered large enough to stay sharp at imageWidth 200 on 3x screens.
+  ['logo-mark.svg', 'splash-icon.png', 1024, 1024, true],
   ['icon-full.svg', 'favicon.png', 48, 48, false],
   ['logo-mark.svg', 'logo-mark.png', 256, 256, true],
 );
