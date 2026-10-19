@@ -197,3 +197,21 @@ describe('TransactionTicket amount contrast', () => {
     }
   });
 });
+
+describe('TransactionTicket amount overflow', () => {
+  it('keeps a huge amount on one shrinkable line', async () => {
+    await i18n.changeLanguage('fr');
+    await render(
+      <TransactionTicket
+        title="Salaire"
+        amountLabel="4 999 999 999 999 FCFA"
+        direction="in"
+        date={DATE}
+        locale="fr"
+      />,
+    );
+    const amount = screen.getByText('+4 999 999 999 999 FCFA');
+    expect(amount.props.numberOfLines).toBe(1);
+    expect(amount.props.adjustsFontSizeToFit).toBe(true);
+  });
+});

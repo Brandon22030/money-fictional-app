@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react-native';
 
 import '@/src/i18n';
-import { RingGauge, type RingSegment } from '../RingGauge';
+import { CENTER_MIN_FONT_SIZE, RingGauge, centerFontSize, type RingSegment } from '../RingGauge';
 
 const segments: RingSegment[] = [
   {
@@ -66,5 +66,20 @@ describe('RingGauge', () => {
     );
 
     expect(screen.queryByTestId('ring-segment-out')).toBeNull();
+  });
+});
+
+describe('centerFontSize', () => {
+  it('keeps 44 for short labels and shrinks the long ones to fit the ring hole', () => {
+    expect(centerFontSize('186k')).toBe(44);
+    expect(centerFontSize('10000000 M')).toBeLessThan(25);
+    expect(centerFontSize('10000000 M') * 0.6 * '10000000 M'.length).toBeLessThanOrEqual(130);
+  });
+
+  it('never goes below the legibility floor of 16 for very long labels', () => {
+    expect(CENTER_MIN_FONT_SIZE).toBe(16);
+    expect(centerFontSize('9'.repeat(14))).toBe(16);
+    expect(centerFontSize('9'.repeat(200))).toBe(16);
+    expect(centerFontSize('9'.repeat(13))).toBeGreaterThan(16);
   });
 });

@@ -73,7 +73,14 @@ export function TransactionTicket({
             <AppText variant="bodyStrong" style={styles.title} numberOfLines={2}>
               {title}
             </AppText>
-            <AppText variant="title" tabular style={styles.amount}>
+            <AppText
+              variant="title"
+              tabular
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.5}
+              style={styles.amount}
+            >
               {signedAmount}
             </AppText>
           </View>
@@ -130,6 +137,7 @@ const styles = StyleSheet.create({
   },
   main: {
     flex: 1,
+    minWidth: 0,
     gap: 4,
   },
   title: {

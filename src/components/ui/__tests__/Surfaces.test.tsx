@@ -90,3 +90,13 @@ describe('NavyCard', () => {
     expect(StyleSheet.flatten(content?.props.style)).toMatchObject({ padding: 20 });
   });
 });
+
+describe('Pill overflow', () => {
+  it('keeps a long label on one shrinkable line inside the container width', async () => {
+    await render(<Pill testID="p" label="+4 999 999 999 999 FCFA aujourd'hui" />);
+    const label = screen.getByText("+4 999 999 999 999 FCFA aujourd'hui");
+    expect(label.props.numberOfLines).toBe(1);
+    expect(label.props.adjustsFontSizeToFit).toBe(true);
+    expect(StyleSheet.flatten(screen.getByTestId('p').props.style).maxWidth).toBe('100%');
+  });
+});
