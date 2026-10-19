@@ -6,20 +6,5 @@
   "close": "Close",
   "save": "Save",
   "back": "Back",
-  "simulationNotice": "FICTIONAL - SIMULATION",
-  "tabs": {
-    "home": "Home",
-    "card": "Card",
-    "abundance": "Abundance",
-    "history": "History",
-    "settings": "Settings"
-  },
-  "placeholder": {
-    "home": "Home",
-    "card": "Card",
-    "abundance": "Abundance",
-    "history": "History",
-    "settings": "Settings",
-    "keypad": "Keypad"
-  }
+  "simulationNotice": "FICTIONAL - SIMULATION"
 }

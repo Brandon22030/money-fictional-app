@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { TabBar } from '@/src/components/navigation/TabBar';
 
 export default function TabsLayout() {
-  const { t } = useTranslation();
+  const { t } = useTranslation('nav');
 
   return (
     <Tabs tabBar={(props) => <TabBar {...props} />} screenOptions={{ headerShown: false }}>

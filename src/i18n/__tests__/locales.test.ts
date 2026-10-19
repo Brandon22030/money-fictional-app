@@ -44,3 +44,20 @@ describe('locales', () => {
     expect(offenders).toEqual([]);
   });
 });
+
+describe('navigation labels', () => {
+  it('lives only in the nav namespace', () => {
+    for (const lang of ['fr', 'en'] as const) {
+      expect(resources[lang].common).not.toHaveProperty('tabs');
+      expect(resources[lang].common).not.toHaveProperty('placeholder');
+      expect(Object.keys(resources[lang].nav.tabs).sort()).toEqual(
+        ['abundance', 'card', 'history', 'home', 'settings'],
+      );
+    }
+  });
+
+  it('is read from nav by the tabs layout', () => {
+    const layout = readFileSync(join(__dirname, '..', '..', '..', 'app', '(tabs)', '_layout.tsx'), 'utf8');
+    expect(layout).toContain("useTranslation('nav')");
+  });
+});

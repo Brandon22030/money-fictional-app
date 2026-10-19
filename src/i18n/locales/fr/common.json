@@ -6,20 +6,5 @@
   "close": "Fermer",
   "save": "Enregistrer",
   "back": "Retour",
-  "simulationNotice": "FICTIF - SIMULATION",
-  "tabs": {
-    "home": "Accueil",
-    "card": "Carte",
-    "abundance": "Abondance",
-    "history": "Historique",
-    "settings": "Réglages"
-  },
-  "placeholder": {
-    "home": "Accueil",
-    "card": "Carte",
-    "abundance": "Abondance",
-    "history": "Historique",
-    "settings": "Réglages",
-    "keypad": "Clavier"
-  }
+  "simulationNotice": "FICTIF - SIMULATION"
 }
