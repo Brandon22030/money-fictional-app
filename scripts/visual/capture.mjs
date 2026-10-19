@@ -7,7 +7,7 @@
 // node scripts/visual/capture.mjs [--skip-export]
 //
 // Output: .agents/tasks/MFA-004/shots/{mockup,app,compare}-<screen>.png
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { createReadStream, existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { createServer } from 'node:http';
@@ -152,7 +152,12 @@ async function compare(browser) {
 async function main() {
   mkdirSync(outDir, { recursive: true });
   if (!process.argv.includes('--skip-export')) {
-    execSync(`CI=1 EXPO_PUBLIC_VISUAL_FIXTURE=1 npx expo export --platform web --output-dir ${webDir}`, { cwd: root, stdio: 'inherit' });
+    // Arguments are passed as an array (no shell), so a webDir with spaces or quotes is safe.
+    execFileSync('npx', ['expo', 'export', '--platform', 'web', '--output-dir', webDir], {
+      cwd: root,
+      stdio: 'inherit',
+      env: { ...process.env, CI: '1', EXPO_PUBLIC_VISUAL_FIXTURE: '1' },
+    });
   }
   const { chromium } = loadPlaywright();
   const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
