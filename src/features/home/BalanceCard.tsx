@@ -73,6 +73,9 @@ export function BalanceCard() {
           suffix={parts.suffix}
         />
       </Pressable>
+      <AppText variant="caption" tone="onDark" testID="home-fictional-notice" style={styles.notice}>
+        {t('fictionalBalance')}
+      </AppText>
       <View style={styles.pills}>
         <Pill testID="home-delta-percent" label={percentLabel} />
         <Pill testID="home-delta-amount" label={`${amountLabel} ${t('today')}`} />
@@ -104,7 +107,11 @@ export function BalanceCard() {
 const styles = StyleSheet.create({
   amount: {
     marginTop: spacing.xs,
+  },
+  notice: {
+    marginTop: spacing.xs,
     marginBottom: spacing.md,
+    letterSpacing: 0.4,
   },
   pills: {
     flexDirection: 'row',

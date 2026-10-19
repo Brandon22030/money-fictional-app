@@ -34,3 +34,15 @@ describe('BalanceCard on the 1st of the month', () => {
     expect(screen.getByTestId('home-delta-amount')).toHaveTextContent(/^\+10,00\s€\s/);
   });
 });
+
+describe('BalanceCard fictional notice', () => {
+  it.each([
+    ['fr', 'Solde fictif - simulation'],
+    ['en', 'Fictional balance - simulation'],
+  ] as const)('shows the fictional mention under the balance in %s', async (language, text) => {
+    await i18n.changeLanguage(language);
+    useAppStore.getState().setLanguage(language);
+    await render(<BalanceCard />);
+    expect(screen.getByTestId('home-fictional-notice')).toHaveTextContent(text);
+  });
+});
