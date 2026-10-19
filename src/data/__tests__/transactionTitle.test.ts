@@ -35,6 +35,22 @@ describe('transactionTitle', () => {
     expect(transactionTitle({ ...base, labelParams: { contact: 'unknown' } }, tr)).toBe('Money sent');
   });
 
+  it.each(['amina', 'koffi', 'lea', 'samuel'])(
+    'shows the generic kind label for an intention saved with the former contact id %s',
+    async (contact) => {
+      // C5: the old demo contacts were replaced by Univers/Gratitude/Moi futur/Famille; an
+      // intention persisted with one of their ids must not show the raw id or a stale name.
+      expect(findFavorite(contact)).toBeUndefined();
+      const legacy: Transaction = { ...base, labelParams: { contact } };
+      await i18n.changeLanguage('fr');
+      expect(transactionTitle(legacy, tr)).toBe(i18n.t('content:intentions.send'));
+      expect(transactionTitle(legacy, tr)).not.toContain(contact);
+      expect(transactionTitle({ ...legacy, kind: 'pay' }, tr)).toBe(i18n.t('content:intentions.pay'));
+      await i18n.changeLanguage('en');
+      expect(transactionTitle(legacy, tr)).toBe('Money sent');
+    },
+  );
+
   it('translates plain labels unchanged', async () => {
     await i18n.changeLanguage('fr');
     const plain: Transaction = { ...base, labelKey: 'content:intentions.coffee', labelParams: undefined };
