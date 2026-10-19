@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "Abonda",
+    "slug": "abonda",
+    "description": "Abonda is a visualization and manifestation tool. It shows a symbolic balance that you choose yourself, as a daily ritual of gratitude and abundance. It is not a bank and moves no real money.",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "abonda",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.abonda.app"
+    },
+    "android": {
+      "package": "com.abonda.app"
+    },
+    "plugins": ["expo-router", "expo-font", "expo-localization"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
