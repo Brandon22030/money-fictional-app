@@ -1,24 +1,37 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { RingGauge, type RingSegment } from '@/src/components/charts/RingGauge';
 import { StackedBarChart } from '@/src/components/charts/StackedBarChart';
 import { useTabBarClearance } from '@/src/components/navigation/tabBarLayout';
 import { AppText, NavyCard, Screen } from '@/src/components/ui';
+import { CURRENCIES } from '@/src/config/locale';
+import { getVisualFixture } from '@/src/dev/visualFixture';
 import { formatCompact, getLocaleTag } from '@/src/domain/money';
 import { INTENTION_KINDS, monthlyTotals, shareByKind } from '@/src/domain/stats';
 import type { IntentionKind } from '@/src/domain/types';
 import { useAllTransactions } from '@/src/store/selectors';
 import { useAppStore } from '@/src/store/useAppStore';
-import { colors, spacing } from '@/src/theme';
+import { colors, font, layout } from '@/src/theme';
 
 const KIND_STYLE: Record<IntentionKind, Pick<RingSegment, 'color' | 'icon'>> = {
-  receive: { color: colors.accent, icon: 'arrow-down-left' },
-  send: { color: colors.accentSoft, icon: 'arrow-up-right' },
-  pay: { color: colors.slateBar, icon: 'shopping-bag' },
-  withdraw: { color: colors.navy700, icon: 'log-out' },
+  receive: { color: '#1B3F7A', icon: 'down' },
+  send: { color: '#0F2A55', icon: 'send' },
+  pay: { color: '#2A5594', icon: 'card' },
+  withdraw: { color: '#163766', icon: 'up' },
 };
+
+const LEGEND_DOT: Record<IntentionKind, string> = {
+  receive: colors.accent,
+  send: '#4F83C2',
+  pay: colors.accentSoft,
+  withdraw: colors.slateBar,
+};
+
+function capitalize(text: string) {
+  return text.charAt(0).toLocaleUpperCase() + text.slice(1);
+}
 
 export function AbundanceScreen() {
   const { t } = useTranslation('abundance');
@@ -28,24 +41,39 @@ export function AbundanceScreen() {
   const language = useAppStore((state) => state.language);
   const bottomClearance = useTabBarClearance();
 
-  const segments = useMemo<RingSegment[]>(() => {
-    const shares = shareByKind(transactions);
-    return INTENTION_KINDS.map((kind) => ({
-      key: kind,
-      label: t(`kinds.${kind}`),
-      value: shares.find((share) => share.kind === kind)?.amountMinor ?? 0,
-      ...KIND_STYLE[kind],
-    }));
-  }, [transactions, t]);
+  const shares = useMemo<Record<IntentionKind, number>>(() => {
+    const fixture = getVisualFixture();
+    if (fixture) return fixture.kindShares;
+    const computed = shareByKind(transactions);
+    return Object.fromEntries(
+      INTENTION_KINDS.map((kind) => [
+        kind,
+        (computed.find((share) => share.kind === kind)?.ratio ?? 0) * 100,
+      ]),
+    ) as Record<IntentionKind, number>;
+  }, [transactions]);
+
+  const segments = useMemo<RingSegment[]>(
+    () =>
+      INTENTION_KINDS.map((kind) => ({
+        key: kind,
+        label: t(`kinds.${kind}`),
+        value: shares[kind],
+        ...KIND_STYLE[kind],
+      })),
+    [shares, t],
+  );
 
   const bars = useMemo(() => {
     const monthFormat = new Intl.DateTimeFormat(getLocaleTag(language), { month: 'short' });
-    return monthlyTotals(transactions, new Date()).map((total) => {
+    const fixture = getVisualFixture();
+    return monthlyTotals(transactions, new Date()).map((total, index) => {
       const [year, month] = total.month.split('-').map(Number);
+      const fixed = fixture?.monthly[index];
       return {
-        label: monthFormat.format(new Date(year, month - 1, 1)).replace('.', ''),
-        a: total.inMinor,
-        b: total.outMinor,
+        label: capitalize(monthFormat.format(new Date(year, month - 1, 1))),
+        a: fixed ? fixed.in : total.inMinor,
+        b: fixed ? fixed.out : total.outMinor,
       };
     });
   }, [transactions, language]);
@@ -53,20 +81,31 @@ export function AbundanceScreen() {
   return (
     <Screen testID="screen-abundance">
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: bottomClearance }]}>
-        <AppText variant="h2">{t('title')}</AppText>
+        <AppText variant="h2" style={styles.title}>
+          {t('title')}
+        </AppText>
         <NavyCard testID="abundance-ring" contentStyle={styles.ring}>
           <RingGauge
             segments={segments}
             centerLabel={formatCompact(balanceMinor, currency, language)}
-            centerCaption={t('balanceCaption')}
+            centerCaption={t('balanceCaption', { symbol: CURRENCIES[currency].symbol })}
           />
+          <View style={styles.legend} testID="abundance-legend">
+            {INTENTION_KINDS.map((kind) => (
+              <View key={kind} style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: LEGEND_DOT[kind] }]} />
+                <AppText style={styles.legendText}>
+                  {t('legendItem', { label: t(`kinds.${kind}`), percent: Math.round(shares[kind]) })}
+                </AppText>
+              </View>
+            ))}
+          </View>
         </NavyCard>
-        <NavyCard testID="abundance-bars">
-          <AppText variant="title" tone="onDark" style={styles.barsTitle}>
-            {t('barsTitle')}
-          </AppText>
+        <NavyCard testID="abundance-bars" contentStyle={styles.bars}>
           <StackedBarChart
+            title={t('barsTitle')}
             data={bars}
+            colors={{ a: colors.accent, b: colors.slateBar }}
             legend={{ a: t('legend.received'), b: t('legend.given') }}
           />
         </NavyCard>
@@ -77,14 +116,32 @@ export function AbundanceScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.lg,
-    gap: spacing.xl,
+    paddingHorizontal: layout.screenX,
+    gap: layout.gap,
+  },
+  title: {
+    paddingTop: 7,
+    paddingHorizontal: 4,
   },
   ring: {
     alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingTop: 15,
+    marginBottom: 17,
   },
-  barsTitle: {
-    marginBottom: spacing.md,
+  legend: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    columnGap: 14,
+    rowGap: 10,
+  },
+  legendItem: { flexDirection: 'row', alignItems: 'center' },
+  legendDot: { width: 8, height: 8, borderRadius: 4, marginRight: 6 },
+  legendText: { ...font(12, 'semiBold'), color: 'rgba(255,255,255,0.85)' },
+  bars: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    marginBottom: 17,
   },
 });

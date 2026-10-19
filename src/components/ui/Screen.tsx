@@ -1,9 +1,10 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import Svg, { Defs, Ellipse, RadialGradient, Stop } from 'react-native-svg';
+import { Image, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors, gradients } from '@/src/theme';
+import { colors, layout } from '@/src/theme';
+
+// Pre-rendered mockup background (sky gradient, blurred waves, light veil), see scripts/visual/render-bg.mjs.
+const skyBackground = require('@/assets/visual/sky-bg.png');
 
 export type ScreenProps = {
   children?: React.ReactNode;
@@ -11,39 +12,22 @@ export type ScreenProps = {
   testID?: string;
 };
 
-function Waves() {
-  return (
-    <Svg style={StyleSheet.absoluteFill} viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice">
-      <Defs>
-        <RadialGradient id="waveA" cx="50%" cy="50%" r="50%">
-          <Stop offset="0%" stopColor={colors.accent} stopOpacity={0.55} />
-          <Stop offset="100%" stopColor={colors.accent} stopOpacity={0} />
-        </RadialGradient>
-        <RadialGradient id="waveB" cx="50%" cy="50%" r="50%">
-          <Stop offset="0%" stopColor={colors.navy700} stopOpacity={0.5} />
-          <Stop offset="100%" stopColor={colors.navy700} stopOpacity={0} />
-        </RadialGradient>
-      </Defs>
-      <Ellipse cx={60} cy={560} rx={260} ry={110} fill="url(#waveA)" />
-      <Ellipse cx={340} cy={700} rx={300} ry={130} fill="url(#waveB)" />
-      <Ellipse cx={200} cy={820} rx={320} ry={90} fill="url(#waveA)" />
-    </Svg>
-  );
-}
-
 export function Screen({ children, style, testID }: ScreenProps) {
   const insets = useSafeAreaInsets();
 
   return (
     <View testID={testID} style={styles.root}>
-      <LinearGradient
-        colors={[...gradients.sky.colors]}
-        start={gradients.sky.start}
-        end={gradients.sky.end}
-        style={StyleSheet.absoluteFill}
+      <Image
+        source={skyBackground}
+        resizeMode="stretch"
+        style={styles.background}
+        accessibilityIgnoresInvertColors
       />
-      <Waves />
-      <View style={[styles.content, { paddingTop: insets.top }, style]}>{children}</View>
+      <View
+        style={[styles.content, { paddingTop: Math.max(layout.screenTop, insets.top + 4) }, style]}
+      >
+        {children}
+      </View>
     </View>
   );
 }
@@ -51,7 +35,17 @@ export function Screen({ children, style, testID }: ScreenProps) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    overflow: 'hidden',
     backgroundColor: colors.skyTop,
+  },
+  // Explicit size: on web, Image otherwise takes the PNG's intrinsic pixel size (1170x2532),
+  // which overrides the absolute insets and shows only the light top-left corner.
+  background: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
   },
   content: {
     flex: 1,

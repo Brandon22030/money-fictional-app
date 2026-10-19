@@ -1,26 +1,23 @@
-import { Feather } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SectionList, StyleSheet, TextInput, View } from 'react-native';
 
 import { useTabBarClearance } from '@/src/components/navigation/tabBarLayout';
-import { TransactionTicket, type FeatherIconName } from '@/src/components/transactions/TransactionTicket';
-import { AppText, Screen } from '@/src/components/ui';
+import { TransactionTicket } from '@/src/components/transactions/TransactionTicket';
+import { AppText, Icon, Screen } from '@/src/components/ui';
 import { transactionTitle } from '@/src/data/transactionTitle';
 import { getLocaleTag, formatMoney } from '@/src/domain/money';
-import type { IntentionKind } from '@/src/domain/types';
 import { useAllTransactions } from '@/src/store/selectors';
 import { useAppStore } from '@/src/store/useAppStore';
-import { colors, fontFamily, fontSize, radius, spacing } from '@/src/theme';
+import { colors, font, spacing } from '@/src/theme';
 
 import { filterEntries, groupByDay, type TransactionEntry } from './historyData';
 
-const KIND_ICONS: Record<IntentionKind, FeatherIconName> = {
-  receive: 'arrow-down-left',
-  send: 'arrow-up-right',
-  pay: 'shopping-bag',
-  withdraw: 'log-out',
-};
+const ROW_GAP = 14;
+
+function startOfDay(date: Date): number {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+}
 
 export function HistoryScreen() {
   const { t } = useTranslation('history');
@@ -44,19 +41,27 @@ export function HistoryScreen() {
   const dayFormat = useMemo(
     () =>
       new Intl.DateTimeFormat(getLocaleTag(language), {
-        weekday: 'long',
         day: 'numeric',
         month: 'long',
       }),
     [language],
   );
 
+  const dayTitle = (date: Date) => {
+    const diffDays = Math.round((startOfDay(new Date()) - startOfDay(date)) / 86_400_000);
+    if (diffDays === 0) return t('today');
+    if (diffDays === 1) return t('yesterday');
+    return dayFormat.format(date);
+  };
+
   return (
     <Screen testID="screen-history">
       <View style={styles.header}>
-        <AppText variant="h2">{t('title')}</AppText>
+        <AppText variant="h2" style={styles.title}>
+          {t('title')}
+        </AppText>
         <View style={styles.search}>
-          <Feather name="search" size={18} color={colors.textOnLightMuted} />
+          <Icon name="search" size={20} color={colors.textOnLightMuted} />
           <TextInput
             testID="history-search"
             style={styles.input}
@@ -80,9 +85,7 @@ export function HistoryScreen() {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={[styles.list, { paddingBottom: bottomClearance }]}
         renderSectionHeader={({ section }) => (
-          <AppText variant="bodyStrong" tone="onLightMuted" style={styles.day}>
-            {dayFormat.format(section.date)}
-          </AppText>
+          <AppText style={styles.day}>{dayTitle(section.date)}</AppText>
         )}
         renderItem={({ item }) => (
           <View style={styles.item}>
@@ -93,7 +96,7 @@ export function HistoryScreen() {
               direction={item.transaction.kind === 'receive' ? 'in' : 'out'}
               date={new Date(item.transaction.createdAt)}
               locale={language}
-              icon={KIND_ICONS[item.transaction.kind]}
+              kind={item.transaction.kind}
             />
           </View>
         )}
@@ -110,37 +113,39 @@ export function HistoryScreen() {
 const styles = StyleSheet.create({
   header: {
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.lg,
-    gap: spacing.lg,
+    gap: ROW_GAP,
+  },
+  title: {
+    paddingTop: 7.5,
+    paddingHorizontal: 4,
   },
   search: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: 10,
     backgroundColor: colors.glassLight,
-    borderRadius: radius.pill,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.glassBorder,
-    paddingHorizontal: spacing.lg,
-    height: 46,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.75)',
+    paddingHorizontal: 18,
+    height: 50,
   },
   input: {
     flex: 1,
-    fontFamily: fontFamily.regular,
-    fontSize: fontSize.body,
+    ...font(15, 'regular'),
     color: colors.textOnLight,
     paddingVertical: 0,
   },
   list: {
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.lg,
   },
   day: {
-    marginTop: spacing.md,
-    textTransform: 'capitalize',
+    ...font(14, 'bold'),
+    color: colors.navy800,
+    marginTop: ROW_GAP + 2,
   },
   item: {
-    marginTop: spacing.xs,
+    marginTop: ROW_GAP,
   },
   empty: {
     textAlign: 'center',

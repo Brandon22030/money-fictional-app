@@ -26,4 +26,13 @@ describe('AmountText', () => {
 
     expect(screen.queryByTestId('amount-decimals')).toBeNull();
   });
+
+  it('renders decimals and suffix at the integer size with a 600 weight and tight tracking', async () => {
+    await render(<AmountText integer="186 420" decimals=",50" suffix="€" size={40} />);
+
+    const decimals = screen.getByTestId('amount-decimals');
+    expect(decimals).toHaveStyle({ fontSize: 40, lineHeight: 55, color: colors.textOnDarkMuted });
+    expect(screen.getByTestId('amount-suffix')).toHaveStyle({ fontSize: 40 });
+    expect(screen.getByTestId('amount-suffix')).toHaveTextContent('€');
+  });
 });

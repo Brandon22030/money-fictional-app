@@ -4,24 +4,30 @@ import { Image, StyleSheet, View } from 'react-native';
 
 import { AppText, RoundIconButton } from '@/src/components/ui';
 import { APP_NAME } from '@/src/config/brand';
-import { spacing } from '@/src/theme';
+import { useHasUnseenIntentions } from '@/src/store/selectors';
+
+import { colors, font } from '@/src/theme';
 
 const logoMark = require('@/assets/brand/logo-mark.png');
 
 export function HomeHeader() {
   const { t } = useTranslation('home');
   const router = useRouter();
+  const hasUnseenIntentions = useHasUnseenIntentions();
 
   return (
     <View style={styles.row}>
       <View style={styles.brand}>
         <Image source={logoMark} style={styles.logo} accessibilityIgnoresInvertColors />
-        <AppText variant="title">{APP_NAME}</AppText>
+        <AppText variant="title" style={styles.name}>
+          {APP_NAME}
+        </AppText>
       </View>
       <View style={styles.actions}>
         <RoundIconButton
           testID="home-history"
           icon="bell"
+          badge={hasUnseenIntentions}
           accessibilityLabel={t('notifications')}
           onPress={() => router.push('/history')}
         />
@@ -41,11 +47,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingVertical: 4,
   },
   brand: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: 10,
+  },
+  name: {
+    ...font(20, 'bold'),
+    color: colors.navy800,
   },
   logo: {
     width: 36,
@@ -54,6 +65,6 @@ const styles = StyleSheet.create({
   },
   actions: {
     flexDirection: 'row',
-    gap: spacing.sm,
+    gap: 10,
   },
 });

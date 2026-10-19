@@ -67,6 +67,20 @@ node assets/brand/build.mjs
 
 Le script réécrit les SVG et les PNG de `assets/brand/`. Dans `assets/brand/explorations/`, seule la piste retenue (`b-coin`) garde un export PNG.
 
+## Banc de comparaison visuelle (app vs maquette)
+
+`scripts/visual/capture.mjs` capture les 7 écrans de `docs/mockup/index.html` (390x844, sans le cadre téléphone) et les routes correspondantes de l'app (export web Expo, viewport 390x844, facteur 2, état de démo injecté dans `localStorage`), puis assemble une image `mockup | app` par écran. Comme pour les assets de marque, Playwright n'est pas une dépendance du projet.
+
+```
+PLAYWRIGHT_PATH=<dossier contenant node_modules/playwright> \
+CHROMIUM_PATH=<binaire chromium, optionnel> \
+npm run visual:capture            # ajouter -- --skip-export pour réutiliser /tmp/mfa004-web
+```
+
+L'export du banc est fait avec `EXPO_PUBLIC_VISUAL_FIXTURE=1` : le module `src/dev/visualFixture.ts` expose alors les chiffres de la maquette (transactions, variation du jour, parts, barres mensuelles) injectés par le script, et l'horloge est figée au 19 octobre 2026 09:45. Sans cette variable (builds normaux), la fixture est inactive. Après un changement de source, relancer sans `--skip-export`.
+
+Sortie : `.agents/tasks/MFA-004/shots/{mockup,app,compare}-<écran>.png`. Le rendu web ne sert qu'à la mesure, la cible reste le rendu natif. Écarts de rendu web connus : `expo-blur` et les ombres sont approximés par le navigateur, les polices et le crénage diffèrent légèrement, la barre d'état système (9:41, wifi, batterie) n'existe pas sur le web, et les safe areas sont nulles.
+
 ## Maquette
 
 `docs/mockup/index.html` est la maquette statique des écrans et des tokens (voir `docs/mockup/README.md`).

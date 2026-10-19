@@ -4,25 +4,18 @@ import { useTranslation } from 'react-i18next';
 import { Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { useTabBarClearance } from '@/src/components/navigation/tabBarLayout';
-import { AppText, Screen } from '@/src/components/ui';
+import { AppText, Icon, NavyCard, Screen } from '@/src/components/ui';
 import { type Currency, type Language } from '@/src/config/locale';
 import { HOLDER_NAME_MAX_LENGTH, useAppStore } from '@/src/store/useAppStore';
-import { colors, radius, spacing } from '@/src/theme';
+import { colors, font, layout } from '@/src/theme';
 
 import { SegmentedControl, type SegmentedOption } from './SegmentedControl';
 
 const CURRENCY_ORDER: Currency[] = ['EUR', 'XOF', 'USD'];
 const LANGUAGE_ORDER: Language[] = ['fr', 'en'];
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <View style={styles.section}>
-      <AppText variant="bodyStrong" tone="onLightMuted">
-        {title}
-      </AppText>
-      {children}
-    </View>
-  );
+function Label({ children, first = false }: { children: React.ReactNode; first?: boolean }) {
+  return <AppText style={first ? styles.labelFirst : styles.label}>{children}</AppText>;
 }
 
 export function SettingsScreen() {
@@ -63,6 +56,8 @@ export function SettingsScreen() {
 
   const version = Constants.expoConfig?.version ?? '1.0.0';
 
+  const holderValue = holderDraft ?? holderName;
+
   return (
     <Screen testID="screen-settings">
       <ScrollView
@@ -70,69 +65,71 @@ export function SettingsScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <AppText variant="h2">{t('title')}</AppText>
+        <AppText variant="h2" style={styles.title}>
+          {t('title')}
+        </AppText>
 
-        <Section title={t('currency.title')}>
+        <NavyCard contentStyle={styles.panel}>
+          <Label first>{t('currency.title')}</Label>
           <SegmentedControl
             testID="settings-currency"
             options={currencyOptions}
             value={currency}
             onChange={(next) => useAppStore.getState().setCurrency(next)}
           />
-        </Section>
 
-        <Section title={t('language.title')}>
+          <Label>{t('language.title')}</Label>
           <SegmentedControl
             testID="settings-language"
             options={languageOptions}
             value={language}
             onChange={changeLanguage}
           />
-        </Section>
 
-        <Section title={t('holder.title')}>
-          <TextInput
-            testID="settings-holder"
-            value={holderDraft ?? holderName}
-            onChangeText={(text) => setHolderDraft(text.toUpperCase())}
-            onBlur={commitHolder}
-            onSubmitEditing={commitHolder}
-            maxLength={HOLDER_NAME_MAX_LENGTH}
-            autoCapitalize="characters"
-            autoCorrect={false}
-            placeholder={t('holder.placeholder')}
-            placeholderTextColor={colors.textOnLightMuted}
-            style={styles.input}
-          />
-          <AppText variant="caption" tone="onLightMuted">
-            {t('holder.hint')}
-          </AppText>
-        </Section>
+          <Label>{t('holder.title')}</Label>
+          <View style={styles.field}>
+            <TextInput
+              testID="settings-holder"
+              value={holderValue}
+              onChangeText={(text) => setHolderDraft(text.toUpperCase())}
+              onBlur={commitHolder}
+              onSubmitEditing={commitHolder}
+              maxLength={HOLDER_NAME_MAX_LENGTH}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              accessibilityLabel={t('holder.title')}
+              accessibilityHint={t('holder.hint')}
+              placeholder={t('holder.placeholder')}
+              placeholderTextColor={colors.textOnDarkMuted}
+              style={styles.input}
+            />
+            <AppText style={styles.small} testID="settings-holder-count">
+              {`${holderValue.length} / ${HOLDER_NAME_MAX_LENGTH}`}
+            </AppText>
+          </View>
 
-        <Section title={t('reset.button')}>
-          <AppText variant="caption" tone="onLightMuted">
-            {t('reset.description')}
-          </AppText>
           <Pressable
             testID="settings-reset"
             accessibilityRole="button"
+            accessibilityHint={t('reset.description')}
             onPress={confirmReset}
             style={styles.resetButton}
           >
-            <AppText variant="bodyStrong" tone="onDark">
-              {t('reset.button')}
-            </AppText>
+            <Icon name="trash" size={18} color={colors.warning} />
+            <AppText style={styles.resetText}>{t('reset.button')}</AppText>
           </Pressable>
-        </Section>
+        </NavyCard>
 
-        <Section title={t('about.title')}>
-          <AppText variant="body" tone="onLight">
-            {t('about.text')}
-          </AppText>
-          <AppText variant="caption" tone="onLightMuted" testID="settings-version">
+        <NavyCard contentStyle={styles.about}>
+          <View style={styles.aboutHeader}>
+            <Icon name="info" size={16} color={colors.textOnDarkMuted} />
+            <AppText style={styles.aboutTitle}>{t('about.title')}</AppText>
+          </View>
+          <AppText style={styles.aboutText}>{t('about.text')}</AppText>
+          <AppText style={[styles.small, styles.version]} testID="settings-version">
             {t('about.version', { version })}
           </AppText>
-        </Section>
+        </NavyCard>
       </ScrollView>
     </Screen>
   );
@@ -140,27 +137,90 @@ export function SettingsScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: spacing['2xl'],
-    paddingTop: spacing.lg,
-    gap: spacing['2xl'],
+    paddingHorizontal: layout.screenX,
+    gap: layout.gap,
   },
-  section: {
-    gap: spacing.sm,
+  title: {
+    paddingTop: 6,
+    paddingHorizontal: 4,
+    color: colors.navy800,
+  },
+  panel: {
+    padding: 20,
+    gap: 10,
+  },
+  // Line heights and margins calibrated against the mockup capture (web line-height drift).
+  labelFirst: {
+    ...font(12, 'semiBold'),
+    lineHeight: 16,
+    color: colors.textOnDarkMuted,
+    marginTop: 8,
+  },
+  label: {
+    ...font(12, 'semiBold'),
+    lineHeight: 16,
+    color: colors.textOnDarkMuted,
+    marginTop: 6.5,
+  },
+  field: {
+    height: 50,
+    borderRadius: 16,
+    backgroundColor: colors.glassFill,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
   },
   input: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderRadius: radius.md,
-    backgroundColor: colors.glassLight,
-    color: colors.textOnLight,
-    fontSize: 15,
+    flex: 1,
+    height: '100%',
+    ...font(15, 'semiBold'),
     letterSpacing: 1,
+    color: colors.textOnDark,
+  },
+  small: {
+    ...font(12.5, 'regular'),
+    color: colors.textOnDarkMuted,
+  },
+  version: {
+    marginTop: 7,
+    marginBottom: 10.5,
   },
   resetButton: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: spacing['2xl'],
-    paddingVertical: spacing.md,
-    borderRadius: radius.pill,
-    backgroundColor: colors.navy800,
+    marginTop: 8,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: colors.warning,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  resetText: {
+    ...font(15, 'semiBold'),
+    color: colors.warning,
+  },
+  about: {
+    paddingTop: 18,
+    paddingHorizontal: 20,
+    gap: 6,
+  },
+  aboutHeader: {
+    marginTop: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  aboutTitle: {
+    ...font(12, 'semiBold'),
+    color: colors.textOnDarkMuted,
+  },
+  aboutText: {
+    ...font(14, 'regular'),
+    lineHeight: 21,
+    color: 'rgba(255,255,255,0.88)',
   },
 });

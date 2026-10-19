@@ -9,7 +9,7 @@ const segments: RingSegment[] = [
     label: 'Reçu',
     value: 40,
     color: '#1B3F7A',
-    icon: 'arrow-down-left',
+    icon: 'down',
   },
   { key: 'sent', label: 'Envoyé', value: 30, color: '#0F2A55', icon: 'send' },
   {
@@ -17,7 +17,7 @@ const segments: RingSegment[] = [
     label: 'Payé',
     value: 20,
     color: '#2A5594',
-    icon: 'credit-card',
+    icon: 'card',
   },
 ];
 
@@ -58,7 +58,7 @@ describe('RingGauge', () => {
             label: 'Retiré',
             value: 0,
             color: '#163766',
-            icon: 'arrow-up-right',
+            icon: 'up',
           },
         ]}
         centerLabel="1k"

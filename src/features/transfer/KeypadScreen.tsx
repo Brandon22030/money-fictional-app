@@ -1,18 +1,23 @@
-import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { NumericKeypad } from '@/src/components/keypad/NumericKeypad';
 import { useAmountInput } from '@/src/components/keypad/useAmountInput';
-import { AppText, Screen } from '@/src/components/ui';
+import {
+  AmountText,
+  AppText,
+  Icon,
+  NavyCard,
+  Screen,
+} from '@/src/components/ui';
 import { CURRENCIES } from '@/src/config/locale';
 import { findFavorite } from '@/src/data/favorites';
-import { isCurrencyPrefixed } from '@/src/domain/money';
+import { formatMoney } from '@/src/domain/money';
 import type { IntentionKind } from '@/src/domain/types';
 import { useAppStore } from '@/src/store/useAppStore';
-import { colors, radius, spacing } from '@/src/theme';
+import { colors, font, layout } from '@/src/theme';
 
 export type KeypadMode = 'set' | IntentionKind;
 
@@ -48,7 +53,7 @@ export function KeypadScreen() {
   const setBalance = useAppStore((state) => state.setBalance);
   const applyIntention = useAppStore((state) => state.applyIntention);
 
-  const { display, minor, press } = useAmountInput({
+  const { minor, press } = useAmountInput({
     currency,
     initialMinor: mode === 'set' ? balanceMinor : 0,
     decimalSeparator: tKeypad('separator'),
@@ -96,137 +101,195 @@ export function KeypadScreen() {
     }
   };
 
-  const symbol = CURRENCIES[currency].symbol;
-  const prefixed = isCurrencyPrefixed(currency, language);
+  const money = formatMoney(minor, currency, language);
+  const available = formatMoney(balanceMinor, currency, language).full;
 
   return (
     <Screen testID="screen-keypad" style={styles.screen}>
-      <View style={styles.header}>
-        <Pressable
-          testID="keypad-close"
-          accessibilityRole="button"
-          accessibilityLabel={t('close')}
-          onPress={close}
-          style={styles.close}
-        >
-          <Feather name="x" size={22} color={colors.navy800} />
-        </Pressable>
-      </View>
-
-      <View style={styles.titles}>
-        <AppText variant="title" testID="keypad-title">
-          {t(`modes.${mode}.title`)}
-        </AppText>
-        <AppText variant="body" tone="onLightMuted" testID="keypad-subtitle">
-          {t(`modes.${mode}.subtitle`)}
-        </AppText>
-        {contactName ? (
-          <AppText variant="bodyStrong" testID="keypad-contact">
-            {t('contact', { name: contactName })}
-          </AppText>
-        ) : null}
-      </View>
-
-      <View style={styles.amountRow}>
-        {prefixed ? (
-          <AppText variant="title" tone="onLightMuted" testID="keypad-symbol-prefix">
-            {symbol}
-          </AppText>
-        ) : null}
-        <AppText variant="display" tabular testID="keypad-amount">
-          {display}
-        </AppText>
-        {prefixed ? null : (
-          <AppText variant="title" tone="onLightMuted" testID="keypad-symbol-suffix">
-            {` ${symbol}`}
-          </AppText>
-        )}
-      </View>
-
-      <View style={styles.messageSlot}>
-        {notice ? (
-          <AppText
-            variant="body"
-            tone="onLightMuted"
-            testID={notice === 'insufficient' ? 'keypad-insufficient' : 'keypad-too-large'}
-            accessibilityLiveRegion="polite"
-            style={styles.message}
-          >
-            {t(notice)}
-          </AppText>
-        ) : null}
-      </View>
-
-      <NumericKeypad
-        testID="keypad"
-        onKey={onKey}
-        decimalEnabled={CURRENCIES[currency].decimals > 0}
-      />
-
       <Pressable
-        testID="keypad-validate"
+        testID="keypad-close"
         accessibilityRole="button"
-        accessibilityLabel={t('validate')}
-        accessibilityState={{ disabled }}
-        disabled={disabled}
-        onPress={onValidate}
-        style={[styles.validate, disabled ? styles.validateDisabled : null]}
+        accessibilityLabel={t('close')}
+        onPress={close}
+        style={styles.handleTarget}
       >
-        <AppText variant="bodyStrong" tone="onDark">
-          {t('validate')}
-        </AppText>
+        <View style={styles.handle} />
       </Pressable>
-      <AppText variant="caption" tone="onLightMuted" style={styles.notice}>
-        {tCommon('simulationNotice')}
+
+      <AppText variant="h2" style={styles.title} testID="keypad-title">
+        {t(`modes.${mode}.title`)}
       </AppText>
+      {contactName ? (
+        <Text
+          testID="keypad-contact"
+          accessibilityLabel={t('contact', { name: contactName })}
+          style={styles.subtitle}
+        >
+          {`${t('contactPrefix')} `}
+          <Text style={styles.subtitleName}>{contactName}</Text>
+        </Text>
+      ) : (
+        <Text testID="keypad-subtitle" style={styles.subtitle}>
+          {t(`modes.${mode}.subtitle`)}
+        </Text>
+      )}
+
+      {/* The card fills the free height (as in the mockup) and scrolls when the window or
+          the modal sheet is too short for it, so Valider always stays reachable. */}
+      <ScrollView
+        testID="keypad-scroll"
+        style={styles.cardSlot}
+        contentContainerStyle={styles.cardScroll}
+        showsVerticalScrollIndicator={false}
+        alwaysBounceVertical={false}
+      >
+        <NavyCard fill contentStyle={styles.card}>
+          <AmountText
+            testID="keypad-amount"
+            integer={money.integer}
+            decimals={money.decimals}
+            suffix={money.suffix}
+            size={52}
+            style={styles.amount}
+          />
+          {mode === 'set' ? null : (
+            <AppText tone="onDarkMuted" style={styles.available}>
+              {t('available', { amount: available })}
+            </AppText>
+          )}
+
+          <NumericKeypad
+            testID="keypad"
+            onKey={onKey}
+            decimalEnabled={CURRENCIES[currency].decimals > 0}
+          />
+
+          <Pressable
+            testID="keypad-validate"
+            accessibilityRole="button"
+            accessibilityLabel={t('validate')}
+            accessibilityState={{ disabled }}
+            disabled={disabled}
+            onPress={onValidate}
+            style={[styles.validate, disabled ? styles.validateDisabled : null]}
+          >
+            <Icon name="check" size={20} color={colors.navy900} />
+            <Text style={styles.validateLabel}>{t('validate')}</Text>
+          </Pressable>
+
+          {notice ? (
+            <AppText
+              tone="onDark"
+              testID={
+                notice === 'insufficient'
+                  ? 'keypad-insufficient'
+                  : 'keypad-too-large'
+              }
+              accessibilityLiveRegion="polite"
+              style={styles.message}
+            >
+              {t(notice)}
+            </AppText>
+          ) : null}
+          <Text style={styles.notice}>{tCommon('simulationNotice')}</Text>
+        </NavyCard>
+      </ScrollView>
     </Screen>
   );
 }
 
+// Minimum touch target (iOS HIG / Material) for the close handle.
+const HANDLE_TARGET = 44;
+const HANDLE_HEIGHT = 5;
+// Room around the card inside the scroll view so its shadow is not clipped. The scroll view
+// spreads by the same amounts over the screen padding and the gap above (up to the subtitle,
+// where scrolled content is clipped), so the card keeps its place.
+const SCREEN_BOTTOM = 28;
+const CARD_BOTTOM_GAP = 6;
+const SUBTITLE_GAP = 4;
+const CARD_SHADOW_TOP = layout.gap + SUBTITLE_GAP;
+
 const styles = StyleSheet.create({
   screen: {
-    paddingHorizontal: spacing['2xl'],
-    paddingBottom: spacing['3xl'],
-    gap: spacing.lg,
+    paddingHorizontal: layout.screenX,
+    paddingBottom: SCREEN_BOTTOM,
+    gap: layout.gap,
   },
-  header: {
-    alignItems: 'flex-end',
-  },
-  close: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.pill,
+  // 44 pt square-ish target centred on the 5 pt bar; negative margins keep the bar where it was.
+  handleTarget: {
+    alignSelf: 'center',
+    width: HANDLE_TARGET * 2,
+    height: HANDLE_TARGET,
+    marginTop: 2 - (HANDLE_TARGET - HANDLE_HEIGHT) / 2,
+    marginBottom: 6 - (HANDLE_TARGET - HANDLE_HEIGHT) / 2,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.glassLight,
   },
-  titles: {
+  handle: {
+    width: 44,
+    height: HANDLE_HEIGHT,
+    borderRadius: 3,
+    backgroundColor: 'rgba(15,42,85,0.35)',
+  },
+  title: {
+    textAlign: 'center',
+  },
+  subtitle: {
+    ...font(14, 'regular'),
+    textAlign: 'center',
+    color: colors.navy700,
+    marginBottom: SUBTITLE_GAP,
+  },
+  subtitleName: {
+    ...font(14, 'bold'),
+  },
+  cardSlot: {
+    flex: 1,
+    marginHorizontal: -layout.screenX,
+    marginTop: -CARD_SHADOW_TOP,
+    marginBottom: -SCREEN_BOTTOM,
+  },
+  cardScroll: {
+    flexGrow: 1,
+    paddingHorizontal: layout.screenX,
+    paddingTop: CARD_SHADOW_TOP,
+    paddingBottom: SCREEN_BOTTOM + CARD_BOTTOM_GAP,
+  },
+  card: {
+    paddingVertical: 22,
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  amount: {
     alignItems: 'center',
-    gap: spacing.xs,
   },
-  amountRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'center',
-  },
-  messageSlot: {
-    minHeight: 44,
-    justifyContent: 'center',
-  },
-  message: {
+  available: {
+    ...font(12, 'regular'),
     textAlign: 'center',
   },
   validate: {
-    height: 56,
-    borderRadius: radius.pill,
+    height: 58,
+    borderRadius: 29,
+    marginTop: 12,
+    flexDirection: 'row',
+    gap: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.navy800,
+    backgroundColor: colors.accent,
   },
   validateDisabled: {
     opacity: 0.4,
   },
-  notice: {
+  validateLabel: {
+    ...font(16, 'bold'),
+    color: colors.navy900,
+  },
+  message: {
     textAlign: 'center',
+  },
+  notice: {
+    ...font(11, 'semiBold'),
+    textAlign: 'center',
+    color: colors.textOnDarkMuted,
   },
 });

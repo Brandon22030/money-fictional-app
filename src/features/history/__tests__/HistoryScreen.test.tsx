@@ -2,7 +2,11 @@ import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { HistoryScreen } from '@/src/features/history/HistoryScreen';
-import { filterEntries, groupByDay, type TransactionEntry } from '@/src/features/history/historyData';
+import {
+  filterEntries,
+  groupByDay,
+  type TransactionEntry,
+} from '@/src/features/history/historyData';
 import i18n from '@/src/i18n';
 import { useAppStore } from '@/src/store/useAppStore';
 
@@ -53,13 +57,55 @@ describe('HistoryScreen', () => {
     await act(async () => {
       useAppStore.getState().applyIntention('send', 100, {
         labelKey: 'content:intentions.sharedWith',
-        labelParams: { contact: 'samuel' },
+        labelParams: { contact: 'futureSelf' },
       });
     });
     await renderScreen();
-    await fireEvent.changeText(screen.getByTestId('history-search'), 'samuel');
-    expect(screen.getByText('Partagé avec Samuel')).toBeTruthy();
+    await fireEvent.changeText(screen.getByTestId('history-search'), 'moi futur');
+    expect(screen.getByText('Partagé avec Moi futur')).toBeTruthy();
     expect(screen.queryByText('Panier de fruits')).toBeNull();
+  });
+
+  it("titles days as Aujourd'hui, Hier, then day and month", async () => {
+    jest.useFakeTimers({
+      now: new Date(2026, 9, 16, 15, 22),
+      doNotFake: [
+        'setTimeout',
+        'setInterval',
+        'setImmediate',
+        'clearTimeout',
+        'clearInterval',
+        'clearImmediate',
+        'nextTick',
+        'queueMicrotask',
+      ],
+    });
+    await act(async () => {
+      useAppStore.getState().setLanguage('fr');
+      useAppStore.getState().applyIntention('withdraw', 30000, {
+        labelKey: 'content:intentions.sharedWith',
+        labelParams: { contact: 'family' },
+      });
+    });
+    jest.setSystemTime(new Date(2026, 9, 18, 10, 0));
+    await act(async () => {
+      useAppStore.getState().applyIntention('send', 40000, {
+        labelKey: 'content:intentions.sharedWith',
+        labelParams: { contact: 'family' },
+      });
+    });
+    jest.setSystemTime(new Date(2026, 9, 19, 9, 45));
+    await act(async () => {
+      useAppStore.getState().applyIntention('receive', 250000, {
+        labelKey: 'content:intentions.sharedWith',
+        labelParams: { contact: 'family' },
+      });
+    });
+    await renderScreen();
+    expect(screen.getByText("Aujourd'hui")).toBeTruthy();
+    expect(screen.getByText('Hier')).toBeTruthy();
+    expect(screen.getByText('16 octobre')).toBeTruthy();
+    jest.useRealTimers();
   });
 
   it('shows the empty state when nothing matches', async () => {
@@ -71,7 +117,12 @@ describe('HistoryScreen', () => {
 });
 
 describe('historyData', () => {
-  const entry = (id: string, createdAt: string, title: string, amountLabel: string): TransactionEntry => ({
+  const entry = (
+    id: string,
+    createdAt: string,
+    title: string,
+    amountLabel: string,
+  ): TransactionEntry => ({
     transaction: { id, kind: 'pay', labelKey: 'x', amountMinor: 1, createdAt },
     title,
     amountLabel,

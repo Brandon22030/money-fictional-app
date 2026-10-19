@@ -7,7 +7,7 @@ const base: Transaction = {
   id: 'tx-1',
   kind: 'send',
   labelKey: 'content:intentions.sharedWith',
-  labelParams: { contact: 'lea' },
+  labelParams: { contact: 'family' },
   amountMinor: 100,
   createdAt: '2026-10-01T12:00:00.000Z',
 };
@@ -16,7 +16,7 @@ const tr = (key: string, options?: Record<string, unknown>) => i18n.t(key, optio
 
 describe('findFavorite', () => {
   it('returns known favorites only', () => {
-    expect(findFavorite('amina')?.id).toBe('amina');
+    expect(findFavorite('family')?.id).toBe('family');
     expect(findFavorite('Someone typed')).toBeUndefined();
     expect(findFavorite(undefined)).toBeUndefined();
   });
@@ -25,15 +25,31 @@ describe('findFavorite', () => {
 describe('transactionTitle', () => {
   it('resolves the favorite name in the current language', async () => {
     await i18n.changeLanguage('fr');
-    expect(transactionTitle(base, tr)).toBe('Partagé avec Léa');
+    expect(transactionTitle(base, tr)).toBe('Partagé avec Famille');
     await i18n.changeLanguage('en');
-    expect(transactionTitle(base, tr)).toBe('Shared with Lea');
+    expect(transactionTitle(base, tr)).toBe('Shared with Family');
   });
 
   it('falls back to the kind label when the contact is not a favorite', async () => {
     await i18n.changeLanguage('en');
     expect(transactionTitle({ ...base, labelParams: { contact: 'unknown' } }, tr)).toBe('Money sent');
   });
+
+  it.each(['amina', 'koffi', 'lea', 'samuel'])(
+    'shows the generic kind label for an intention saved with the former contact id %s',
+    async (contact) => {
+      // C5: the old demo contacts were replaced by Univers/Gratitude/Moi futur/Famille; an
+      // intention persisted with one of their ids must not show the raw id or a stale name.
+      expect(findFavorite(contact)).toBeUndefined();
+      const legacy: Transaction = { ...base, labelParams: { contact } };
+      await i18n.changeLanguage('fr');
+      expect(transactionTitle(legacy, tr)).toBe(i18n.t('content:intentions.send'));
+      expect(transactionTitle(legacy, tr)).not.toContain(contact);
+      expect(transactionTitle({ ...legacy, kind: 'pay' }, tr)).toBe(i18n.t('content:intentions.pay'));
+      await i18n.changeLanguage('en');
+      expect(transactionTitle(legacy, tr)).toBe('Money sent');
+    },
+  );
 
   it('translates plain labels unchanged', async () => {
     await i18n.changeLanguage('fr');

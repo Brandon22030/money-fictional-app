@@ -1,18 +1,20 @@
 import { Feather } from '@expo/vector-icons';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/src/components/ui/AppText';
+import { Icon } from '@/src/components/ui/Icon';
 import type { Currency, Language } from '@/src/config/locale';
-import { colors, radius, spacing } from '@/src/theme';
+import { colors, font, glass, shadows } from '@/src/theme';
 import { announceBalance, stopAnnouncement } from '@/src/services/voice';
 
 export type VoiceButtonProps = {
   amountMinor: number;
   currency: Currency;
   language: Language;
-  variant?: 'glass' | 'tile';
+  variant?: 'action' | 'tile';
   testID?: string;
 };
 
@@ -20,7 +22,7 @@ export function VoiceButton({
   amountMinor,
   currency,
   language,
-  variant = 'glass',
+  variant = 'action',
   testID,
 }: VoiceButtonProps) {
   const { t } = useTranslation('voice');
@@ -54,7 +56,7 @@ export function VoiceButton({
 
   const label = speaking ? t('stop') : t('listen');
   const isTile = variant === 'tile';
-  const tone = isTile ? colors.navy800 : colors.textOnDark;
+  const iconColor = isTile ? colors.accentSoft : colors.textOnDark;
 
   return (
     <Pressable
@@ -65,35 +67,66 @@ export function VoiceButton({
       onPress={onPress}
       style={({ pressed }) => [
         styles.base,
-        isTile ? styles.tile : styles.glass,
+        isTile ? styles.tile : styles.action,
         pressed ? styles.pressed : null,
       ]}
     >
-      <Feather name={speaking ? 'square' : 'volume-2'} size={20} color={tone} />
-      <AppText variant="caption" tone={isTile ? 'onLight' : 'onDark'}>
-        {label}
-      </AppText>
+      <View style={[styles.content, isTile ? styles.tileContent : null]}>
+        {isTile ? (
+          <LinearGradient
+            colors={glass.colors}
+            start={glass.start}
+            end={glass.end}
+            style={StyleSheet.absoluteFill}
+          />
+        ) : null}
+        {/* View wrapper: on web a bare svg would paint under the absolute gradient. */}
+        <View>
+          {speaking ? (
+            <Feather name="square" size={24} color={iconColor} />
+          ) : (
+            <Icon name="volume" size={24} color={iconColor} />
+          )}
+        </View>
+        <AppText variant="caption" tone="onDark" style={styles.label}>
+          {label}
+        </AppText>
+      </View>
     </Pressable>
   );
 }
 
+// The tile shadow lives on the unclipped Pressable, the clipping and gradient on the inner view.
 const styles = StyleSheet.create({
   base: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xs,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
+    flex: 1,
+    borderRadius: 22,
   },
-  glass: {
+  action: {
+    height: 76,
     backgroundColor: colors.glassFill,
+    borderWidth: 1,
     borderColor: colors.glassBorder,
   },
   tile: {
-    backgroundColor: colors.glassLight,
-    borderColor: colors.glassBorder,
+    height: 84,
+    backgroundColor: glass.colors[0],
+    ...shadows.tile,
+  },
+  content: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderRadius: 22,
+  },
+  tileContent: {
+    overflow: 'hidden',
+    borderWidth: glass.borderWidth,
+    borderColor: glass.borderColor,
+  },
+  label: {
+    ...font(12, 'semiBold'),
   },
   pressed: {
     opacity: 0.7,

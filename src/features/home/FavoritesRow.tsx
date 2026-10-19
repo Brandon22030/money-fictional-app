@@ -1,19 +1,20 @@
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { AppText } from '@/src/components/ui';
+import { AppText, Icon } from '@/src/components/ui';
 import { FAVORITES } from '@/src/data/favorites';
-import { colors, radius, spacing } from '@/src/theme';
+import { colors, font, gradients, shadow } from '@/src/theme';
 
-const AVATAR_SIZE = 56;
+const AVATAR_SIZE = 58;
 
 export function FavoritesRow() {
   const { t } = useTranslation('home');
   const router = useRouter();
 
   return (
-    <View>
+    <View style={styles.section}>
       <AppText variant="bodyStrong" style={styles.title}>
         {t('favorites')}
       </AppText>
@@ -29,12 +30,17 @@ export function FavoritesRow() {
               onPress={() => router.push({ pathname: '/keypad', params: { mode: 'send', contact: favorite.id } })}
               style={({ pressed }) => [styles.item, pressed ? styles.pressed : null]}
             >
-              <View style={styles.avatar}>
-                <AppText variant="title" style={styles.initial}>
-                  {name.charAt(0).toUpperCase()}
-                </AppText>
+              <View style={styles.shadow}>
+                <LinearGradient
+                  colors={gradients.navyCard.colors}
+                  start={gradients.navyCard.start}
+                  end={gradients.navyCard.end}
+                  style={styles.avatar}
+                >
+                  <Icon name={favorite.icon} size={24} color={colors.accentSoft} />
+                </LinearGradient>
               </View>
-              <AppText variant="caption" numberOfLines={1}>
+              <AppText variant="caption" numberOfLines={1} style={styles.name}>
                 {name}
               </AppText>
             </Pressable>
@@ -46,8 +52,13 @@ export function FavoritesRow() {
 }
 
 const styles = StyleSheet.create({
+  section: {
+    gap: 14,
+  },
   title: {
-    marginBottom: spacing.md,
+    ...font(16, 'bold'),
+    color: colors.navy800,
+    marginTop: 2,
   },
   row: {
     flexDirection: 'row',
@@ -55,20 +66,23 @@ const styles = StyleSheet.create({
   },
   item: {
     alignItems: 'center',
-    gap: spacing.xs,
-    width: AVATAR_SIZE + spacing.md,
+    gap: 6,
+  },
+  shadow: {
+    borderRadius: AVATAR_SIZE / 2,
+    ...shadow.card,
   },
   avatar: {
     width: AVATAR_SIZE,
     height: AVATAR_SIZE,
-    borderRadius: radius.pill,
+    borderRadius: AVATAR_SIZE / 2,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.accentSoft,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.glassBorder,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.4)',
   },
-  initial: {
+  name: {
+    ...font(12, 'semiBold'),
     color: colors.navy800,
   },
   pressed: {

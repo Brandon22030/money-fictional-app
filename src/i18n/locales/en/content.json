@@ -16,13 +16,17 @@
     "bonus": "Small bonus",
     "friend": "Thanks to a friend",
     "music": "Open-air concert",
+    "universeGratitude": "Gratitude received from the Universe",
+    "dreamProject": "Dream project funded",
+    "futureSelfAbundance": "Abundance received from Future self",
+    "tripWithdrawal": "Withdrawal for a trip",
     "sharedWith": "Shared with {{name}}"
   },
   "favorites": {
-    "amina": "Amina",
-    "koffi": "Koffi",
-    "lea": "Lea",
-    "samuel": "Samuel"
+    "universe": "Universe",
+    "gratitude": "Gratitude",
+    "futureSelf": "Future self",
+    "family": "Family"
   },
   "affirmations": {
     "a01": "I am at peace with the abundance around me.",
@@ -31,7 +35,7 @@
     "a04": "My gratitude opens the door to new good things.",
     "a05": "I choose trust over worry.",
     "a06": "Today, I celebrate my small wins.",
-    "a07": "I am enough, just as I am.",
+    "a07": "Abundance flows to me with ease, and I receive it with gratitude.",
     "a08": "My energy attracts bright encounters.",
     "a09": "I breathe deeply and let tension go.",
     "a10": "I thank the people who make my days gentler.",

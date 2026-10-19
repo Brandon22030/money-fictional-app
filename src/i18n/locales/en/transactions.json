@@ -1,6 +1,8 @@
 {
-  "direction": {
-    "in": "Received",
-    "out": "Sent"
+  "kind": {
+    "receive": "Received",
+    "send": "Sent",
+    "pay": "Paid",
+    "withdraw": "Withdrawn"
   }
 }

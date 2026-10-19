@@ -22,6 +22,8 @@ export const HOLDER_NAME_MAX_LENGTH = 26;
 /** Only the most recent user intentions are kept, to bound the persisted payload. */
 export const MAX_USER_TRANSACTIONS = 500;
 
+// Version 1 data without lastHistoryVisitAt (added later) is still valid: merge fills it
+// with null, so adding that optional field did not need a version bump.
 export const STORE_VERSION = 1;
 
 type AppData = {
@@ -31,6 +33,8 @@ type AppData = {
   holderName: string;
   card: Card;
   userTransactions: Transaction[];
+  /** ISO date of the last time the History screen was opened, null if never. */
+  lastHistoryVisitAt: string | null;
 };
 
 type AppState = AppData & {
@@ -41,6 +45,7 @@ type AppState = AppData & {
   setLanguage: (language: Language) => void;
   setHolderName: (name: string) => void;
   regenerateCard: () => void;
+  markHistoryVisited: (at?: Date) => void;
   resetAll: () => void;
 };
 
@@ -66,6 +71,7 @@ function createInitialData(): AppData {
     holderName: defaultHolderName(language),
     card: newCard(),
     userTransactions: [],
+    lastHistoryVisitAt: null,
   };
 }
 
@@ -100,6 +106,10 @@ function isCard(value: unknown): value is Card {
   );
 }
 
+function isIsoDate(value: unknown): value is string {
+  return typeof value === 'string' && !Number.isNaN(new Date(value).getTime());
+}
+
 function isTransaction(value: unknown): value is Transaction {
   return (
     isRecord(value) &&
@@ -109,8 +119,7 @@ function isTransaction(value: unknown): value is Transaction {
     typeof value.amountMinor === 'number' &&
     Number.isInteger(value.amountMinor) &&
     value.amountMinor > 0 &&
-    typeof value.createdAt === 'string' &&
-    !Number.isNaN(new Date(value.createdAt).getTime()) &&
+    isIsoDate(value.createdAt) &&
     (value.labelParams === undefined || isRecord(value.labelParams))
   );
 }
@@ -146,6 +155,9 @@ export function mergePersisted<T extends AppData>(persisted: unknown, current: T
     holderName,
     card: isCard(persisted.card) ? persisted.card : current.card,
     userTransactions,
+    lastHistoryVisitAt: isIsoDate(persisted.lastHistoryVisitAt)
+      ? persisted.lastHistoryVisitAt
+      : current.lastHistoryVisitAt,
   };
 }
 
@@ -220,6 +232,8 @@ export const useAppStore = create<AppState>()(
 
       regenerateCard: () => set({ card: newCard() }),
 
+      markHistoryVisited: (at = new Date()) => set({ lastHistoryVisitAt: at.toISOString() }),
+
       resetAll: () => set(createInitialData()),
     }),
     {
@@ -236,6 +250,7 @@ export const useAppStore = create<AppState>()(
         holderName: state.holderName,
         card: state.card,
         userTransactions: state.userTransactions,
+        lastHistoryVisitAt: state.lastHistoryVisitAt,
       }),
       onRehydrateStorage: () => () => {
         useAppStore.setState({ hasHydrated: true });

@@ -6,3 +6,4 @@ export * from './Pill';
 export * from './RoundIconButton';
 export * from './Screen';
 export * from './TicketCard';
+export * from './Icon';

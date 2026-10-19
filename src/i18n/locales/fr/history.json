@@ -1,6 +1,8 @@
 {
   "title": "Historique",
-  "searchPlaceholder": "Rechercher un libellé ou un montant",
+  "searchPlaceholder": "Rechercher une intention",
   "searchLabel": "Rechercher dans l'historique",
-  "empty": "Aucune intention ne correspond à votre recherche."
+  "empty": "Aucune intention ne correspond à votre recherche.",
+  "today": "Aujourd'hui",
+  "yesterday": "Hier"
 }

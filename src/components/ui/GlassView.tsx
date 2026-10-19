@@ -21,7 +21,7 @@ export function GlassView({ borderRadius = radius.lg, style, children, ...rest }
 const styles = StyleSheet.create({
   container: {
     overflow: 'hidden',
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     borderColor: colors.glassBorder,
   },
   fill: {
