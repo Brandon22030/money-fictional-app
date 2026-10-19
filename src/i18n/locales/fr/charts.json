@@ -1,1 +1,4 @@
-{}
+{
+  "ring": { "a11y": "Répartition des intentions" },
+  "bars": { "a11y": "Reçu et donné par mois" }
+}
