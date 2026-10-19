@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useId, useState, type ReactNode } from 'react';
-import { Pressable, StyleSheet, type LayoutChangeEvent } from 'react-native';
+import { Pressable, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
@@ -61,7 +61,7 @@ function Face({
       locations={[...bankCard.linear.locations]}
       start={bankCard.linear.start}
       end={bankCard.linear.end}
-      style={[styles.face, padded ? styles.padded : null]}
+      style={styles.face}
     >
       <Reflection />
       <LinearGradient
@@ -72,7 +72,10 @@ function Face({
         end={{ x: 1.066, y: 0.825 }}
         style={styles.gloss}
       />
-      {children}
+      {/* Padding lives on this inner view: on iOS, percentage sizes of absolute children
+          resolve against the parent's content box, so a padded face would shrink the
+          reflection Svg (width="100%") and cut it with a hard edge. */}
+      <View style={[styles.content, padded ? styles.padded : null]}>{children}</View>
     </LinearGradient>
   );
 }
@@ -155,6 +158,7 @@ const styles = StyleSheet.create({
     backfaceVisibility: 'hidden',
     borderRadius: bankCard.radius,
   },
+  content: { flex: 1 },
   padded: { paddingTop: 20, paddingHorizontal: 22, paddingBottom: 30 },
   face: {
     flex: 1,
