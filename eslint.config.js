@@ -4,7 +4,8 @@ const expoConfig = require('eslint-config-expo/flat');
 module.exports = defineConfig([
   expoConfig,
   {
-    ignores: ['dist/*', '.expo/*', 'node_modules/*', 'docs/*'],
+    // Untracked local folders (agent task notes, temporary scripts) are never linted.
+    ignores: ['dist/*', '.expo/*', 'node_modules/*', 'docs/*', '.agents/**', '.claude/**'],
   },
   {
     rules: {
