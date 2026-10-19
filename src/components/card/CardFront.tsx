@@ -96,10 +96,10 @@ const styles = StyleSheet.create({
   label: { fontFamily: fontFamily.medium, fontSize: 9, letterSpacing: 1, color: colors.goldPearlMuted },
   value: { fontFamily: fontFamily.semiBold, fontSize: 13, color: colors.goldPearl },
   fictional: {
-    fontFamily: fontFamily.bold,
-    fontSize: 9,
+    fontFamily: fontFamily.semiBold,
+    fontSize: 11,
     letterSpacing: 1.6,
-    color: colors.goldPearlMuted,
+    color: colors.goldPearl,
     textAlign: 'center',
   },
 });

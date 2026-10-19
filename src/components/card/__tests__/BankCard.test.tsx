@@ -1,6 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 
 import i18n from '@/src/i18n';
+import { colors, fontFamily } from '@/src/theme';
 import { BankCard } from '@/src/components/card/BankCard';
 import { formatCardNumber } from '@/src/components/card/formatCardNumber';
 
@@ -50,7 +52,18 @@ describe('BankCard', () => {
     expect(screen.getByTestId('card-fictional-back')).toHaveTextContent('FICTIONAL - SIMULATION');
   });
 
-  it('describes the card as fictional for accessibility', async () => {
+  it.each(['card-fictional-front', 'card-fictional-back'])(
+    'renders %s legibly: 11 px minimum, semiBold, full pearl color',
+    async (testID) => {
+      await render(<BankCard {...props} />);
+      const style = StyleSheet.flatten(screen.getByTestId(testID, hidden).props.style);
+      expect(style.fontSize).toBeGreaterThanOrEqual(11);
+      expect(style.fontFamily).toBe(fontFamily.semiBold);
+      expect(style.color).toBe(colors.goldPearl);
+    },
+  );
+
+    it('describes the card as fictional for accessibility', async () => {
     await render(<BankCard {...props} testID="card" />);
     expect(screen.getByTestId('card').props.accessibilityLabel).toMatch(/Fictional/);
   });

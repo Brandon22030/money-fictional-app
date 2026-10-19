@@ -68,10 +68,10 @@ const styles = StyleSheet.create({
   padded: { paddingHorizontal: 22, paddingBottom: 18, gap: 6 },
   legal: { fontFamily: fontFamily.regular, fontSize: 9, lineHeight: 12, color: colors.goldPearlMuted },
   fictional: {
-    fontFamily: fontFamily.bold,
-    fontSize: 10,
+    fontFamily: fontFamily.semiBold,
+    fontSize: 11,
     letterSpacing: 1.8,
-    color: colors.goldPearlMuted,
+    color: colors.goldPearl,
     textAlign: 'center',
   },
   foot: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
