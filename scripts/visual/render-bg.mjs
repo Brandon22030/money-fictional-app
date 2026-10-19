@@ -3,6 +3,10 @@
 // PLAYWRIGHT_PATH=<dir containing node_modules/playwright> \
 // CHROMIUM_PATH=<chromium binary, optional> \
 // node scripts/visual/render-bg.mjs
+//
+// The committed PNG is then reduced to a 256-colour palette (max 3/255 per channel on this
+// smooth gradient, no visible loss), for example with Pillow:
+// python3 -c "from PIL import Image; Image.open('assets/visual/sky-bg.png').quantize(256, dither=Image.Dither.NONE).save('assets/visual/sky-bg.png', optimize=True)"
 import { mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join, resolve } from 'node:path';
