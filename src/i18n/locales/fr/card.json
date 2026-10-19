@@ -1,6 +1,6 @@
 {
   "holder": "TITULAIRE",
-  "validThru": "EXPIRE FIN",
+  "validThru": "EXPIRE",
   "balance": "SOLDE",
   "cvv": "CVV",
   "fictional": "FICTIF - SIMULATION",

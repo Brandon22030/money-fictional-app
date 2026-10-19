@@ -1,22 +1,27 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { formatCardNumber } from '@/src/domain/card';
-import { colors, fontFamily, numbers } from '@/src/theme';
+import { colors, font, numbers } from '@/src/theme';
 
+import { cardText } from './cardPalette';
 import { NetworkLogo } from './NetworkLogo';
+import { SignatureStripes } from './SignatureStripes';
+import { toTitleCase } from './toTitleCase';
 
 export type CardBackProps = { holderName: string; cardNumber: string; cvv: string };
 
 export function CardBack({ holderName, cardNumber, cvv }: CardBackProps) {
-  const { t } = useTranslation('card');
+  const { t, i18n } = useTranslation('card');
   return (
     <View style={styles.root}>
-      <View testID="card-stripe" style={styles.stripe} />
+      <LinearGradient testID="card-stripe" colors={['#050E20', '#0B1F40']} style={styles.stripe} />
       <View style={styles.sigRow}>
         <View testID="card-signature" style={styles.signature}>
+          <SignatureStripes />
           <Text style={styles.signatureText} numberOfLines={1}>
-            {holderName}
+            {toTitleCase(holderName, i18n.language)}
           </Text>
         </View>
         <View style={styles.cvvBox}>
@@ -26,54 +31,68 @@ export function CardBack({ holderName, cardNumber, cvv }: CardBackProps) {
           </Text>
         </View>
       </View>
-      <View style={styles.padded}>
-        <Text style={styles.legal}>{t('legal')}</Text>
-        <Text testID="card-fictional-back" style={styles.fictional}>
-          {t('fictional')}
+      <Text style={styles.legal}>{t('legal')}</Text>
+      {/* C2: 11 px / semiBold / pearl kept for legibility, margins and letter-spacing of the mockup. */}
+      <Text testID="card-fictional-back" style={styles.fictional}>
+        {t('fictional')}
+      </Text>
+      <View style={styles.foot}>
+        <Text style={[styles.footNumber, { fontVariant: numbers.fontVariant }]}>
+          {formatCardNumber(cardNumber)}
         </Text>
-        <View style={styles.foot}>
-          <Text style={[styles.footNumber, { fontVariant: numbers.fontVariant }]}>
-            {formatCardNumber(cardNumber)}
-          </Text>
-          <NetworkLogo height={22} />
-        </View>
+        <NetworkLogo height={24} />
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, justifyContent: 'space-between' },
-  stripe: { height: 38, marginTop: 22, backgroundColor: '#050B18' },
-  sigRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 22 },
+  root: { flex: 1 },
+  stripe: { height: 36, marginTop: 18 },
+  sigRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12, marginHorizontal: 22 },
   signature: {
     flex: 1,
     height: 34,
     borderRadius: 6,
-    backgroundColor: colors.goldPearl,
+    overflow: 'hidden',
     justifyContent: 'center',
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
   },
-  signatureText: { fontFamily: fontFamily.medium, fontStyle: 'italic', fontSize: 14, color: '#2A3550' },
+  signatureText: { ...font(15, 'regular'), fontStyle: 'italic', color: colors.navy800 },
   cvvBox: {
-    minWidth: 58,
+    height: 34,
     borderRadius: 6,
-    paddingVertical: 3,
-    paddingHorizontal: 8,
-    backgroundColor: colors.goldPearl,
+    paddingVertical: 2,
+    paddingHorizontal: 12,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  cvvLabel: { fontFamily: fontFamily.medium, fontSize: 8, letterSpacing: 1, color: '#5B6F8C' },
-  cvv: { fontFamily: fontFamily.bold, fontSize: 15, color: '#0F2A55' },
-  padded: { paddingHorizontal: 22, paddingBottom: 18, gap: 6 },
-  legal: { fontFamily: fontFamily.regular, fontSize: 9, lineHeight: 12, color: colors.goldPearlMuted },
+  cvvLabel: { ...font(8, 'regular'), letterSpacing: 1.4, color: cardText.cvvLabel },
+  cvv: { ...font(15, 'bold'), color: colors.navy800 },
+  legal: {
+    ...font(9, 'regular'),
+    lineHeight: 13.5,
+    marginTop: 9,
+    marginHorizontal: 22,
+    color: cardText.legal,
+  },
   fictional: {
-    fontFamily: fontFamily.semiBold,
-    fontSize: 11,
-    letterSpacing: 1.8,
+    ...font(11, 'semiBold'),
+    marginTop: 14,
+    marginHorizontal: 22,
+    letterSpacing: 2.4,
     color: colors.goldPearl,
     textAlign: 'center',
   },
-  foot: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  footNumber: { fontFamily: fontFamily.medium, fontSize: 11, letterSpacing: 1, color: colors.goldPearlMuted },
+  foot: {
+    position: 'absolute',
+    left: 22,
+    right: 22,
+    bottom: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  footNumber: { ...font(10, 'regular'), letterSpacing: 1.5, color: cardText.foot },
 });

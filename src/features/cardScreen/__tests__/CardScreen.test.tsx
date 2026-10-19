@@ -58,6 +58,15 @@ describe("CardScreen", () => {
     ).toMatch(/recto/);
   });
 
+  it("shows the flip hint of the visible face", async () => {
+    await renderCard();
+    expect(screen.getByTestId("card-hint")).toHaveTextContent(
+      "Touchez la carte pour la retourner",
+    );
+    await fireEvent.press(screen.getByTestId("action-flip"));
+    expect(screen.getByTestId("card-hint")).toHaveTextContent("Verso de la carte");
+  });
+
   it("regenerates the number after confirmation only", async () => {
     const alert = jest
       .spyOn(Alert, "alert")

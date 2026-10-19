@@ -12,5 +12,9 @@
     "message": "Générer un nouveau numéro de carte fictif ? L'ancien sera remplacé.",
     "cancel": "Annuler",
     "confirm": "Générer"
+  },
+  "hint": {
+    "front": "Touchez la carte pour la retourner",
+    "back": "Verso de la carte"
   }
 }

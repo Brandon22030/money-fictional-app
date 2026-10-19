@@ -9,7 +9,7 @@ import { AppText, Screen } from '@/src/components/ui';
 import { VoiceButton } from '@/src/components/voice/VoiceButton';
 import { useBalanceParts } from '@/src/store/selectors';
 import { useAppStore } from '@/src/store/useAppStore';
-import { spacing } from '@/src/theme';
+import { font, layout } from '@/src/theme';
 
 import { ActionTile } from './ActionTile';
 import { GoldLogo } from './GoldLogo';
@@ -40,30 +40,40 @@ export function CardScreen() {
 
   return (
     <Screen testID="screen-card">
-      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: bottomClearance }]}>
-        <AppText variant="h2">{t('title')}</AppText>
-        <BankCard
-          testID="card-screen-card"
-          holderName={holderName}
-          cardNumber={card.number}
-          expiry={card.expiry}
-          cvv={card.cvv}
-          balanceLabel={balance.full}
-          flipped={flipped}
-          onPress={toggleFlip}
-          brandMark={<GoldLogo />}
-        />
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingBottom: bottomClearance }]}
+        showsVerticalScrollIndicator={false}
+      >
+        <AppText variant="h2" style={styles.title}>
+          {t('title')}
+        </AppText>
+        <View style={styles.cardWrap}>
+          <BankCard
+            testID="card-screen-card"
+            holderName={holderName}
+            cardNumber={card.number}
+            expiry={card.expiry}
+            cvv={card.cvv}
+            balanceLabel={balance.full}
+            flipped={flipped}
+            onPress={toggleFlip}
+            brandMark={<GoldLogo size={26} />}
+          />
+        </View>
+        <AppText testID="card-hint" tone="onLight" style={styles.hint}>
+          {t(flipped ? 'hint.back' : 'hint.front')}
+        </AppText>
         <View style={styles.grid}>
           <View style={styles.row}>
             <ActionTile
               testID="action-flip"
-              icon="refresh-cw"
+              icon="flip"
               label={t('actions.flip')}
               onPress={toggleFlip}
             />
             <ActionTile
               testID="action-set"
-              icon="edit-3"
+              icon="edit"
               label={t('actions.set')}
               onPress={goTo('set')}
             />
@@ -71,13 +81,13 @@ export function CardScreen() {
           <View style={styles.row}>
             <ActionTile
               testID="action-pay"
-              icon="credit-card"
+              icon="card"
               label={t('actions.pay')}
               onPress={goTo('pay')}
             />
             <ActionTile
               testID="action-withdraw"
-              icon="arrow-up-right"
+              icon="up"
               label={t('actions.withdraw')}
               onPress={goTo('withdraw')}
             />
@@ -94,7 +104,7 @@ export function CardScreen() {
             </View>
             <ActionTile
               testID="action-new-number"
-              icon="shuffle"
+              icon="refresh"
               label={t('actions.newNumber')}
               onPress={confirmNewNumber}
             />
@@ -107,10 +117,13 @@ export function CardScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    padding: spacing.xl,
-    gap: spacing.xl,
+    paddingHorizontal: layout.screenX,
+    gap: layout.gap,
   },
-  grid: { gap: spacing.md },
-  row: { flexDirection: 'row', gap: spacing.md },
+  title: { paddingTop: 7, paddingHorizontal: 4 },
+  cardWrap: { paddingTop: 8, alignItems: 'center' },
+  hint: { ...font(12, 'semiBold'), textAlign: 'center', opacity: 0.75 },
+  grid: { gap: 10 },
+  row: { flexDirection: 'row', gap: 10 },
   cell: { flex: 1, justifyContent: 'center' },
 });
