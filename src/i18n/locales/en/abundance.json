@@ -1,0 +1,15 @@
+{
+  "title": "Abundance",
+  "balanceCaption": "Fictional balance",
+  "kinds": {
+    "receive": "Received",
+    "send": "Sent",
+    "pay": "Paid",
+    "withdraw": "Withdrawn"
+  },
+  "barsTitle": "Last 6 months",
+  "legend": {
+    "received": "Received",
+    "given": "Given"
+  }
+}

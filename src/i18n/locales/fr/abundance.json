@@ -1,0 +1,15 @@
+{
+  "title": "Abondance",
+  "balanceCaption": "Solde fictif",
+  "kinds": {
+    "receive": "Reçu",
+    "send": "Envoyé",
+    "pay": "Payé",
+    "withdraw": "Retiré"
+  },
+  "barsTitle": "6 derniers mois",
+  "legend": {
+    "received": "Reçu",
+    "given": "Donné"
+  }
+}

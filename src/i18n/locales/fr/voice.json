@@ -1,0 +1,5 @@
+{
+  "announce": "Votre solde bancaire actuel est de {{amount}}",
+  "listen": "Écouter",
+  "stop": "Arrêter"
+}

@@ -1,0 +1,15 @@
+{
+  "fictionalBalance": "Solde fictif - simulation",
+  "balanceLabel": "Solde disponible",
+  "today": "aujourd'hui",
+  "receive": "Recevoir",
+  "send": "Envoyer",
+  "notifications": "Historique",
+  "menu": "Réglages",
+  "editBalance": "Modifier le solde",
+  "affirmationTitle": "Affirmation du jour",
+  "favorites": "Favoris",
+  "recent": "Dernières intentions",
+  "seeAll": "Tout voir",
+  "empty": "Aucune intention pour le moment"
+}

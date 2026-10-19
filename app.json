@@ -1,0 +1,53 @@
+{
+  "expo": {
+    "name": "Abonda",
+    "slug": "abonda",
+    "description": "Abonda is a visualization and manifestation tool. It shows a symbolic balance that you choose yourself, as a daily ritual of gratitude and abundance. It is not a bank and moves no real money.",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "abonda",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.abonda.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.abonda.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/brand/adaptive-icon.png",
+        "backgroundColor": "#0B1F40"
+      },
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-localization",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/brand/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#0B1F40"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "icon": "./assets/brand/icon.png",
+    "web": {
+      "favicon": "./assets/brand/favicon.png"
+    }
+  }
+}
