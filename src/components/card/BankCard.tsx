@@ -1,18 +1,22 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState, type ReactNode } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, type LayoutChangeEvent } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
+import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
-import { colors, gradients, radius, shadow } from '@/src/theme';
+import { getVisualFixture } from '@/src/dev/visualFixture';
+import { bankCard, shadows } from '@/src/theme';
 
 import { CardBack } from './CardBack';
 import { CardFront } from './CardFront';
 import { CardShine } from './CardShine';
 import { useCardFlip } from './useCardFlip';
 
-/** ISO/IEC 7810 ID-1 card aspect ratio (85.60 x 53.98 mm). */
-export const CARD_RATIO = 1.586;
+/** Card size of the mockup (index.html:126). */
+export const CARD_WIDTH = 350;
+export const CARD_HEIGHT = 221;
+export const CARD_RATIO = CARD_WIDTH / CARD_HEIGHT;
 
 export type BankCardProps = {
   holderName: string;
@@ -27,7 +31,22 @@ export type BankCardProps = {
   testID?: string;
 };
 
-const DEFAULT_WIDTH = 340;
+const DEFAULT_WIDTH = CARD_WIDTH;
+
+function Reflection() {
+  const id = `card-reflection-${useId().replace(/\W/g, '')}`;
+  return (
+    <Svg width="100%" height="100%" style={StyleSheet.absoluteFill} pointerEvents="none">
+      <Defs>
+        <RadialGradient id={id} cx={0.85} cy={-0.1} rx={1.2} ry={0.9}>
+          <Stop offset="0" stopColor={bankCard.radial} />
+          <Stop offset="0.6" stopColor={bankCard.radial} stopOpacity={0} />
+        </RadialGradient>
+      </Defs>
+      <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${id})`} />
+    </Svg>
+  );
+}
 
 function Face({
   children,
@@ -38,17 +57,20 @@ function Face({
 }) {
   return (
     <LinearGradient
-      colors={[...gradients.navyCard.colors, colors.navy900]}
-      start={gradients.navyCard.start}
-      end={gradients.navyCard.end}
+      colors={[...bankCard.linear.colors]}
+      locations={[...bankCard.linear.locations]}
+      start={bankCard.linear.start}
+      end={bankCard.linear.end}
       style={[styles.face, padded ? styles.padded : null]}
     >
+      <Reflection />
       <LinearGradient
         pointerEvents="none"
-        colors={['rgba(125,184,240,0.22)', 'transparent']}
-        start={{ x: 1, y: 0 }}
-        end={{ x: 0.2, y: 0.8 }}
-        style={StyleSheet.absoluteFill}
+        colors={['transparent', 'rgba(255,255,255,0.1)', 'transparent']}
+        locations={[0.35, 0.5, 0.65]}
+        start={{ x: -0.066, y: 0.175 }}
+        end={{ x: 1.066, y: 0.825 }}
+        style={styles.gloss}
       />
       {children}
     </LinearGradient>
@@ -69,6 +91,8 @@ export function BankCard({
   const { t } = useTranslation('card');
   const { frontStyle, backStyle, reduceMotion } = useCardFlip(flipped);
   const [width, setWidth] = useState(DEFAULT_WIDTH);
+  // The sweep is switched off for the visual harness so that captures are stable.
+  const sweepOff = getVisualFixture() !== undefined;
 
   const onLayout = (event: LayoutChangeEvent) => {
     const next = event.nativeEvent.layout.width;
@@ -99,7 +123,7 @@ export function BankCard({
             balanceLabel={balanceLabel}
             brandMark={brandMark}
           />
-          <CardShine width={width} disabled={reduceMotion || flipped} />
+          <CardShine width={width} disabled={reduceMotion || flipped || sweepOff} />
         </Face>
       </Animated.View>
       <Animated.View
@@ -110,7 +134,7 @@ export function BankCard({
       >
         <Face padded={false}>
           <CardBack holderName={holderName} cardNumber={cardNumber} cvv={cvv} />
-          <CardShine width={width} disabled={reduceMotion || !flipped} />
+          <CardShine width={width} disabled={reduceMotion || !flipped || sweepOff} />
         </Face>
       </Animated.View>
     </Pressable>
@@ -120,23 +144,25 @@ export function BankCard({
 const styles = StyleSheet.create({
   wrapper: {
     width: '100%',
-    maxWidth: 380,
+    maxWidth: CARD_WIDTH,
     aspectRatio: CARD_RATIO,
     alignSelf: 'center',
-    borderRadius: radius.lg,
-    ...shadow.card,
+    borderRadius: bankCard.radius,
+    ...shadows.bankCard,
   },
   layer: {
     ...StyleSheet.absoluteFill,
     backfaceVisibility: 'hidden',
-    borderRadius: radius.lg,
+    borderRadius: bankCard.radius,
   },
-  padded: { padding: 22 },
+  padded: { paddingTop: 20, paddingHorizontal: 22, paddingBottom: 30 },
   face: {
     flex: 1,
-    borderRadius: radius.lg,
+    borderRadius: bankCard.radius,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.goldEdge,
+    borderWidth: bankCard.borderWidth,
+    borderColor: bankCard.borderColor,
   },
+  // Static band of the mockup (`.shine`): inset -40% -20%.
+  gloss: { position: 'absolute', top: '-40%', bottom: '-40%', left: '-20%', right: '-20%' },
 });

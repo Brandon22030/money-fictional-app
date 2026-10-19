@@ -12,5 +12,9 @@
     "message": "Generate a new fictional card number? The old one will be replaced.",
     "cancel": "Cancel",
     "confirm": "Generate"
+  },
+  "hint": {
+    "front": "Tap the card to flip it",
+    "back": "Back of the card"
   }
 }

@@ -39,7 +39,7 @@ describe('BankCard', () => {
     expect(screen.getByTestId('card-fictional-front', hidden)).toHaveTextContent(
       'FICTIONAL - SIMULATION',
     );
-    expect(screen.getByText('VALID THRU', hidden)).toBeTruthy();
+    expect(screen.getByText('EXPIRES', hidden)).toBeTruthy();
     expect(screen.getByTestId('card-chip', hidden)).toBeTruthy();
   });
 

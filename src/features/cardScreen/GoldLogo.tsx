@@ -14,7 +14,7 @@ export type GoldLogoProps = {
 };
 
 /** Gold coin emblem (see assets/brand/logo-gold.svg), decorative. */
-export function GoldLogo({ size = 24 }: GoldLogoProps) {
+export function GoldLogo({ size = 26 }: GoldLogoProps) {
   return (
     <View testID="card-gold-logo">
       <Svg

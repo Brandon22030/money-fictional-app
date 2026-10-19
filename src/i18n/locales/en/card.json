@@ -1,6 +1,6 @@
 {
   "holder": "CARDHOLDER",
-  "validThru": "VALID THRU",
+  "validThru": "EXPIRES",
   "balance": "BALANCE",
   "cvv": "CVV",
   "fictional": "FICTIONAL - SIMULATION",
