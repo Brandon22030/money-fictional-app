@@ -1,7 +1,12 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
+import { StyleSheet } from 'react-native';
 
-import { TabBar } from '@/src/components/navigation/TabBar';
+import {
+  LABEL_MAX_FONT_SIZE_MULTIPLIER,
+  LABEL_MIN_FONT_SCALE,
+  TabBar,
+} from '@/src/components/navigation/TabBar';
 import i18n from '@/src/i18n';
 
 const NAMES = ['index', 'card', 'abundance', 'history', 'settings'];
@@ -50,11 +55,29 @@ describe('TabBar', () => {
   });
 
   it.each([
-    [2, 'Abondance'],
-    [3, 'Historique'],
-  ])('never truncates the active label %s', async (index, label) => {
+    ['Accueil', 0],
+    ['Carte', 1],
+    ['Abondance', 2],
+    ['Historique', 3],
+    ['Réglages', 4],
+  ])('keeps the active label %s inside the pill', async (label, index) => {
     await render(<TabBar {...makeProps(index).props} />);
-    expect(screen.getByText(label).props.numberOfLines).toBeUndefined();
+    const text = screen.getByText(label);
+    // One line, shrunk to fit (down to 80 %) rather than overflowing the pill, and a capped
+    // system font scale so a large accessibility font cannot push it out either.
+    expect(text.props.numberOfLines).toBe(1);
+    expect(text.props.adjustsFontSizeToFit).toBe(true);
+    expect(text.props.minimumFontScale).toBe(LABEL_MIN_FONT_SCALE);
+    expect(LABEL_MIN_FONT_SCALE).toBeCloseTo(0.8);
+    expect(text.props.maxFontSizeMultiplier).toBe(LABEL_MAX_FONT_SIZE_MULTIPLIER);
+    expect(LABEL_MAX_FONT_SIZE_MULTIPLIER).toBe(1.2);
+    expect(text.props.allowFontScaling).not.toBe(false);
+    // Every box between the pill and the label may shrink, so the label gets the pill width.
+    const labelWrap = text.parent?.parent;
+    const content = labelWrap?.parent?.parent;
+    expect(StyleSheet.flatten(labelWrap?.props.style)).toMatchObject({ flexShrink: 1, minWidth: 0 });
+    expect(StyleSheet.flatten(content?.props.style)).toMatchObject({ flexShrink: 1, minWidth: 0 });
+    expect(StyleSheet.flatten(text.props.style).flexShrink ?? 1).not.toBe(0);
   });
 
   it('emits tabPress then navigates to the pressed inactive tab', async () => {
