@@ -110,10 +110,11 @@ const styles = StyleSheet.create({
   meta: {
     alignItems: 'flex-end',
   },
+  // Amount colors keep at least 3:1 on glassLight; the accent stays on the icon tab.
   in: {
-    color: colors.accent,
+    color: colors.navy700,
   },
   out: {
-    color: colors.slateBar,
+    color: colors.textOnLightMuted,
   },
 });
