@@ -135,12 +135,7 @@ export function BalanceCard() {
           label={t('send')}
           onPress={() => router.push({ pathname: '/keypad', params: { mode: 'send' } })}
         />
-        <VoiceButton
-          testID="home-voice"
-          amountMinor={balanceMinor}
-          currency={currency}
-          language={language}
-        />
+        <VoiceButton testID="home-voice" />
       </View>
     </NavyCard>
   );

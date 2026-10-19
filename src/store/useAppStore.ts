@@ -22,8 +22,8 @@ export const HOLDER_NAME_MAX_LENGTH = 26;
 /** Only the most recent user intentions are kept, to bound the persisted payload. */
 export const MAX_USER_TRANSACTIONS = 500;
 
-// Version 1 data without lastHistoryVisitAt (added later) is still valid: merge fills it
-// with null, so adding that optional field did not need a version bump.
+// Version 1 data without lastHistoryVisitAt or repeatAnnouncement (added later) is still valid:
+// merge fills them with their defaults, so adding those optional fields did not need a version bump.
 export const STORE_VERSION = 1;
 
 type AppData = {
@@ -35,6 +35,8 @@ type AppData = {
   userTransactions: Transaction[];
   /** ISO date of the last time the History screen was opened, null if never. */
   lastHistoryVisitAt: string | null;
+  /** When true, "Listen" repeats the balance announcement until it is stopped. */
+  repeatAnnouncement: boolean;
 };
 
 type AppState = AppData & {
@@ -46,6 +48,7 @@ type AppState = AppData & {
   setHolderName: (name: string) => void;
   regenerateCard: () => void;
   markHistoryVisited: (at?: Date) => void;
+  setRepeatAnnouncement: (repeat: boolean) => void;
   resetAll: () => void;
 };
 
@@ -72,6 +75,7 @@ function createInitialData(): AppData {
     card: newCard(),
     userTransactions: [],
     lastHistoryVisitAt: null,
+    repeatAnnouncement: false,
   };
 }
 
@@ -158,6 +162,10 @@ export function mergePersisted<T extends AppData>(persisted: unknown, current: T
     lastHistoryVisitAt: isIsoDate(persisted.lastHistoryVisitAt)
       ? persisted.lastHistoryVisitAt
       : current.lastHistoryVisitAt,
+    repeatAnnouncement:
+      typeof persisted.repeatAnnouncement === 'boolean'
+        ? persisted.repeatAnnouncement
+        : current.repeatAnnouncement,
   };
 }
 
@@ -234,6 +242,8 @@ export const useAppStore = create<AppState>()(
 
       markHistoryVisited: (at = new Date()) => set({ lastHistoryVisitAt: at.toISOString() }),
 
+      setRepeatAnnouncement: (repeat) => set({ repeatAnnouncement: repeat }),
+
       resetAll: () => set(createInitialData()),
     }),
     {
@@ -251,6 +261,7 @@ export const useAppStore = create<AppState>()(
         card: state.card,
         userTransactions: state.userTransactions,
         lastHistoryVisitAt: state.lastHistoryVisitAt,
+        repeatAnnouncement: state.repeatAnnouncement,
       }),
       onRehydrateStorage: () => () => {
         useAppStore.setState({ hasHydrated: true });

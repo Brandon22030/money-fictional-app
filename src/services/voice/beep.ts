@@ -1,14 +1,18 @@
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
 
-const BEEP_SOURCE = require('../../../assets/sounds/teller-beep.wav') as number;
-const MAX_WAIT_MS = 1500;
+const BEEP_SOURCE = require('../../../assets/sounds/cash-counter.m4a') as number;
+// Safety net a little above the 2 s sound, in case the finish event never comes.
+const MAX_WAIT_MS = 3000;
 
 type ActiveBeep = { player: AudioPlayer; finish: () => void };
 
 let active: ActiveBeep | null = null;
 let token = 0;
 
-/** Plays the teller beep and resolves once it has finished, been stopped, or timed out. */
+/**
+ * Plays the cash counter sound (about 2 s) and resolves once it has finished, been stopped,
+ * or timed out.
+ */
 export async function playBeep(): Promise<void> {
   stopBeep();
   const current = ++token;
