@@ -1,1 +1,13 @@
-{}
+{
+  "holder": "CARDHOLDER",
+  "validThru": "VALID THRU",
+  "balance": "BALANCE",
+  "cvv": "CVV",
+  "fictional": "FICTIONAL - SIMULATION",
+  "legal": "Fictional Abonda card, with no value and no link to any bank. A visualization and manifestation tool.",
+  "a11y": {
+    "front": "Fictional bank card, front. Simulation with no value.",
+    "back": "Fictional bank card, back. Simulation with no value.",
+    "hint": "Tap to flip the card"
+  }
+}

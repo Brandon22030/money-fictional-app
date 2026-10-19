@@ -1,1 +1,13 @@
-{}
+{
+  "holder": "TITULAIRE",
+  "validThru": "EXPIRE FIN",
+  "balance": "SOLDE",
+  "cvv": "CVV",
+  "fictional": "FICTIF - SIMULATION",
+  "legal": "Carte fictive Abonda, sans valeur et sans lien avec une banque. Outil de visualisation et de manifestation.",
+  "a11y": {
+    "front": "Carte bancaire fictive, recto. Simulation sans valeur.",
+    "back": "Carte bancaire fictive, verso. Simulation sans valeur.",
+    "hint": "Touchez pour retourner la carte"
+  }
+}
