@@ -10,13 +10,20 @@
       "title": "Recevoir de l'abondance",
       "subtitle": "Accueille ce qui arrive vers toi"
     },
-    "send": { "title": "Envoyer", "subtitle": "Offre avec joie" },
-    "pay": { "title": "Payer", "subtitle": "Règle avec sérénité" },
+    "send": {
+      "title": "Envoyer",
+      "subtitle": "Offre avec joie"
+    },
+    "pay": {
+      "title": "Payer",
+      "subtitle": "Règle avec sérénité"
+    },
     "withdraw": {
       "title": "Retirer",
       "subtitle": "Prends ce dont tu as besoin"
     }
   },
   "contact": "Pour {{name}}",
-  "insufficient": "Ce montant dépasse ton solde actuel. Essaie un montant un peu plus doux."
+  "insufficient": "Ce montant dépasse ton solde actuel. Essaie un montant un peu plus doux.",
+  "tooLarge": "Ce montant dépasse le plafond de la simulation. Essayez un montant un peu plus doux."
 }

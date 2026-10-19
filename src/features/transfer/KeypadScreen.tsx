@@ -9,11 +9,14 @@ import { useAmountInput } from "@/src/components/keypad/useAmountInput";
 import { AppText, Screen } from "@/src/components/ui";
 import { CURRENCIES } from "@/src/config/locale";
 import { findFavorite } from "@/src/data/favorites";
+import { isCurrencyPrefixed } from "@/src/domain/money";
 import type { IntentionKind } from "@/src/domain/types";
 import { useAppStore } from "@/src/store/useAppStore";
 import { colors, radius, spacing } from "@/src/theme";
 
 export type KeypadMode = "set" | IntentionKind;
+
+type Notice = "insufficient" | "tooLarge";
 
 const MODES: KeypadMode[] = ["set", "receive", "send", "pay", "withdraw"];
 
@@ -40,6 +43,7 @@ export function KeypadScreen() {
   const contactName = favorite ? t(favorite.nameKey) : undefined;
 
   const currency = useAppStore((state) => state.currency);
+  const language = useAppStore((state) => state.language);
   const balanceMinor = useAppStore((state) => state.balanceMinor);
   const setBalance = useAppStore((state) => state.setBalance);
   const applyIntention = useAppStore((state) => state.applyIntention);
@@ -49,19 +53,27 @@ export function KeypadScreen() {
     initialMinor: mode === "set" ? balanceMinor : 0,
     decimalSeparator: tKeypad("separator"),
   });
-  const [insufficient, setInsufficient] = useState(false);
+  const [notice, setNotice] = useState<Notice | null>(null);
 
+  // Opened from a deep link there is nothing to go back to: land on Home.
   const close = () => {
-    if (router.canGoBack()) router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/");
+    }
   };
 
   const onKey = (key: Parameters<typeof press>[0]) => {
-    setInsufficient(false);
+    setNotice(null);
     press(key);
   };
 
+  // A balance of zero is a valid choice; an intention needs a positive amount.
+  const disabled = mode === "set" ? false : minor <= 0;
+
   const onValidate = () => {
-    if (minor <= 0) return;
+    if (disabled) return;
     if (mode === "set") {
       setBalance(minor);
       close();
@@ -79,12 +91,13 @@ export function KeypadScreen() {
     );
     if (result.ok) {
       close();
-    } else if (result.reason === "insufficient") {
-      setInsufficient(true);
+    } else {
+      setNotice(result.reason === "insufficient" ? "insufficient" : "tooLarge");
     }
   };
 
-  const disabled = minor <= 0;
+  const symbol = CURRENCIES[currency].symbol;
+  const prefixed = isCurrencyPrefixed(currency, language);
 
   return (
     <Screen testID="screen-keypad" style={styles.screen}>
@@ -115,23 +128,31 @@ export function KeypadScreen() {
       </View>
 
       <View style={styles.amountRow}>
+        {prefixed ? (
+          <AppText variant="title" tone="onLightMuted" testID="keypad-symbol-prefix">
+            {symbol}
+          </AppText>
+        ) : null}
         <AppText variant="display" tabular testID="keypad-amount">
           {display}
         </AppText>
-        <AppText variant="title" tone="onLightMuted">
-          {` ${CURRENCIES[currency].symbol}`}
-        </AppText>
+        {prefixed ? null : (
+          <AppText variant="title" tone="onLightMuted" testID="keypad-symbol-suffix">
+            {` ${symbol}`}
+          </AppText>
+        )}
       </View>
 
       <View style={styles.messageSlot}>
-        {insufficient ? (
+        {notice ? (
           <AppText
             variant="body"
             tone="onLightMuted"
-            testID="keypad-insufficient"
+            testID={notice === "insufficient" ? "keypad-insufficient" : "keypad-too-large"}
+            accessibilityLiveRegion="polite"
             style={styles.message}
           >
-            {t("insufficient")}
+            {t(notice)}
           </AppText>
         ) : null}
       </View>

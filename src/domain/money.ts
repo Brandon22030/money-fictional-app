@@ -31,7 +31,8 @@ function groupDigits(digits: string, group: string): string {
   return digits.replace(/\B(?=(\d{3})+(?!\d))/g, group);
 }
 
-function isPrefixed(currency: Currency, language: Language): boolean {
+/** True when the currency symbol goes before the amount ("$12"), false when it follows it. */
+export function isCurrencyPrefixed(currency: Currency, language: Language): boolean {
   return language === 'en' && currency !== 'XOF';
 }
 
@@ -48,7 +49,7 @@ export function formatMoney(minor: number, currency: Currency, language: Languag
   const groupedWhole = groupDigits(String(whole), group);
   const decimals = digitsCount > 0 ? `${decimal}${String(fraction).padStart(digitsCount, '0')}` : '';
 
-  if (isPrefixed(currency, language)) {
+  if (isCurrencyPrefixed(currency, language)) {
     const integer = `${sign}${symbol}${groupedWhole}`;
     return { full: `${integer}${decimals}`, integer, decimals, suffix: '' };
   }

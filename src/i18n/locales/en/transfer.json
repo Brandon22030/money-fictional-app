@@ -10,10 +10,20 @@
       "title": "Receive abundance",
       "subtitle": "Welcome what is coming your way"
     },
-    "send": { "title": "Send", "subtitle": "Give with joy" },
-    "pay": { "title": "Pay", "subtitle": "Settle with serenity" },
-    "withdraw": { "title": "Withdraw", "subtitle": "Take what you need" }
+    "send": {
+      "title": "Send",
+      "subtitle": "Give with joy"
+    },
+    "pay": {
+      "title": "Pay",
+      "subtitle": "Settle with serenity"
+    },
+    "withdraw": {
+      "title": "Withdraw",
+      "subtitle": "Take what you need"
+    }
   },
   "contact": "For {{name}}",
-  "insufficient": "This amount is above your current balance. Try a gentler amount."
+  "insufficient": "This amount is above your current balance. Try a gentler amount.",
+  "tooLarge": "This amount is above the simulation limit. Try a gentler amount."
 }
