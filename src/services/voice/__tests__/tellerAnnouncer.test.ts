@@ -130,6 +130,25 @@ describe('tellerAnnouncer', () => {
     expect(useAnnouncementState.getState().active).toBe(false);
   });
 
+  it('settles without rejecting when a one-shot announcement fails', async () => {
+    const provider = makeProvider([]);
+    provider.speak = jest.fn(async () => {
+      throw new Error('no voice');
+    });
+    setVoiceProvider(provider);
+    (playBeep as jest.Mock).mockResolvedValue(undefined);
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+    await expect(
+      announceBalance({
+        read: () => ({ amountMinor: 100, currency: 'USD', language: 'en' }),
+        t,
+      }),
+    ).resolves.toBeUndefined();
+    expect(useAnnouncementState.getState().active).toBe(false);
+    warn.mockRestore();
+  });
+
   describe('loop', () => {
     let events: string[];
     let balance: number;
@@ -250,7 +269,9 @@ describe('tellerAnnouncer', () => {
         throw new Error('no voice');
       });
       setVoiceProvider(provider);
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
       await start();
+      expect(warn).toHaveBeenCalledWith('Balance announcement failed', expect.any(Error));
       expect(useAnnouncementState.getState().active).toBe(false);
       await jest.advanceTimersByTimeAsync(LOOP_PAUSE_MS * 2);
       expect(provider.speak).toHaveBeenCalledTimes(1);

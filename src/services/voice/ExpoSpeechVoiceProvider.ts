@@ -6,16 +6,17 @@ import type { SpeakOptions, VoiceProvider } from './VoiceProvider';
 
 export class ExpoSpeechVoiceProvider implements VoiceProvider {
   speak(text: string, { language }: SpeakOptions): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       try {
         Speech.speak(text, {
           language: SPEECH_TAGS[language],
           onDone: () => resolve(),
           onStopped: () => resolve(),
-          onError: () => resolve(),
+          // Rejecting lets the caller end a loop that would otherwise beep with no voice.
+          onError: (error) => reject(error),
         });
-      } catch {
-        resolve();
+      } catch (error) {
+        reject(error);
       }
     });
   }

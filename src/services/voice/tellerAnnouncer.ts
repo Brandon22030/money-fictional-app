@@ -100,8 +100,10 @@ export async function announceBalance(params: AnnounceBalanceParams): Promise<vo
       if (current !== generation || !params.loop) break;
       await sleep(LOOP_PAUSE_MS);
     } while (current === generation);
-  } catch {
-    // A failing provider ends the loop instead of retrying forever.
+  } catch (error) {
+    // A failing provider (for example no voice for the language) ends the loop instead of
+    // beeping forever with no voice. A one-shot announcement ends the same way.
+    if (__DEV__) console.warn('Balance announcement failed', error);
   } finally {
     if (current === generation) {
       setAnnouncementActive(false);
