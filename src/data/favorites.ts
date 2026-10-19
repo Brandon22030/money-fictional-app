@@ -1,10 +1,12 @@
-export type Favorite = { id: string; nameKey: string };
+export type FavoriteIcon = 'star' | 'heart' | 'sun' | 'users';
+
+export type Favorite = { id: string; nameKey: string; icon: FavoriteIcon };
 
 export const FAVORITES: Favorite[] = [
-  { id: 'amina', nameKey: 'content:favorites.amina' },
-  { id: 'koffi', nameKey: 'content:favorites.koffi' },
-  { id: 'lea', nameKey: 'content:favorites.lea' },
-  { id: 'samuel', nameKey: 'content:favorites.samuel' },
+  { id: 'universe', nameKey: 'content:favorites.universe', icon: 'star' },
+  { id: 'gratitude', nameKey: 'content:favorites.gratitude', icon: 'heart' },
+  { id: 'futureSelf', nameKey: 'content:favorites.futureSelf', icon: 'sun' },
+  { id: 'family', nameKey: 'content:favorites.family', icon: 'users' },
 ];
 
 /** Returns the favorite with this id, or undefined for any unknown value (free text included). */

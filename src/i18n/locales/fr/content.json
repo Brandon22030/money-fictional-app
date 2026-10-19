@@ -16,13 +16,17 @@
     "bonus": "Petite prime",
     "friend": "Merci à un ami",
     "music": "Concert en plein air",
+    "universeGratitude": "Gratitude reçue de l'Univers",
+    "dreamProject": "Projet de rêve financé",
+    "futureSelfAbundance": "Abondance reçue de Moi futur",
+    "tripWithdrawal": "Retrait pour un voyage",
     "sharedWith": "Partagé avec {{name}}"
   },
   "favorites": {
-    "amina": "Amina",
-    "koffi": "Koffi",
-    "lea": "Léa",
-    "samuel": "Samuel"
+    "universe": "Univers",
+    "gratitude": "Gratitude",
+    "futureSelf": "Moi futur",
+    "family": "Famille"
   },
   "affirmations": {
     "a01": "Je suis en paix avec l'abondance qui m'entoure.",
@@ -31,7 +35,7 @@
     "a04": "Ma gratitude ouvre la porte à de nouvelles belles choses.",
     "a05": "Je choisis la confiance plutôt que l'inquiétude.",
     "a06": "Aujourd'hui, je célèbre mes petites victoires.",
-    "a07": "Je suis assez, tel que je suis.",
+    "a07": "L'abondance circule vers moi avec facilité, et je la reçois avec gratitude.",
     "a08": "Mon énergie attire des rencontres lumineuses.",
     "a09": "Je respire profondément et je laisse partir la tension.",
     "a10": "Je remercie les personnes qui rendent mes jours plus doux.",

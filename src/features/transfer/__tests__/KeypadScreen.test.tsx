@@ -82,24 +82,24 @@ describe("KeypadScreen", () => {
   });
 
   it("disables validation at zero and shows the contact", async () => {
-    mockParams = { mode: "send", contact: "amina" };
+    mockParams = { mode: "send", contact: "family" };
     await render(<KeypadScreen />);
     expect(
       screen.getByTestId("keypad-validate").props.accessibilityState.disabled,
     ).toBe(true);
     expect(screen.getByTestId("keypad-contact")).toBeTruthy();
-    expect(screen.getByText("Pour Amina")).toBeTruthy();
+    expect(screen.getByText("Pour Famille")).toBeTruthy();
   });
 
   it("records a favorite as a shared-with intention keyed by its id", async () => {
-    mockParams = { mode: "send", contact: "amina" };
+    mockParams = { mode: "send", contact: "family" };
     await render(<KeypadScreen />);
     await typeDigits(["1", "0"]);
     await fireEvent.press(screen.getByTestId("keypad-validate"));
     expect(useAppStore.getState().userTransactions[0]).toMatchObject({
       kind: "send",
       labelKey: "content:intentions.sharedWith",
-      labelParams: { contact: "amina" },
+      labelParams: { contact: "family" },
     });
   });
 
