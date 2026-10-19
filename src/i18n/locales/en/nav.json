@@ -1,1 +1,9 @@
-{}
+{
+  "tabs": {
+    "home": "Home",
+    "card": "Card",
+    "abundance": "Abundance",
+    "history": "History",
+    "settings": "Settings"
+  }
+}

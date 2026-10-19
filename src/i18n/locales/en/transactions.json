@@ -1,1 +1,6 @@
-{}
+{
+  "direction": {
+    "in": "Received",
+    "out": "Sent"
+  }
+}
