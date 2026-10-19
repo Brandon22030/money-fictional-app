@@ -1,58 +1,54 @@
 import { Feather } from '@expo/vector-icons';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/src/components/ui/AppText';
 import { Icon } from '@/src/components/ui/Icon';
-import type { Currency, Language } from '@/src/config/locale';
 import { colors, font, glass, shadows } from '@/src/theme';
-import { announceBalance, stopAnnouncement } from '@/src/services/voice';
+import i18n from '@/src/i18n';
+import {
+  announceBalance,
+  stopAnnouncement,
+  useIsAnnouncing,
+  type AnnouncementSnapshot,
+} from '@/src/services/voice';
+import { useAppStore } from '@/src/store/useAppStore';
 
 export type VoiceButtonProps = {
-  amountMinor: number;
-  currency: Currency;
-  language: Language;
   variant?: 'action' | 'tile';
   testID?: string;
 };
 
-export function VoiceButton({
-  amountMinor,
-  currency,
-  language,
-  variant = 'action',
-  testID,
-}: VoiceButtonProps) {
-  const { t } = useTranslation('voice');
-  const [speaking, setSpeaking] = useState(false);
-  const mounted = useRef(true);
-  // Each press gets an id: only the latest announcement may reset `speaking` when it ends.
-  const callId = useRef(0);
+// Not the hook's `t`: the announcement can outlive this button, so it must not capture one.
+const translate = (key: string, options?: Record<string, unknown>) =>
+  i18n.t(`voice:${key}`, options);
 
-  useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-      callId.current += 1;
-      void stopAnnouncement();
-    };
-  }, []);
+function readCurrentBalance(): AnnouncementSnapshot {
+  const { balanceMinor, currency, language } = useAppStore.getState();
+  return { amountMinor: balanceMinor, currency, language };
+}
+
+/**
+ * Starts or stops the balance announcement. The state is global (not per button), so the
+ * Home and Card buttons stay in sync and a loop keeps running when the tab changes.
+ */
+export function VoiceButton({ variant = 'action', testID }: VoiceButtonProps) {
+  const { t } = useTranslation('voice');
+  const speaking = useIsAnnouncing();
 
   const onPress = useCallback(() => {
-    const id = callId.current + 1;
-    callId.current = id;
     if (speaking) {
-      setSpeaking(false);
       void stopAnnouncement();
       return;
     }
-    setSpeaking(true);
-    void announceBalance({ amountMinor, currency, language, t }).finally(() => {
-      if (mounted.current && callId.current === id) setSpeaking(false);
+    void announceBalance({
+      read: readCurrentBalance,
+      t: translate,
+      loop: useAppStore.getState().repeatAnnouncement,
     });
-  }, [speaking, amountMinor, currency, language, t]);
+  }, [speaking]);
 
   const label = speaking ? t('stop') : t('listen');
   const isTile = variant === 'tile';

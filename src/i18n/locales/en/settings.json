@@ -16,6 +16,10 @@
     "placeholder": "Name on card",
     "hint": "26 characters maximum, uppercase."
   },
+  "repeat": {
+    "title": "Repeat announcement",
+    "hint": "Repeats the balance announcement, with a short pause, until you press Stop."
+  },
   "reset": {
     "button": "Reset",
     "description": "Sets the balance, card and history back to their initial state.",

@@ -22,9 +22,6 @@ export function CardScreen() {
 
   const holderName = useAppStore((state) => state.holderName);
   const card = useAppStore((state) => state.card);
-  const balanceMinor = useAppStore((state) => state.balanceMinor);
-  const currency = useAppStore((state) => state.currency);
-  const language = useAppStore((state) => state.language);
   const regenerateCard = useAppStore((state) => state.regenerateCard);
   const balance = useBalanceParts();
 
@@ -94,13 +91,7 @@ export function CardScreen() {
           </View>
           <View style={styles.row}>
             <View style={styles.cell}>
-              <VoiceButton
-                testID="action-listen"
-                variant="tile"
-                amountMinor={balanceMinor}
-                currency={currency}
-                language={language}
-              />
+              <VoiceButton testID="action-listen" variant="tile" />
             </View>
             <ActionTile
               testID="action-new-number"

@@ -71,6 +71,30 @@ describe('SettingsScreen', () => {
     expect(input.props.maxLength).toBe(26);
   });
 
+  it('toggles and persists the repeat announcement switch with its accessibility props', async () => {
+    await renderScreen();
+    const toggle = screen.getByTestId('settings-repeat');
+    expect(toggle.props.accessibilityRole).toBe('switch');
+    expect(toggle.props.accessibilityState).toEqual({ checked: false });
+    expect(screen.getByLabelText("Répéter l'annonce")).toBeTruthy();
+    expect(toggle.props.accessibilityHint).toContain('Arrêter');
+
+    await fireEvent.press(toggle);
+    expect(useAppStore.getState().repeatAnnouncement).toBe(true);
+    expect(screen.getByTestId('settings-repeat').props.accessibilityState).toEqual({
+      checked: true,
+    });
+
+    await fireEvent.press(screen.getByTestId('settings-repeat'));
+    expect(useAppStore.getState().repeatAnnouncement).toBe(false);
+  });
+
+  it('translates the repeat switch in English', async () => {
+    await renderScreen();
+    await fireEvent.press(screen.getByTestId('settings-language-en'));
+    expect(await screen.findByLabelText('Repeat announcement')).toBeTruthy();
+  });
+
   it('resets only after confirmation', async () => {
     const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
     useAppStore.getState().setBalance(4242);
