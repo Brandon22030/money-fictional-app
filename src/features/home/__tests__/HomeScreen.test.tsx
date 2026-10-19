@@ -1,4 +1,3 @@
-/// <reference path="../../../../node_modules/expo-router/build/ts-declarations/expect.d.ts" />
 import { fireEvent, screen } from '@testing-library/react-native';
 import { renderRouter } from 'expo-router/testing-library';
 import { join } from 'path';

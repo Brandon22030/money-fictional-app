@@ -19,7 +19,7 @@ Abonda est un outil de visualisation et de manifestation. L'utilisateur choisit 
 
 ## Stack
 
-- Expo (SDK 58), React Native et React, TypeScript
+- Expo (SDK 57), React Native et React, TypeScript
 - expo-router pour la navigation par onglets et la modale clavier
 - zustand pour l'état, AsyncStorage pour la persistance locale
 - react-native-reanimated, react-native-svg, expo-linear-gradient, expo-blur

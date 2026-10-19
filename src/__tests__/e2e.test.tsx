@@ -1,4 +1,3 @@
-/// <reference path="../../node_modules/expo-router/build/ts-declarations/expect.d.ts" />
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
