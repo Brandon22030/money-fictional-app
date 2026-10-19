@@ -1,3 +1,6 @@
+import { existsSync } from 'fs';
+import { join } from 'path';
+
 import {
   formatCardNumber,
   generateCardNumber,
@@ -29,6 +32,15 @@ describe('card', () => {
 
   it('formats in groups of 4', () => {
     expect(formatCardNumber('8123456789012345')).toBe('8123 4567 8901 2345');
+  });
+
+  it('is idempotent on an already grouped number', () => {
+    expect(formatCardNumber('8123 4567 8901 2345')).toBe('8123 4567 8901 2345');
+  });
+
+  it('is the only card number formatter in the codebase', () => {
+    const duplicate = join(__dirname, '..', '..', 'components', 'card', 'formatCardNumber.ts');
+    expect(existsSync(duplicate)).toBe(false);
   });
 
   it('generates an expiry four years ahead', () => {

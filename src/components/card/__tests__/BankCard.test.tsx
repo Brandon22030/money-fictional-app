@@ -4,8 +4,16 @@ import { StyleSheet } from 'react-native';
 import i18n from '@/src/i18n';
 import { colors, fontFamily } from '@/src/theme';
 import { BankCard } from '@/src/components/card/BankCard';
-import { formatCardNumber } from '@/src/components/card/formatCardNumber';
+import { formatCardNumber } from '@/src/domain/card';
 
+const mockShineWidths: number[] = [];
+
+jest.mock('@/src/components/card/CardShine', () => ({
+  CardShine: ({ width }: { width: number }) => {
+    mockShineWidths.push(width);
+    return null;
+  },
+}));
 
 const props = {
   holderName: 'ÉLISE ADJOVI',
@@ -71,5 +79,22 @@ describe('BankCard', () => {
   it('formats card numbers by groups of four', () => {
     expect(formatCardNumber('8402158733069914')).toBe('8402 1587 3306 9914');
     expect(formatCardNumber('8402 1587')).toBe('8402 1587');
+  });
+
+  it('re-renders on layout only when the width changes', async () => {
+    await render(<BankCard {...props} testID="card" />);
+    const card = screen.getByTestId('card');
+    const layout = (width: number) => ({ nativeEvent: { layout: { x: 0, y: 0, width, height: 200 } } });
+
+    await fireEvent(card, 'layout', layout(300));
+    const afterFirst = mockShineWidths.length;
+    expect(mockShineWidths.slice(-2)).toEqual([300, 300]);
+
+    await fireEvent(card, 'layout', layout(300));
+    expect(mockShineWidths).toHaveLength(afterFirst);
+
+    await fireEvent(card, 'layout', layout(320));
+    expect(mockShineWidths.length).toBeGreaterThan(afterFirst);
+    expect(mockShineWidths.slice(-1)).toEqual([320]);
   });
 });

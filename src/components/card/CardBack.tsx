@@ -1,10 +1,10 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
+import { formatCardNumber } from '@/src/domain/card';
 import { colors, fontFamily, numbers } from '@/src/theme';
 
 import { NetworkLogo } from './NetworkLogo';
-import { formatCardNumber } from './formatCardNumber';
 
 export type CardBackProps = { holderName: string; cardNumber: string; cvv: string };
 

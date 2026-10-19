@@ -4,11 +4,11 @@ import { useTranslation } from 'react-i18next';
 import Svg, { Path } from 'react-native-svg';
 
 import { BANK_NAME } from '@/src/config/brand';
+import { formatCardNumber } from '@/src/domain/card';
 import { colors, fontFamily, numbers } from '@/src/theme';
 
 import { EmvChip } from './EmvChip';
 import { NetworkLogo } from './NetworkLogo';
-import { formatCardNumber } from './formatCardNumber';
 
 export type CardFrontProps = {
   holderName: string;

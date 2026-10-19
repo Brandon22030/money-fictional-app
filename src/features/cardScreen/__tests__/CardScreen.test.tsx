@@ -2,7 +2,7 @@ import { act, fireEvent, screen } from "@testing-library/react-native";
 import { renderRouter } from "expo-router/testing-library";
 import { Alert } from "react-native";
 
-import { formatCardNumber } from "@/src/components/card/formatCardNumber";
+import { formatCardNumber } from "@/src/domain/card";
 import { formatMoney } from "@/src/domain/money";
 import i18n from "@/src/i18n";
 import { useAppStore } from "@/src/store/useAppStore";

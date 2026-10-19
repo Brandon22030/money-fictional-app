@@ -70,7 +70,10 @@ export function BankCard({
   const { frontStyle, backStyle, reduceMotion } = useCardFlip(flipped);
   const [width, setWidth] = useState(DEFAULT_WIDTH);
 
-  const onLayout = (event: LayoutChangeEvent) => setWidth(event.nativeEvent.layout.width);
+  const onLayout = (event: LayoutChangeEvent) => {
+    const next = event.nativeEvent.layout.width;
+    if (next !== width) setWidth(next);
+  };
 
   return (
     <Pressable
