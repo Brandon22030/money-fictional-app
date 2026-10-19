@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 
 import { BankCard } from '@/src/components/card';
+import { useTabBarClearance } from '@/src/components/navigation/tabBarLayout';
 import { AppText, Screen } from '@/src/components/ui';
 import { VoiceButton } from '@/src/components/voice/VoiceButton';
 import { useBalanceParts } from '@/src/store/selectors';
@@ -13,13 +14,11 @@ import { spacing } from '@/src/theme';
 import { ActionTile } from './ActionTile';
 import { GoldLogo } from './GoldLogo';
 
-/** Keeps the grid clear of the floating tab bar. */
-const TAB_BAR_CLEARANCE = 120;
-
 export function CardScreen() {
   const { t } = useTranslation('cardScreen');
   const router = useRouter();
   const [flipped, setFlipped] = useState(false);
+  const bottomClearance = useTabBarClearance();
 
   const holderName = useAppStore((state) => state.holderName);
   const card = useAppStore((state) => state.card);
@@ -41,7 +40,7 @@ export function CardScreen() {
 
   return (
     <Screen testID="screen-card">
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: bottomClearance }]}>
         <AppText variant="h2">{t('title')}</AppText>
         <BankCard
           testID="card-screen-card"
@@ -109,7 +108,6 @@ export function CardScreen() {
 const styles = StyleSheet.create({
   content: {
     padding: spacing.xl,
-    paddingBottom: TAB_BAR_CLEARANCE,
     gap: spacing.xl,
   },
   grid: { gap: spacing.md },

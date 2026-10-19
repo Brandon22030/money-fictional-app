@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SectionList, StyleSheet, TextInput, View } from 'react-native';
 
+import { useTabBarClearance } from '@/src/components/navigation/tabBarLayout';
 import { TransactionTicket, type FeatherIconName } from '@/src/components/transactions/TransactionTicket';
 import { AppText, Screen } from '@/src/components/ui';
 import { transactionTitle } from '@/src/data/transactionTitle';
@@ -21,14 +22,13 @@ const KIND_ICONS: Record<IntentionKind, FeatherIconName> = {
   withdraw: 'log-out',
 };
 
-const LIST_BOTTOM_PADDING = 120;
-
 export function HistoryScreen() {
   const { t } = useTranslation('history');
   const transactions = useAllTransactions();
   const currency = useAppStore((state) => state.currency);
   const language = useAppStore((state) => state.language);
   const [query, setQuery] = useState('');
+  const bottomClearance = useTabBarClearance();
 
   const entries = useMemo<TransactionEntry[]>(
     () =>
@@ -78,7 +78,7 @@ export function HistoryScreen() {
         stickySectionHeadersEnabled={false}
         initialNumToRender={20}
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: bottomClearance }]}
         renderSectionHeader={({ section }) => (
           <AppText variant="bodyStrong" tone="onLightMuted" style={styles.day}>
             {dayFormat.format(section.date)}
@@ -134,7 +134,6 @@ const styles = StyleSheet.create({
   list: {
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.lg,
-    paddingBottom: LIST_BOTTOM_PADDING,
   },
   day: {
     marginTop: spacing.md,

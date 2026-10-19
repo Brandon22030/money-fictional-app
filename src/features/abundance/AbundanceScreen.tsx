@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet } from 'react-native';
 
 import { RingGauge, type RingSegment } from '@/src/components/charts/RingGauge';
 import { StackedBarChart } from '@/src/components/charts/StackedBarChart';
+import { useTabBarClearance } from '@/src/components/navigation/tabBarLayout';
 import { AppText, NavyCard, Screen } from '@/src/components/ui';
 import { formatCompact, getLocaleTag } from '@/src/domain/money';
 import { INTENTION_KINDS, monthlyTotals, shareByKind } from '@/src/domain/stats';
@@ -19,14 +20,13 @@ const KIND_STYLE: Record<IntentionKind, Pick<RingSegment, 'color' | 'icon'>> = {
   withdraw: { color: colors.navy700, icon: 'log-out' },
 };
 
-const SCROLL_BOTTOM_PADDING = 120;
-
 export function AbundanceScreen() {
   const { t } = useTranslation('abundance');
   const transactions = useAllTransactions();
   const balanceMinor = useAppStore((state) => state.balanceMinor);
   const currency = useAppStore((state) => state.currency);
   const language = useAppStore((state) => state.language);
+  const bottomClearance = useTabBarClearance();
 
   const segments = useMemo<RingSegment[]>(() => {
     const shares = shareByKind(transactions);
@@ -52,7 +52,7 @@ export function AbundanceScreen() {
 
   return (
     <Screen testID="screen-abundance">
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: bottomClearance }]}>
         <AppText variant="h2">{t('title')}</AppText>
         <NavyCard testID="abundance-ring" contentStyle={styles.ring}>
           <RingGauge
@@ -79,7 +79,6 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.lg,
-    paddingBottom: SCROLL_BOTTOM_PADDING,
     gap: spacing.xl,
   },
   ring: {

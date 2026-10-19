@@ -8,6 +8,8 @@ import { AppText } from '@/src/components/ui/AppText';
 import { colors, radius, spacing } from '@/src/theme';
 import { shadow } from '@/src/theme/tokens';
 
+import { TAB_ITEM_SIZE, tabBarBottom } from './tabBarLayout';
+
 type FeatherName = keyof typeof Feather.glyphMap;
 
 const TABS: Record<string, { icon: FeatherName; labelKey: string }> = {
@@ -17,8 +19,6 @@ const TABS: Record<string, { icon: FeatherName; labelKey: string }> = {
   history: { icon: 'clock', labelKey: 'tabs.history' },
   settings: { icon: 'settings', labelKey: 'tabs.settings' },
 };
-
-const ITEM_SIZE = 46;
 
 type TabItemProps = {
   testID: string;
@@ -67,7 +67,7 @@ export function TabBar({ state, navigateToTab, insets }: BottomTabBarProps) {
   const { t } = useTranslation('nav');
 
   return (
-    <View style={[styles.bar, { bottom: Math.max(insets.bottom, spacing.md) }]}>
+    <View style={[styles.bar, { bottom: tabBarBottom(insets.bottom) }]}>
       {state.routes.map((route, index) => {
         const tab = TABS[route.name];
         return (
@@ -99,11 +99,11 @@ const styles = StyleSheet.create({
     ...shadow.card,
   },
   wrap: {
-    flexBasis: ITEM_SIZE,
+    flexBasis: TAB_ITEM_SIZE,
     flexShrink: 1,
   },
   item: {
-    height: ITEM_SIZE,
+    height: TAB_ITEM_SIZE,
     borderRadius: radius.pill,
     flexDirection: 'row',
     alignItems: 'center',

@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet } from 'react-native';
 
+import { useTabBarClearance } from '@/src/components/navigation/tabBarLayout';
 import { AppText, Screen, TicketCard } from '@/src/components/ui';
 import { getAffirmationOfTheDay } from '@/src/data/affirmations';
 import { spacing } from '@/src/theme';
@@ -13,11 +14,12 @@ import { RecentIntentions } from './RecentIntentions';
 export function HomeScreen() {
   const { t } = useTranslation('home');
   const affirmationKey = getAffirmationOfTheDay();
+  const bottomClearance = useTabBarClearance();
 
   return (
     <Screen testID="screen-home">
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingBottom: bottomClearance }]}
         showsVerticalScrollIndicator={false}
       >
         <HomeHeader />
@@ -40,7 +42,6 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   content: {
     padding: spacing.xl,
-    paddingBottom: 140,
     gap: spacing.xl,
   },
   affirmation: {

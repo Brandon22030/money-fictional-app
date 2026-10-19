@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
+import { useTabBarClearance } from '@/src/components/navigation/tabBarLayout';
 import { AppText, Screen } from '@/src/components/ui';
 import { type Currency, type Language } from '@/src/config/locale';
 import i18n from '@/src/i18n';
@@ -13,7 +14,6 @@ import { SegmentedControl, type SegmentedOption } from './SegmentedControl';
 
 const CURRENCY_ORDER: Currency[] = ['EUR', 'XOF', 'USD'];
 const LANGUAGE_ORDER: Language[] = ['fr', 'en'];
-const TAB_BAR_CLEARANCE = 140;
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -32,6 +32,7 @@ export function SettingsScreen() {
   const language = useAppStore((state) => state.language);
   const holderName = useAppStore((state) => state.holderName);
   const [holderDraft, setHolderDraft] = useState<string | null>(null);
+  const bottomClearance = useTabBarClearance();
 
   const currencyOptions: SegmentedOption<Currency>[] = CURRENCY_ORDER.map((value) => ({
     value,
@@ -68,7 +69,7 @@ export function SettingsScreen() {
   return (
     <Screen testID="screen-settings">
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingBottom: bottomClearance }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -144,7 +145,6 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing['2xl'],
     paddingTop: spacing.lg,
-    paddingBottom: TAB_BAR_CLEARANCE,
     gap: spacing['2xl'],
   },
   section: {
