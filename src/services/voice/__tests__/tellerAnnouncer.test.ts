@@ -1,4 +1,4 @@
-import { playBeep } from '@/src/services/voice/beep';
+import { playBeep, stopBeep } from '@/src/services/voice/beep';
 import {
   announceBalance,
   getVoiceProvider,
@@ -7,7 +7,7 @@ import {
 } from '@/src/services/voice';
 import type { VoiceProvider } from '@/src/services/voice';
 
-jest.mock('@/src/services/voice/beep', () => ({ playBeep: jest.fn() }));
+jest.mock('@/src/services/voice/beep', () => ({ playBeep: jest.fn(), stopBeep: jest.fn() }));
 
 const t = (key: string, options?: Record<string, unknown>) =>
   `${key}:${String(options?.amount)}:${String(options?.lng)}`;
@@ -47,7 +47,7 @@ describe('tellerAnnouncer', () => {
     });
 
     expect(getVoiceProvider()).toBe(provider);
-    expect(events).toEqual(['beep done', 'speak announce:1250 euros et 50 centimes:fr']);
+    expect(events).toEqual(['stop', 'beep done', 'speak announce:1250 euros et 50 centimes:fr']);
     expect(provider.speak).toHaveBeenCalledWith(expect.any(String), {
       language: 'fr',
     });
@@ -65,7 +65,7 @@ describe('tellerAnnouncer', () => {
       t,
     });
 
-    expect(events).toEqual(['speak announce:1 dollar:en']);
+    expect(events).toEqual(['stop', 'speak announce:1 dollar:en']);
   });
 
   it('does not speak when stopped during the beep', async () => {
@@ -84,6 +84,26 @@ describe('tellerAnnouncer', () => {
     release();
     await pending;
 
-    expect(events).toEqual(['stop']);
+    expect(events).toEqual(['stop', 'stop']);
+    expect(events.some((event) => event.startsWith('speak'))).toBe(false);
+  });
+
+  it('stops the previous speech before speaking again', async () => {
+    const events: string[] = [];
+    const provider = makeProvider(events);
+    setVoiceProvider(provider);
+    (playBeep as jest.Mock).mockResolvedValue(undefined);
+
+    await announceBalance({ amountMinor: 100, currency: 'USD', language: 'en', t });
+
+    const stopOrder = (provider.stop as jest.Mock).mock.invocationCallOrder[0];
+    const speakOrder = (provider.speak as jest.Mock).mock.invocationCallOrder[0];
+    expect(stopOrder).toBeLessThan(speakOrder as number);
+  });
+
+  it('interrupts the beep in progress when stopped', async () => {
+    setVoiceProvider(makeProvider([]));
+    await stopAnnouncement();
+    expect(stopBeep).toHaveBeenCalledTimes(1);
   });
 });

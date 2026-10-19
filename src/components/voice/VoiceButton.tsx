@@ -26,16 +26,21 @@ export function VoiceButton({
   const { t } = useTranslation('voice');
   const [speaking, setSpeaking] = useState(false);
   const mounted = useRef(true);
+  // Each press gets an id: only the latest announcement may reset `speaking` when it ends.
+  const callId = useRef(0);
 
   useEffect(() => {
     mounted.current = true;
     return () => {
       mounted.current = false;
+      callId.current += 1;
       void stopAnnouncement();
     };
   }, []);
 
   const onPress = useCallback(() => {
+    const id = callId.current + 1;
+    callId.current = id;
     if (speaking) {
       setSpeaking(false);
       void stopAnnouncement();
@@ -43,7 +48,7 @@ export function VoiceButton({
     }
     setSpeaking(true);
     void announceBalance({ amountMinor, currency, language, t }).finally(() => {
-      if (mounted.current) setSpeaking(false);
+      if (mounted.current && callId.current === id) setSpeaking(false);
     });
   }, [speaking, amountMinor, currency, language, t]);
 

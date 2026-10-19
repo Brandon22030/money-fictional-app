@@ -1,6 +1,6 @@
 import type { Currency, Language } from '@/src/config/locale';
 
-import { playBeep } from './beep';
+import { playBeep, stopBeep } from './beep';
 import { getVoiceProvider } from './registry';
 import { spokenAmount } from './spokenAmount';
 
@@ -22,6 +22,10 @@ export async function announceBalance({
 }: AnnounceBalanceParams): Promise<void> {
   generation += 1;
   const current = generation;
+  const provider = getVoiceProvider();
+  // Never overlap a previous announcement, from this button or another one.
+  await provider.stop();
+  if (current !== generation) return;
 
   try {
     await playBeep();
@@ -32,11 +36,12 @@ export async function announceBalance({
 
   const amount = spokenAmount(amountMinor, currency, language);
   const text = t('announce', { amount, lng: language });
-  await getVoiceProvider().speak(text, { language });
+  await provider.speak(text, { language });
 }
 
-/** Stops the current announcement, including one still waiting on the beep. */
+/** Stops the current announcement, including the beep still playing before it. */
 export async function stopAnnouncement(): Promise<void> {
   generation += 1;
+  stopBeep();
   await getVoiceProvider().stop();
 }

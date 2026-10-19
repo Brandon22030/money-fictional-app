@@ -7,6 +7,7 @@ import type { VoiceProvider } from '@/src/services/voice';
 
 jest.mock('@/src/services/voice/beep', () => ({
   playBeep: jest.fn(async () => undefined),
+  stopBeep: jest.fn(),
 }));
 
 describe('VoiceButton', () => {
@@ -61,5 +62,36 @@ describe('VoiceButton', () => {
       finishSpeech();
     });
     expect(screen.getByTestId('voice')).toBeTruthy();
+  });
+
+  it('ignores the end of an older announcement after a stop and a new press', async () => {
+    const pending: (() => void)[] = [];
+    provider.speak = jest.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          pending.push(resolve);
+        }),
+    );
+    // A provider whose stop does not settle the pending speech right away.
+    provider.stop = jest.fn(async () => undefined);
+
+    await render(<VoiceButton testID="voice" amountMinor={100} currency="EUR" language="fr" />);
+    await fireEvent.press(screen.getByTestId('voice'));
+    expect(screen.getByLabelText('Arrêter')).toBeTruthy();
+    await fireEvent.press(screen.getByTestId('voice'));
+    expect(screen.getByLabelText('Écouter')).toBeTruthy();
+    await fireEvent.press(screen.getByTestId('voice'));
+    expect(screen.getByLabelText('Arrêter')).toBeTruthy();
+    expect(pending).toHaveLength(2);
+
+    await act(async () => {
+      pending[0]?.();
+    });
+    expect(screen.getByLabelText('Arrêter')).toBeTruthy();
+
+    await act(async () => {
+      pending[1]?.();
+    });
+    expect(screen.getByLabelText('Écouter')).toBeTruthy();
   });
 });
