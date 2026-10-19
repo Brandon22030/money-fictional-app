@@ -66,6 +66,18 @@ describe('HomeScreen', () => {
     expect(screen).toHaveSearchParams({ mode: 'send', contact: 'family' });
   });
 
+  it('shows the four abundance sources and routes each to the keypad', async () => {
+    await renderRouter(APP_DIR);
+    await screen.findByTestId('screen-home');
+
+    expect(screen.getByText("Sources d'abondance")).toBeTruthy();
+    for (const name of ['Univers', 'Gratitude', 'Moi futur', 'Famille']) {
+      expect(screen.getByText(name)).toBeTruthy();
+    }
+    await fireEvent.press(screen.getByTestId('home-favorite-universe'));
+    expect(screen).toHaveSearchParams({ mode: 'send', contact: 'universe' });
+  });
+
   it('lists the five latest intentions and links to the history', async () => {
     await renderRouter(APP_DIR);
     await screen.findByTestId('screen-home');

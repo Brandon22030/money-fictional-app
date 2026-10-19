@@ -3,22 +3,18 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/src/components/ui';
-import { TransactionTicket, type FeatherIconName } from '@/src/components/transactions/TransactionTicket';
+import { TransactionTicket } from '@/src/components/transactions/TransactionTicket';
 import { transactionTitle } from '@/src/data/transactionTitle';
 import { formatMoney } from '@/src/domain/money';
-import type { IntentionKind } from '@/src/domain/types';
 import { useAllTransactions } from '@/src/store/selectors';
 import { useAppStore } from '@/src/store/useAppStore';
-import { spacing } from '@/src/theme';
+import { colors, font, layout } from '@/src/theme';
 
 const RECENT_COUNT = 5;
 
-const KIND_ICONS: Record<IntentionKind, FeatherIconName> = {
-  receive: 'arrow-down-left',
-  send: 'arrow-up-right',
-  pay: 'credit-card',
-  withdraw: 'download',
-};
+function isSameDay(a: Date, b: Date): boolean {
+  return a.toDateString() === b.toDateString();
+}
 
 export function RecentIntentions() {
   const { t } = useTranslation('home');
@@ -26,18 +22,21 @@ export function RecentIntentions() {
   const transactions = useAllTransactions();
   const currency = useAppStore((state) => state.currency);
   const language = useAppStore((state) => state.language);
+  const now = new Date();
   const recent = transactions.slice(0, RECENT_COUNT);
 
   return (
-    <View>
+    <View style={styles.section}>
       <View style={styles.header}>
-        <AppText variant="bodyStrong">{t('recent')}</AppText>
+        <AppText variant="bodyStrong" style={styles.title}>
+          {t('recent')}
+        </AppText>
         <Pressable
           testID="home-see-all"
           accessibilityRole="link"
           onPress={() => router.push('/history')}
         >
-          <AppText variant="caption" tone="onLightMuted">
+          <AppText variant="caption" style={styles.seeAll}>
             {t('seeAll')}
           </AppText>
         </Pressable>
@@ -48,18 +47,22 @@ export function RecentIntentions() {
         </AppText>
       ) : (
         <View style={styles.list}>
-          {recent.map((tx) => (
-            <TransactionTicket
-              key={tx.id}
-              testID={`home-tx-${tx.id}`}
-              title={transactionTitle(tx, t)}
-              amountLabel={formatMoney(tx.amountMinor, currency, language).full}
-              direction={tx.kind === 'receive' ? 'in' : 'out'}
-              date={new Date(tx.createdAt)}
-              locale={language}
-              icon={KIND_ICONS[tx.kind]}
-            />
-          ))}
+          {recent.map((tx) => {
+            const date = new Date(tx.createdAt);
+            return (
+              <TransactionTicket
+                key={tx.id}
+                testID={`home-tx-${tx.id}`}
+                kind={tx.kind}
+                title={transactionTitle(tx, t)}
+                amountLabel={formatMoney(tx.amountMinor, currency, language).full}
+                direction={tx.kind === 'receive' ? 'in' : 'out'}
+                date={date}
+                locale={language}
+                dayLabel={isSameDay(date, now) ? t('todayLabel') : undefined}
+              />
+            );
+          })}
         </View>
       )}
     </View>
@@ -67,13 +70,24 @@ export function RecentIntentions() {
 }
 
 const styles = StyleSheet.create({
+  section: {
+    gap: layout.gap,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.md,
+    marginTop: 2,
+  },
+  title: {
+    ...font(16, 'bold'),
+    color: colors.navy800,
+  },
+  seeAll: {
+    ...font(13, 'bold'),
+    color: colors.navy700,
   },
   list: {
-    gap: spacing.md,
+    gap: layout.gap,
   },
 });
