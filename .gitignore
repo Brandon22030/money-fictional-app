@@ -1,11 +1,10 @@
 .DS_Store
 .agents/
 node_modules/
-settings.json
 
 # Claude Code local config (may contain secrets)
-.claude/settings.json
-.claude/settings.local.json
+/.claude/settings.json
+/.claude/settings.local.json
 
 # Expo
 .expo/
