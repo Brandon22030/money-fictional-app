@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/src/components/ui';
-import { colors, radius, spacing } from '@/src/theme';
+import { colors, font } from '@/src/theme';
 
 export type SegmentedOption<T extends string> = { value: T; label: string };
 
@@ -31,7 +31,7 @@ export function SegmentedControl<T extends string>({
             onPress={() => onChange(option.value)}
             style={[styles.segment, selected ? styles.segmentSelected : null]}
           >
-            <AppText variant="bodyStrong" tone={selected ? 'onDark' : 'onLight'}>
+            <AppText style={[styles.label, selected ? styles.labelSelected : null]}>
               {option.label}
             </AppText>
           </Pressable>
@@ -44,18 +44,27 @@ export function SegmentedControl<T extends string>({
 const styles = StyleSheet.create({
   track: {
     flexDirection: 'row',
-    padding: spacing.xs,
-    borderRadius: radius.pill,
-    backgroundColor: colors.glassLight,
+    padding: 4,
+    borderRadius: 18,
+    backgroundColor: colors.glassFill,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
   },
   segment: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.md,
-    borderRadius: radius.pill,
+    paddingVertical: 10,
+    borderRadius: 14,
   },
   segmentSelected: {
-    backgroundColor: colors.navy800,
+    backgroundColor: colors.accent,
+  },
+  label: {
+    ...font(14, 'semiBold'),
+    color: colors.textOnDarkMuted,
+  },
+  labelSelected: {
+    color: colors.navy900,
   },
 });
