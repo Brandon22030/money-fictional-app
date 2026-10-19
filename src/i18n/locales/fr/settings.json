@@ -1,1 +1,32 @@
-{}
+{
+  "title": "Réglages",
+  "currency": {
+    "title": "Devise",
+    "EUR": "EUR",
+    "XOF": "FCFA",
+    "USD": "USD"
+  },
+  "language": {
+    "title": "Langue",
+    "fr": "Français",
+    "en": "English"
+  },
+  "holder": {
+    "title": "Titulaire de la carte",
+    "placeholder": "Nom sur la carte",
+    "hint": "26 caractères maximum, en majuscules."
+  },
+  "reset": {
+    "button": "Réinitialiser",
+    "description": "Remet le solde, la carte et l'historique à zéro.",
+    "confirmTitle": "Tout réinitialiser ?",
+    "confirmMessage": "Le solde, la carte et l'historique seront remis à leur état initial.",
+    "cancel": "Annuler",
+    "confirm": "Réinitialiser"
+  },
+  "about": {
+    "title": "À propos",
+    "text": "Outil de visualisation et de manifestation. Solde et carte fictifs, sans valeur ni lien avec une banque.",
+    "version": "Version {{version}}"
+  }
+}

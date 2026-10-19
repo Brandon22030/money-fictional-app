@@ -13,11 +13,31 @@
       "bundleIdentifier": "com.abonda.app"
     },
     "android": {
-      "package": "com.abonda.app"
+      "package": "com.abonda.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/brand/adaptive-icon.png",
+        "backgroundColor": "#0B1F40"
+      }
     },
-    "plugins": ["expo-router", "expo-font", "expo-localization"],
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-localization",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/brand/splash.png",
+          "resizeMode": "cover",
+          "backgroundColor": "#0B1F40"
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
+    },
+    "icon": "./assets/brand/icon.png",
+    "web": {
+      "favicon": "./assets/brand/favicon.png"
     }
   }
 }

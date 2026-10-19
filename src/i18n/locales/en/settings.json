@@ -1,1 +1,32 @@
-{}
+{
+  "title": "Settings",
+  "currency": {
+    "title": "Currency",
+    "EUR": "EUR",
+    "XOF": "FCFA",
+    "USD": "USD"
+  },
+  "language": {
+    "title": "Language",
+    "fr": "Français",
+    "en": "English"
+  },
+  "holder": {
+    "title": "Cardholder",
+    "placeholder": "Name on card",
+    "hint": "26 characters maximum, uppercase."
+  },
+  "reset": {
+    "button": "Reset",
+    "description": "Sets the balance, card and history back to their initial state.",
+    "confirmTitle": "Reset everything?",
+    "confirmMessage": "The balance, card and history will be restored to their initial state.",
+    "cancel": "Cancel",
+    "confirm": "Reset"
+  },
+  "about": {
+    "title": "About",
+    "text": "A visualization and manifestation tool. Fictional balance and card, with no value and no link to any bank.",
+    "version": "Version {{version}}"
+  }
+}
