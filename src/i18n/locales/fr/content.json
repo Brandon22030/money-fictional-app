@@ -15,7 +15,8 @@
     "book": "Livre de gratitude",
     "bonus": "Petite prime",
     "friend": "Merci à un ami",
-    "music": "Concert en plein air"
+    "music": "Concert en plein air",
+    "sharedWith": "Partagé avec {{name}}"
   },
   "favorites": {
     "amina": "Amina",

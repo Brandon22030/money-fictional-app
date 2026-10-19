@@ -49,6 +49,19 @@ describe('HistoryScreen', () => {
     expect(screen.queryByText('Concert en plein air')).toBeNull();
   });
 
+  it('shows and finds a shared-with intention by the favorite name', async () => {
+    await act(async () => {
+      useAppStore.getState().applyIntention('send', 100, {
+        labelKey: 'content:intentions.sharedWith',
+        labelParams: { contact: 'samuel' },
+      });
+    });
+    await renderScreen();
+    await fireEvent.changeText(screen.getByTestId('history-search'), 'samuel');
+    expect(screen.getByText('Partagé avec Samuel')).toBeTruthy();
+    expect(screen.queryByText('Panier de fruits')).toBeNull();
+  });
+
   it('shows the empty state when nothing matches', async () => {
     await renderScreen();
     await fireEvent.changeText(screen.getByTestId('history-search'), 'zzzzzz');

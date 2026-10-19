@@ -8,7 +8,7 @@ import { NumericKeypad } from "@/src/components/keypad/NumericKeypad";
 import { useAmountInput } from "@/src/components/keypad/useAmountInput";
 import { AppText, Screen } from "@/src/components/ui";
 import { CURRENCIES } from "@/src/config/locale";
-import { FAVORITES } from "@/src/data/favorites";
+import { findFavorite } from "@/src/data/favorites";
 import type { IntentionKind } from "@/src/domain/types";
 import { useAppStore } from "@/src/store/useAppStore";
 import { colors, radius, spacing } from "@/src/theme";
@@ -31,16 +31,13 @@ export function KeypadScreen() {
   const { t } = useTranslation("transfer");
   const { t: tKeypad } = useTranslation("keypad");
   const { t: tCommon } = useTranslation("common");
-  const { t: tContent } = useTranslation("content");
   const router = useRouter();
   const params = useLocalSearchParams<{ mode?: string; contact?: string }>();
 
   const mode = parseMode(params.mode);
-  const contactParam = firstParam(params.contact);
-  const favorite = FAVORITES.find((item) => item.id === contactParam);
-  const contactName = favorite
-    ? tContent(favorite.nameKey.replace("content:", ""))
-    : contactParam;
+  // Only known favorites count as contacts: free text from a deep link is ignored.
+  const favorite = findFavorite(firstParam(params.contact));
+  const contactName = favorite ? t(favorite.nameKey) : undefined;
 
   const currency = useAppStore((state) => state.currency);
   const balanceMinor = useAppStore((state) => state.balanceMinor);
@@ -70,7 +67,16 @@ export function KeypadScreen() {
       close();
       return;
     }
-    const result = applyIntention(mode, minor);
+    const result = applyIntention(
+      mode,
+      minor,
+      favorite
+        ? {
+            labelKey: "content:intentions.sharedWith",
+            labelParams: { contact: favorite.id },
+          }
+        : undefined,
+    );
     if (result.ok) {
       close();
     } else if (result.reason === "insufficient") {

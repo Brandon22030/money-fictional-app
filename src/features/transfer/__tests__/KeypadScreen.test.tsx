@@ -81,4 +81,27 @@ describe("KeypadScreen", () => {
     expect(screen.getByTestId("keypad-contact")).toBeTruthy();
     expect(screen.getByText("Pour Amina")).toBeTruthy();
   });
+
+  it("records a favorite as a shared-with intention keyed by its id", async () => {
+    mockParams = { mode: "send", contact: "amina" };
+    await render(<KeypadScreen />);
+    await typeDigits(["1", "0"]);
+    await fireEvent.press(screen.getByTestId("keypad-validate"));
+    expect(useAppStore.getState().userTransactions[0]).toMatchObject({
+      kind: "send",
+      labelKey: "content:intentions.sharedWith",
+      labelParams: { contact: "amina" },
+    });
+  });
+
+  it("ignores a free-text contact that is not a favorite", async () => {
+    mockParams = { mode: "send", contact: "Arbitrary deep link text" };
+    await render(<KeypadScreen />);
+    expect(screen.queryByTestId("keypad-contact")).toBeNull();
+    await typeDigits(["1", "0"]);
+    await fireEvent.press(screen.getByTestId("keypad-validate"));
+    const [tx] = useAppStore.getState().userTransactions;
+    expect(tx?.labelKey).toBe("content:intentions.send");
+    expect(tx?.labelParams).toBeUndefined();
+  });
 });

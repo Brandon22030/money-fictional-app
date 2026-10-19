@@ -5,6 +5,7 @@ import { SectionList, StyleSheet, TextInput, View } from 'react-native';
 
 import { TransactionTicket, type FeatherIconName } from '@/src/components/transactions/TransactionTicket';
 import { AppText, Screen } from '@/src/components/ui';
+import { transactionTitle } from '@/src/data/transactionTitle';
 import { getLocaleTag, formatMoney } from '@/src/domain/money';
 import type { IntentionKind } from '@/src/domain/types';
 import { useAllTransactions } from '@/src/store/selectors';
@@ -33,7 +34,7 @@ export function HistoryScreen() {
     () =>
       transactions.map((transaction) => ({
         transaction,
-        title: t(transaction.labelKey, transaction.labelParams),
+        title: transactionTitle(transaction, t),
         amountLabel: formatMoney(transaction.amountMinor, currency, language).full,
       })),
     [transactions, currency, language, t],

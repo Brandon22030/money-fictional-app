@@ -75,4 +75,15 @@ describe('HomeScreen', () => {
     await fireEvent.press(screen.getByTestId('home-see-all'));
     expect(screen).toHavePathname('/history');
   });
+
+  it('shows a shared-with intention with the favorite name', async () => {
+    useAppStore.getState().applyIntention('send', 100, {
+      labelKey: 'content:intentions.sharedWith',
+      labelParams: { contact: 'koffi' },
+    });
+    await renderRouter(APP_DIR);
+    await screen.findByTestId('screen-home');
+
+    expect(screen.getByText('Partagé avec Koffi')).toBeTruthy();
+  });
 });

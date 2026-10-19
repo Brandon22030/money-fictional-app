@@ -15,7 +15,8 @@
     "book": "Gratitude journal",
     "bonus": "Small bonus",
     "friend": "Thanks to a friend",
-    "music": "Open-air concert"
+    "music": "Open-air concert",
+    "sharedWith": "Shared with {{name}}"
   },
   "favorites": {
     "amina": "Amina",

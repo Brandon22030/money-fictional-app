@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/src/components/ui';
 import { TransactionTicket, type FeatherIconName } from '@/src/components/transactions/TransactionTicket';
+import { transactionTitle } from '@/src/data/transactionTitle';
 import { formatMoney } from '@/src/domain/money';
 import type { IntentionKind } from '@/src/domain/types';
 import { useAllTransactions } from '@/src/store/selectors';
@@ -51,7 +52,7 @@ export function RecentIntentions() {
             <TransactionTicket
               key={tx.id}
               testID={`home-tx-${tx.id}`}
-              title={t(tx.labelKey, tx.labelParams)}
+              title={transactionTitle(tx, t)}
               amountLabel={formatMoney(tx.amountMinor, currency, language).full}
               direction={tx.kind === 'receive' ? 'in' : 'out'}
               date={new Date(tx.createdAt)}
