@@ -125,12 +125,20 @@ export async function announceBalance(params: AnnounceBalanceParams): Promise<vo
   }
 }
 
-/** Stops the current announcement: the beep, the voice and the pause before the next cycle. */
+/**
+ * Stops the current announcement: the beep, the voice and the pause before the next cycle.
+ * Never rejects, so callers can fire and forget it (`void stopAnnouncement()`), for example
+ * from the AppState listener: the announcement is already marked as stopped either way.
+ */
 export async function stopAnnouncement(): Promise<void> {
   generation += 1;
   cancelPause();
   stopBeep();
   setAnnouncementActive(false);
   unwatchAppState();
-  await getVoiceProvider().stop();
+  try {
+    await getVoiceProvider().stop();
+  } catch (error) {
+    if (__DEV__) console.warn('Stopping the voice failed', error);
+  }
 }

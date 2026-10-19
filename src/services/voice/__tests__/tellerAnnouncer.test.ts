@@ -117,6 +117,21 @@ describe('tellerAnnouncer', () => {
     expect(stopBeep).toHaveBeenCalledTimes(1);
   });
 
+  it('stops without rejecting when the voice provider fails to stop', async () => {
+    const provider = makeProvider([]);
+    provider.stop = jest.fn(async () => {
+      throw new Error('stop failed');
+    });
+    setVoiceProvider(provider);
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+    await expect(stopAnnouncement()).resolves.toBeUndefined();
+    expect(stopBeep).toHaveBeenCalledTimes(1);
+    expect(useAnnouncementState.getState().active).toBe(false);
+    expect(warn).toHaveBeenCalledWith('Stopping the voice failed', expect.any(Error));
+    warn.mockRestore();
+  });
+
   it('announces once and goes inactive when the loop is off', async () => {
     setVoiceProvider(makeProvider([]));
     (playBeep as jest.Mock).mockResolvedValue(undefined);
