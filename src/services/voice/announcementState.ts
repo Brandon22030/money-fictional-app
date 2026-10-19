@@ -12,3 +12,8 @@ export function setAnnouncementActive(active: boolean): void {
 export function useIsAnnouncing(): boolean {
   return useAnnouncementState((state) => state.active);
 }
+
+/** Current value, outside React: lets a press handler decide on the real state, not a render's. */
+export function isAnnouncing(): boolean {
+  return useAnnouncementState.getState().active;
+}

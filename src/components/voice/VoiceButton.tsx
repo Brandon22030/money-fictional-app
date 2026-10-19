@@ -10,6 +10,7 @@ import { colors, font, glass, shadows } from '@/src/theme';
 import i18n from '@/src/i18n';
 import {
   announceBalance,
+  isAnnouncing,
   stopAnnouncement,
   useIsAnnouncing,
   type AnnouncementSnapshot,
@@ -39,7 +40,8 @@ export function VoiceButton({ variant = 'action', testID }: VoiceButtonProps) {
   const speaking = useIsAnnouncing();
 
   const onPress = useCallback(() => {
-    if (speaking) {
+    // The real state, not the rendered one: a fast double press must start then stop.
+    if (isAnnouncing()) {
       void stopAnnouncement();
       return;
     }
@@ -49,7 +51,7 @@ export function VoiceButton({ variant = 'action', testID }: VoiceButtonProps) {
       // Read at every cycle: switching the setting off (or a reset) ends a running loop.
       loop: () => useAppStore.getState().repeatAnnouncement,
     });
-  }, [speaking]);
+  }, []);
 
   const label = speaking ? t('stop') : t('listen');
   const isTile = variant === 'tile';

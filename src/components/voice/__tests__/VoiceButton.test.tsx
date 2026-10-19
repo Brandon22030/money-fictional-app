@@ -61,6 +61,22 @@ describe('VoiceButton', () => {
     expect(screen.getByLabelText('Écouter')).toBeTruthy();
   });
 
+  it('stops on a fast second press made before the button re-renders', async () => {
+    // The synchronous RNTL press, so that both presses happen inside one act, before React
+    // re-renders the button: they use the handler of the same render, as with a quick double tap.
+    const { fireEvent: syncFireEvent } = jest.requireActual<
+      typeof import('@testing-library/react-native')
+    >('@testing-library/react-native');
+    await render(<VoiceButton testID="voice" />);
+    const button = screen.getByTestId('voice');
+    await act(async () => {
+      syncFireEvent.press(button);
+      syncFireEvent.press(button);
+    });
+    expect(provider.stop).toHaveBeenCalled();
+    expect(screen.getByLabelText('Écouter')).toBeTruthy();
+  });
+
   it('renders the action variant by default and the tile variant on demand', async () => {
     const { rerender } = await render(<VoiceButton testID="voice" />);
     expect(screen.getByLabelText('Écouter')).toBeTruthy();
