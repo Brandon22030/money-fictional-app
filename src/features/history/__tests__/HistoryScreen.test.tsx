@@ -53,12 +53,12 @@ describe('HistoryScreen', () => {
     await act(async () => {
       useAppStore.getState().applyIntention('send', 100, {
         labelKey: 'content:intentions.sharedWith',
-        labelParams: { contact: 'samuel' },
+        labelParams: { contact: 'futureSelf' },
       });
     });
     await renderScreen();
-    await fireEvent.changeText(screen.getByTestId('history-search'), 'samuel');
-    expect(screen.getByText('Partagé avec Samuel')).toBeTruthy();
+    await fireEvent.changeText(screen.getByTestId('history-search'), 'moi futur');
+    expect(screen.getByText('Partagé avec Moi futur')).toBeTruthy();
     expect(screen.queryByText('Panier de fruits')).toBeNull();
   });
 

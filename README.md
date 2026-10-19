@@ -77,6 +77,8 @@ CHROMIUM_PATH=<binaire chromium, optionnel> \
 npm run visual:capture            # ajouter -- --skip-export pour réutiliser /tmp/mfa004-web
 ```
 
+L'export du banc est fait avec `EXPO_PUBLIC_VISUAL_FIXTURE=1` : le module `src/dev/visualFixture.ts` expose alors les chiffres de la maquette (transactions, variation du jour, parts, barres mensuelles) injectés par le script, et l'horloge est figée au 19 octobre 2026 09:45. Sans cette variable (builds normaux), la fixture est inactive. Après un changement de source, relancer sans `--skip-export`.
+
 Sortie : `.agents/tasks/MFA-004/shots/{mockup,app,compare}-<écran>.png`. Le rendu web ne sert qu'à la mesure, la cible reste le rendu natif. Écarts de rendu web connus : `expo-blur` et les ombres sont approximés par le navigateur, les polices et le crénage diffèrent légèrement, la barre d'état système (9:41, wifi, batterie) n'existe pas sur le web, et les safe areas sont nulles.
 
 ## Maquette

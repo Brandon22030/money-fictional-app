@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { getDemoTransactions } from '@/src/data/intentions';
 import { formatMoney, type MoneyParts } from '@/src/domain/money';
 import type { Transaction } from '@/src/domain/types';
+import { getVisualFixture } from '@/src/dev/visualFixture';
 
 import { useAppStore } from './useAppStore';
 
@@ -11,7 +12,7 @@ export function useAllTransactions(): Transaction[] {
   const currency = useAppStore((state) => state.currency);
   return useMemo(
     () =>
-      [...getDemoTransactions(currency), ...userTransactions].sort(
+      [...(getVisualFixture()?.transactions ?? getDemoTransactions(currency)), ...userTransactions].sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       ),
     [userTransactions, currency],

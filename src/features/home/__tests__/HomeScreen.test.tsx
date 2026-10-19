@@ -62,8 +62,8 @@ describe('HomeScreen', () => {
     await renderRouter(APP_DIR);
     await screen.findByTestId('screen-home');
 
-    await fireEvent.press(screen.getByTestId('home-favorite-amina'));
-    expect(screen).toHaveSearchParams({ mode: 'send', contact: 'amina' });
+    await fireEvent.press(screen.getByTestId('home-favorite-family'));
+    expect(screen).toHaveSearchParams({ mode: 'send', contact: 'family' });
   });
 
   it('lists the five latest intentions and links to the history', async () => {
@@ -78,11 +78,11 @@ describe('HomeScreen', () => {
   it('shows a shared-with intention with the favorite name', async () => {
     useAppStore.getState().applyIntention('send', 100, {
       labelKey: 'content:intentions.sharedWith',
-      labelParams: { contact: 'koffi' },
+      labelParams: { contact: 'gratitude' },
     });
     await renderRouter(APP_DIR);
     await screen.findByTestId('screen-home');
 
-    expect(screen.getByText('Partagé avec Koffi')).toBeTruthy();
+    expect(screen.getByText('Partagé avec Gratitude')).toBeTruthy();
   });
 });
