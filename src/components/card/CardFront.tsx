@@ -4,10 +4,9 @@ import { useTranslation } from 'react-i18next';
 import Svg, { Path } from 'react-native-svg';
 
 import { BANK_NAME } from '@/src/config/brand';
-import { fontFamily, numbers } from '@/src/theme';
+import { colors, fontFamily, numbers } from '@/src/theme';
 
 import { EmvChip } from './EmvChip';
-import { gold } from './goldTokens';
 import { NetworkLogo } from './NetworkLogo';
 import { formatCardNumber } from './formatCardNumber';
 
@@ -42,7 +41,7 @@ export function CardFront({ holderName, cardNumber, expiry, balanceLabel, brandM
           <Path
             d="M7 8a6 6 0 0 1 0 8M11 5.5a10 10 0 0 1 0 13M15 3a14 14 0 0 1 0 18"
             fill="none"
-            stroke={gold.light}
+            stroke={colors.goldLight}
             strokeWidth="1.6"
             strokeLinecap="round"
             opacity="0.85"
@@ -83,24 +82,24 @@ const styles = StyleSheet.create({
   root: { flex: 1, justifyContent: 'space-between' },
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   brand: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandName: { fontFamily: fontFamily.bold, fontSize: 16, color: gold.base, letterSpacing: 0.4 },
+  brandName: { fontFamily: fontFamily.bold, fontSize: 16, color: colors.goldBase, letterSpacing: 0.4 },
   mid: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   number: {
     fontFamily: fontFamily.semiBold,
     fontSize: 20,
     letterSpacing: 2,
-    color: gold.pearl,
+    color: colors.goldPearl,
   },
   bottom: { flexDirection: 'row', alignItems: 'flex-end', gap: 14 },
   holder: { flex: 1 },
   balance: { alignItems: 'flex-end' },
-  label: { fontFamily: fontFamily.medium, fontSize: 9, letterSpacing: 1, color: gold.pearlMuted },
-  value: { fontFamily: fontFamily.semiBold, fontSize: 13, color: gold.pearl },
+  label: { fontFamily: fontFamily.medium, fontSize: 9, letterSpacing: 1, color: colors.goldPearlMuted },
+  value: { fontFamily: fontFamily.semiBold, fontSize: 13, color: colors.goldPearl },
   fictional: {
     fontFamily: fontFamily.bold,
     fontSize: 9,
     letterSpacing: 1.6,
-    color: gold.pearlMuted,
+    color: colors.goldPearlMuted,
     textAlign: 'center',
   },
 });

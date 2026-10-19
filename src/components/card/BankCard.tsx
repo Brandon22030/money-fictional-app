@@ -9,8 +9,10 @@ import { colors, gradients, radius, shadow } from '@/src/theme';
 import { CardBack } from './CardBack';
 import { CardFront } from './CardFront';
 import { CardShine } from './CardShine';
-import { CARD_RATIO, gold } from './goldTokens';
 import { useCardFlip } from './useCardFlip';
+
+/** ISO/IEC 7810 ID-1 card aspect ratio (85.60 x 53.98 mm). */
+export const CARD_RATIO = 1.586;
 
 export type BankCardProps = {
   holderName: string;
@@ -132,6 +134,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: gold.edge,
+    borderColor: colors.goldEdge,
   },
 });
