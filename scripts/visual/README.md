@@ -5,8 +5,14 @@ Captures the mockup screens and the app (web export), then builds mockup | app s
 ```
 PLAYWRIGHT_PATH=<dir containing node_modules/playwright> \
 CHROMIUM_PATH=<chromium binary> \
-node scripts/visual/capture.mjs [--skip-export]
+node scripts/visual/capture.mjs [--skip-export] [--viewport=375x667] [--screens=home,history]
 ```
+
+Options:
+
+- `--skip-export`: reuse the existing web export.
+- `--screens=<a,b>`: only capture the listed screens (names from `ALL_SCREENS` in `capture.mjs`).
+- `--viewport=<width>x<height>`: capture the app at another size (for example a 375x667 small phone). The mockup only exists at 390x844, so in that case only `app-<screen>@<width>x<height>.png` is written, with no mockup or compare image.
 
 Environment variables:
 

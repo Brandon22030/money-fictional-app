@@ -4,9 +4,11 @@
 // PLAYWRIGHT_PATH=<dir containing node_modules/playwright> \
 // CHROMIUM_PATH=<chromium binary, optional> \
 // VISUAL_WEB_DIR=<web export dir, optional, default per-worktree in the OS tmp dir> \
-// node scripts/visual/capture.mjs [--skip-export]
+// node scripts/visual/capture.mjs [--skip-export] [--viewport=375x667] [--screens=home,history]
 //
 // Output: .agents/tasks/MFA-004/shots/{mockup,app,compare}-<screen>.png
+// With a viewport other than the mockup one (390x844), only the app is captured, to
+// app-<screen>@<width>x<height>.png (no mockup to compare with).
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { createReadStream, existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
@@ -21,14 +23,30 @@ const outDir = join(root, '.agents/tasks/MFA-004/shots');
 const worktreeHash = createHash('sha1').update(process.cwd()).digest('hex').slice(0, 8);
 const webDir = process.env.VISUAL_WEB_DIR || join(tmpdir(), `mfa004-web-${worktreeHash}`);
 const mockupUrl = `file://${join(root, 'docs/mockup/index.html')}`;
-const viewport = { width: 390, height: 844 };
+const MOCKUP_VIEWPORT = { width: 390, height: 844 };
+
+function argValue(name) {
+  const arg = process.argv.find((a) => a.startsWith(`--${name}=`));
+  return arg ? arg.slice(name.length + 3) : undefined;
+}
+
+function parseViewport(value) {
+  if (!value) return MOCKUP_VIEWPORT;
+  const match = /^(\d+)x(\d+)$/.exec(value);
+  if (!match) throw new Error(`Invalid --viewport=${value}, expected <width>x<height>`);
+  return { width: Number(match[1]), height: Number(match[2]) };
+}
+
+const viewport = parseViewport(argValue('viewport'));
+const isMockupViewport = viewport.width === MOCKUP_VIEWPORT.width && viewport.height === MOCKUP_VIEWPORT.height;
+const appSuffix = isMockupViewport ? '' : `@${viewport.width}x${viewport.height}`;
 const scale = 2;
 
 // Fixed clock: "today" is 19 Oct 2026 (mockup content), so the day-based content matches.
 const FIXED_TIME = '2026-10-19T09:45:00';
 
 // name, mockup frame index, app route, optional actions (click selectors) before capture
-const SCREENS = [
+const ALL_SCREENS = [
   { name: 'home', frame: 0, route: '/' },
   { name: 'card', frame: 1, route: '/card' },
   { name: 'card-back', frame: 2, route: '/card', action: { click: '[data-testid="action-flip"]', wait: 1200 } },
@@ -37,6 +55,9 @@ const SCREENS = [
   { name: 'history', frame: 5, route: '/history' },
   { name: 'settings', frame: 6, route: '/settings' },
 ];
+
+const screenFilter = argValue('screens')?.split(',');
+const SCREENS = screenFilter ? ALL_SCREENS.filter((s) => screenFilter.includes(s.name)) : ALL_SCREENS;
 
 // Same demo data as the mockup (balance 186 420,50 EUR, card 8402 1587 3306 9914).
 const DEMO_STATE = {
@@ -131,7 +152,7 @@ async function captureApp(browser, origin) {
       await page.waitForTimeout(s.action.wait);
     }
     await page.waitForTimeout(1500);
-    await page.screenshot({ path: join(outDir, `app-${s.name}.png`) });
+    await page.screenshot({ path: join(outDir, `app-${s.name}${appSuffix}.png`) });
     await ctx.close();
   }
 }
@@ -163,9 +184,9 @@ async function main() {
   const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
   const server = await serve(webDir);
   try {
-    await captureMockup(browser);
+    if (isMockupViewport) await captureMockup(browser);
     await captureApp(browser, `http://127.0.0.1:${server.address().port}`);
-    await compare(browser);
+    if (isMockupViewport) await compare(browser);
   } finally {
     await browser.close();
     server.close();
