@@ -61,3 +61,11 @@ describe('navigation labels', () => {
     expect(layout).toContain("useTranslation('nav')");
   });
 });
+
+describe('french register', () => {
+  it('addresses the user with "vous" everywhere', () => {
+    const informal = /(^|[^\p{L}])(tu|te|toi|ton|ta|tes)(?=[^\p{L}]|$)|(^|[^\p{L}])t'|(^|\.\s)(choisis|accueille|offre|règle|prends|essaie)(?=[^\p{L}])/iu;
+    const texts = collectStrings(resources.fr).filter((text) => informal.test(text));
+    expect(texts).toEqual([]);
+  });
+});
