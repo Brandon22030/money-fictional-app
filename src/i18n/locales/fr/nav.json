@@ -1,1 +1,9 @@
-{}
+{
+  "tabs": {
+    "home": "Accueil",
+    "card": "Carte",
+    "abundance": "Abondance",
+    "history": "Historique",
+    "settings": "Réglages"
+  }
+}

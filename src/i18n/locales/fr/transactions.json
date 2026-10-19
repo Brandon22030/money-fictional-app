@@ -1,1 +1,6 @@
-{}
+{
+  "direction": {
+    "in": "Reçu",
+    "out": "Envoyé"
+  }
+}
