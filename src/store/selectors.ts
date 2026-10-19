@@ -25,3 +25,17 @@ export function useBalanceParts(): MoneyParts {
   const language = useAppStore((state) => state.language);
   return useMemo(() => formatMoney(balanceMinor, currency, language), [balanceMinor, currency, language]);
 }
+
+/**
+ * True when at least one intention is more recent than the last visit of the History
+ * screen (or History was never opened and there is any intention). Drives the bell badge.
+ */
+export function useHasUnseenIntentions(): boolean {
+  const transactions = useAllTransactions();
+  const lastHistoryVisitAt = useAppStore((state) => state.lastHistoryVisitAt);
+  return useMemo(() => {
+    if (lastHistoryVisitAt === null) return transactions.length > 0;
+    const lastVisit = new Date(lastHistoryVisitAt).getTime();
+    return transactions.some((tx) => new Date(tx.createdAt).getTime() > lastVisit);
+  }, [transactions, lastHistoryVisitAt]);
+}

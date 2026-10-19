@@ -4,6 +4,7 @@ import { Image, StyleSheet, View } from 'react-native';
 
 import { AppText, RoundIconButton } from '@/src/components/ui';
 import { APP_NAME } from '@/src/config/brand';
+import { useHasUnseenIntentions } from '@/src/store/selectors';
 
 import { colors, font } from '@/src/theme';
 
@@ -12,6 +13,7 @@ const logoMark = require('@/assets/brand/logo-mark.png');
 export function HomeHeader() {
   const { t } = useTranslation('home');
   const router = useRouter();
+  const hasUnseenIntentions = useHasUnseenIntentions();
 
   return (
     <View style={styles.row}>
@@ -25,7 +27,7 @@ export function HomeHeader() {
         <RoundIconButton
           testID="home-history"
           icon="bell"
-          badge
+          badge={hasUnseenIntentions}
           accessibilityLabel={t('notifications')}
           onPress={() => router.push('/history')}
         />

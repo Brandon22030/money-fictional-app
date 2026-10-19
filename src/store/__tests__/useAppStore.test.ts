@@ -252,6 +252,55 @@ describe('rehydration safety', () => {
   });
 });
 
+describe('history visit', () => {
+  it('starts with no recorded visit and records the History visit date', () => {
+    expect(useAppStore.getState().lastHistoryVisitAt).toBeNull();
+    useAppStore.getState().markHistoryVisited(new Date('2026-10-19T09:45:00.000Z'));
+    expect(useAppStore.getState().lastHistoryVisitAt).toBe('2026-10-19T09:45:00.000Z');
+  });
+
+  it('persists the visit date and forgets it on reset', async () => {
+    useAppStore.getState().markHistoryVisited(new Date('2026-10-19T09:45:00.000Z'));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const raw = JSON.parse((await AsyncStorage.getItem(STORAGE_KEY)) as string);
+    expect(raw.state.lastHistoryVisitAt).toBe('2026-10-19T09:45:00.000Z');
+
+    useAppStore.getState().resetAll();
+    expect(useAppStore.getState().lastHistoryVisitAt).toBeNull();
+  });
+
+  async function rehydrateWith(state: unknown) {
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ state, version: 1 }));
+    await useAppStore.persist.rehydrate();
+    return useAppStore.getState();
+  }
+
+  it('rehydrates version 1 data saved before the field existed with no visit', async () => {
+    const card = useAppStore.getState().card;
+    const state = await rehydrateWith({
+      balanceMinor: 321,
+      currency: 'XOF',
+      language: 'fr',
+      holderName: 'ADA',
+      card,
+      userTransactions: [],
+    });
+    expect(state.balanceMinor).toBe(321);
+    expect(state.lastHistoryVisitAt).toBeNull();
+  });
+
+  it('restores a valid visit date and drops a corrupted one', async () => {
+    let state = await rehydrateWith({ currency: 'XOF', lastHistoryVisitAt: '2026-10-18T10:00:00.000Z' });
+    expect(state.lastHistoryVisitAt).toBe('2026-10-18T10:00:00.000Z');
+
+    useAppStore.setState({ lastHistoryVisitAt: null });
+    for (const corrupted of ['yesterday', 42, {}, '']) {
+      state = await rehydrateWith({ currency: 'XOF', lastHistoryVisitAt: corrupted });
+      expect(state.lastHistoryVisitAt).toBeNull();
+    }
+  });
+});
+
 describe('user intentions cap', () => {
   it(`keeps only the ${MAX_USER_TRANSACTIONS} most recent intentions`, () => {
     const { applyIntention } = useAppStore.getState();
