@@ -1,20 +1,23 @@
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { colors, radius, spacing } from '@/src/theme';
+import { colors, font, numbers, radius } from '@/src/theme';
 
-import { AppText, type AppTextTone } from './AppText';
+import { AppText } from './AppText';
+import { Icon, type IconName } from './Icon';
 
 export type PillProps = {
   label: string;
-  tone?: AppTextTone;
+  icon?: IconName;
+  color?: string;
   style?: StyleProp<ViewStyle>;
   testID?: string;
 };
 
-export function Pill({ label, tone = 'onDark', style, testID }: PillProps) {
+export function Pill({ label, icon, color = colors.textOnDark, style, testID }: PillProps) {
   return (
     <View testID={testID} style={[styles.pill, style]}>
-      <AppText variant="caption" tone={tone} tabular>
+      {icon ? <Icon name={icon} size={14} color={color} /> : null}
+      <AppText variant="caption" tone="onDark" style={[styles.label, { color }]}>
         {label}
       </AppText>
     </View>
@@ -24,11 +27,18 @@ export function Pill({ label, tone = 'onDark', style, testID }: PillProps) {
 const styles = StyleSheet.create({
   pill: {
     alignSelf: 'flex-start',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: radius.pill,
     backgroundColor: colors.glassFill,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     borderColor: colors.glassBorder,
+  },
+  label: {
+    ...font(12, 'semiBold'),
+    fontVariant: numbers.fontVariant,
   },
 });
