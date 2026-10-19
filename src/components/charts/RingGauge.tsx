@@ -41,6 +41,12 @@ export const BADGE_ANGLES = [-62, -22, 18, 58] as const;
 /** Usable width of the hole of the ring (inner diameter 2 * (100 - 23) = 154, minus a margin). */
 const CENTER_MAX_WIDTH = 130;
 const CENTER_FONT_SIZE = 44;
+/**
+ * Smallest centre font size: below it the figure stops being legible. Compact labels
+ * (formatCompact) never reach it; a longer one (more than 13 characters) keeps this size and may
+ * overflow the hole rather than become unreadable.
+ */
+export const CENTER_MIN_FONT_SIZE = 16;
 /** Average glyph width of the bold digits, as a fraction of the font size (slightly generous). */
 const CENTER_GLYPH_RATIO = 0.6;
 const TOP_PATH_ID = 'ring-top-path';
@@ -49,9 +55,13 @@ const BOTTOM_PATH_ID = 'ring-bottom-path';
 const TOP_PATH = `M${CENTER} ${CENTER - TOP_LABEL_RADIUS} A${TOP_LABEL_RADIUS} ${TOP_LABEL_RADIUS} 0 1 1 ${CENTER} ${CENTER + TOP_LABEL_RADIUS} A${TOP_LABEL_RADIUS} ${TOP_LABEL_RADIUS} 0 1 1 ${CENTER} ${CENTER - TOP_LABEL_RADIUS}`;
 const BOTTOM_PATH = `M${CENTER - BOTTOM_LABEL_RADIUS} ${CENTER} A${BOTTOM_LABEL_RADIUS} ${BOTTOM_LABEL_RADIUS} 0 0 0 ${CENTER + BOTTOM_LABEL_RADIUS} ${CENTER}`;
 
-/** Font size of the centre label: 44 for short labels, smaller so a long one stays inside the ring. */
+/**
+ * Font size of the centre label: 44 for short labels, smaller so a long one stays inside the ring,
+ * never below CENTER_MIN_FONT_SIZE.
+ */
 export function centerFontSize(label: string): number {
-  return Math.min(CENTER_FONT_SIZE, CENTER_MAX_WIDTH / (Math.max(label.length, 1) * CENTER_GLYPH_RATIO));
+  const fitted = CENTER_MAX_WIDTH / (Math.max(label.length, 1) * CENTER_GLYPH_RATIO);
+  return Math.max(CENTER_MIN_FONT_SIZE, Math.min(CENTER_FONT_SIZE, fitted));
 }
 
 export function RingGauge({
