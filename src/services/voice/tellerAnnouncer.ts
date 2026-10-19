@@ -20,8 +20,16 @@ export type AnnounceBalanceParams = {
   /** Called at every cycle, so a loop announces the balance as it is at that moment. */
   read: () => AnnouncementSnapshot;
   t: (key: string, options?: Record<string, unknown>) => string;
-  loop?: boolean;
+  /**
+   * Repeat the announcement. A function is read again before every new cycle, so turning the
+   * setting off (or resetting the app) during a loop ends it after the current cycle.
+   */
+  loop?: boolean | (() => boolean);
 };
+
+function shouldLoop(loop: AnnounceBalanceParams['loop']): boolean {
+  return typeof loop === 'function' ? loop() : loop === true;
+}
 
 let generation = 0;
 let pause: {
@@ -97,9 +105,9 @@ export async function announceBalance(params: AnnounceBalanceParams): Promise<vo
   try {
     do {
       await playCycle(current, params);
-      if (current !== generation || !params.loop) break;
+      if (current !== generation || !shouldLoop(params.loop)) break;
       await sleep(LOOP_PAUSE_MS);
-    } while (current === generation);
+    } while (current === generation && shouldLoop(params.loop));
   } catch (error) {
     // A failing provider (for example no voice for the language) ends the loop instead of
     // beeping forever with no voice. A one-shot announcement ends the same way.

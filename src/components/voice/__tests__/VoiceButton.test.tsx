@@ -176,5 +176,25 @@ describe('VoiceButton', () => {
       });
       expect(provider.speak).toHaveBeenCalledTimes(2);
     });
+
+    it.each([
+      ['the repeat switch is turned off', () => useAppStore.getState().setRepeatAnnouncement(false)],
+      ['the app is reset', () => useAppStore.getState().resetAll()],
+    ])('ends the loop when %s during the pause', async (_name, change) => {
+      await render(<VoiceButton testID="voice" />);
+      await fireEvent.press(screen.getByTestId('voice'));
+      await act(async () => {
+        finishSpeech();
+      });
+      expect(screen.getByLabelText('Arrêter')).toBeTruthy();
+
+      await act(async () => {
+        await jest.advanceTimersByTimeAsync(LOOP_PAUSE_MS / 2);
+        change();
+        await jest.advanceTimersByTimeAsync(LOOP_PAUSE_MS * 3);
+      });
+      expect(provider.speak).toHaveBeenCalledTimes(1);
+      expect(screen.getByLabelText('Écouter')).toBeTruthy();
+    });
   });
 });

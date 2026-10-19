@@ -263,6 +263,28 @@ describe('tellerAnnouncer', () => {
       expect(playBeep).toHaveBeenCalledTimes(4);
     });
 
+    it('reads the loop setting before every cycle and ends when it turns off', async () => {
+      let repeat = true;
+      void announceBalance({
+        read: () => ({ amountMinor: balance, currency: 'USD', language: 'en' }),
+        t,
+        loop: () => repeat,
+      });
+      await settle();
+      await jest.advanceTimersByTimeAsync(LOOP_PAUSE_MS);
+      await settle();
+      expect(playBeep).toHaveBeenCalledTimes(2);
+
+      // Turned off during the pause: no new cycle once the pause ends.
+      await jest.advanceTimersByTimeAsync(LOOP_PAUSE_MS / 2);
+      repeat = false;
+      await jest.advanceTimersByTimeAsync(LOOP_PAUSE_MS * 3);
+      await settle();
+      expect(playBeep).toHaveBeenCalledTimes(2);
+      expect(useAnnouncementState.getState().active).toBe(false);
+      expect(jest.getTimerCount()).toBe(0);
+    });
+
     it('ends the loop when the voice provider fails', async () => {
       const provider = makeProvider(events);
       provider.speak = jest.fn(async () => {

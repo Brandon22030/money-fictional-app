@@ -46,7 +46,8 @@ export function VoiceButton({ variant = 'action', testID }: VoiceButtonProps) {
     void announceBalance({
       read: readCurrentBalance,
       t: translate,
-      loop: useAppStore.getState().repeatAnnouncement,
+      // Read at every cycle: switching the setting off (or a reset) ends a running loop.
+      loop: () => useAppStore.getState().repeatAnnouncement,
     });
   }, [speaking]);
 
