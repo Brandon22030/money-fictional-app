@@ -19,14 +19,15 @@ export const CARD_FACE_PADDING = { top: 20, horizontal: 22, bottom: 30 } as cons
 /** Distance of the fictional mention box from the bottom edge of the card (calibrated on the mockup). */
 const FICTIONAL_BOTTOM = 8;
 
-/** Smallest scale the balance may shrink to (native) before it stops being comfortably legible. */
-export const BALANCE_MIN_FONT_SCALE = 0.6;
+/**
+ * Largest Dynamic Type / font scale multiplier applied to the card texts. The card has a fixed
+ * ratio and clips its content (overflow hidden), so its texts may only grow a little.
+ */
+export const CARD_MAX_FONT_SIZE_MULTIPLIER = 1.3;
 
 const BALANCE_FONT_SIZE = 13;
 const BALANCE_LETTER_SPACING = 0.8;
 const BALANCE_MIN_FONT_SIZE = 9;
-/** Longest balance label (characters) shown at full size; "186 420,50 €" has 12. */
-const BALANCE_FULL_SIZE_CHARS = 17;
 /** Width (px) the balance may take next to the holder name and the expiry on the narrowest card. */
 const BALANCE_BUDGET_WIDTH = 125;
 /** Tighter tracking for the long labels, which would not fit with the regular one. */
@@ -34,13 +35,21 @@ const BALANCE_TIGHT_LETTER_SPACING = 0.2;
 /** Average glyph width of the semiBold digits, as a fraction of the font size. */
 const BALANCE_GLYPH_RATIO = 0.55;
 
+/** Estimated width (px) of a label at the given typography. */
+function estimatedWidth(label: string, fontSize: number, letterSpacing: number): number {
+  return label.length * (fontSize * BALANCE_GLYPH_RATIO + letterSpacing);
+}
+
 /**
- * Typography of the balance: 13 px up to 17 characters, then smaller (down to 9) and tighter so
- * that the largest balances ("9 999 999 999 999 FCFA") fit next to the expiry. This holds on
- * every platform; `adjustsFontSizeToFit` only completes it on native.
+ * Typography of the balance: 13 px / 0.8 (mockup) while its estimated width fits
+ * BALANCE_BUDGET_WIDTH ("186 420,50 €", "50 000 000 FCFA"), then a tighter tracking and a size
+ * that decreases with the length (down to 9) so that the largest balances
+ * ("9 999 999 999 999 FCFA") fit next to the expiry. It is computed, not measured, so it holds on
+ * every platform; the balance container does not shrink, hence no `adjustsFontSizeToFit`, and the
+ * growth with the accessibility text size is capped by CARD_MAX_FONT_SIZE_MULTIPLIER.
  */
 export function balanceTypography(label: string): { fontSize: number; letterSpacing: number } {
-  if (label.length <= BALANCE_FULL_SIZE_CHARS) {
+  if (estimatedWidth(label, BALANCE_FONT_SIZE, BALANCE_LETTER_SPACING) <= BALANCE_BUDGET_WIDTH) {
     return { fontSize: BALANCE_FONT_SIZE, letterSpacing: BALANCE_LETTER_SPACING };
   }
   const fitted =
@@ -73,28 +82,59 @@ export function CardFront({ holderName, cardNumber, expiry, balanceLabel, brandM
       <View style={styles.mid}>
         <EmvChip testID="card-chip" />
       </View>
-      <Text testID="card-number" style={[styles.number, { fontVariant: numbers.fontVariant }]}>
+      <Text
+        testID="card-number"
+        style={[styles.number, { fontVariant: numbers.fontVariant }]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        maxFontSizeMultiplier={CARD_MAX_FONT_SIZE_MULTIPLIER}
+      >
         {formatCardNumber(cardNumber)}
       </Text>
       <View style={styles.bottom}>
         <View testID="card-holder-box" style={styles.holder}>
-          <Text style={styles.label}>{t('holder')}</Text>
-          <Text testID="card-holder" style={styles.value} numberOfLines={1}>
+          <Text
+            testID="card-holder-label"
+            style={styles.label}
+            numberOfLines={1}
+            maxFontSizeMultiplier={CARD_MAX_FONT_SIZE_MULTIPLIER}
+          >
+            {t('holder')}
+          </Text>
+          <Text
+            testID="card-holder"
+            style={styles.value}
+            numberOfLines={1}
+            maxFontSizeMultiplier={CARD_MAX_FONT_SIZE_MULTIPLIER}
+          >
             {holderName}
           </Text>
         </View>
         <View testID="card-expiry-box" style={styles.expiry}>
-          <Text style={styles.label}>{t('validThru')}</Text>
+          <Text
+            testID="card-expiry-label"
+            style={styles.label}
+            numberOfLines={1}
+            maxFontSizeMultiplier={CARD_MAX_FONT_SIZE_MULTIPLIER}
+          >
+            {t('validThru')}
+          </Text>
           <Text
             testID="card-expiry"
             style={[styles.value, { fontVariant: numbers.fontVariant }]}
             numberOfLines={1}
+            maxFontSizeMultiplier={CARD_MAX_FONT_SIZE_MULTIPLIER}
           >
             {expiry}
           </Text>
         </View>
         <View style={styles.balance}>
-          <Text style={styles.label} numberOfLines={1}>
+          <Text
+            testID="card-balance-label"
+            style={styles.label}
+            numberOfLines={1}
+            maxFontSizeMultiplier={CARD_MAX_FONT_SIZE_MULTIPLIER}
+          >
             {t('balance')}
           </Text>
           <Text
@@ -104,8 +144,7 @@ export function CardFront({ holderName, cardNumber, expiry, balanceLabel, brandM
               { fontVariant: numbers.fontVariant, ...balanceTypography(balanceLabel) },
             ]}
             numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={BALANCE_MIN_FONT_SCALE}
+            maxFontSizeMultiplier={CARD_MAX_FONT_SIZE_MULTIPLIER}
           >
             {balanceLabel}
           </Text>
@@ -123,6 +162,7 @@ const styles = StyleSheet.create({
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   brand: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   mid: { flexDirection: 'row', alignItems: 'center' },
+  // Full card width: on native, the enlarged (accessibility) number shrinks back onto one line.
   number: {
     ...font(21, 'semiBold'),
     letterSpacing: 2.2,

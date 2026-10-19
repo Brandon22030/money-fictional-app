@@ -2,7 +2,7 @@ import { act, render, screen } from '@testing-library/react-native';
 import { StyleSheet } from 'react-native';
 
 import { BankCard } from '@/src/components/card/BankCard';
-import { balanceTypography } from '@/src/components/card/CardFront';
+import { CARD_MAX_FONT_SIZE_MULTIPLIER, balanceTypography } from '@/src/components/card/CardFront';
 import { MAX_BALANCE_MINOR, type Currency } from '@/src/config/locale';
 import { formatMoney } from '@/src/domain/money';
 import i18n from '@/src/i18n';
@@ -69,9 +69,11 @@ describe('MFA-005 reported case: BRANDON DANIEL MEDEHOU, 50 000 000 FCFA', () =>
     const balance = screen.getByTestId('card-balance');
     expect(balance).toHaveTextContent(label);
     expect(balance.props.numberOfLines).toBe(1);
-    expect(balance.props.adjustsFontSizeToFit).toBe(true);
+    expect(balance.props.maxFontSizeMultiplier).toBe(CARD_MAX_FONT_SIZE_MULTIPLIER);
     const style = StyleSheet.flatten(balance.props.style);
     expect(style.fontSize).toBeLessThan(13);
     expect(style.fontSize).toBeGreaterThanOrEqual(9);
+    // The computed typography fits the 125 px budget of the balance (estimated glyph width 0.55 em).
+    expect(label.length * (style.fontSize * 0.55 + style.letterSpacing)).toBeLessThanOrEqual(125);
   });
 });
