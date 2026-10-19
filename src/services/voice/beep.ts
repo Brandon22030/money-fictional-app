@@ -1,26 +1,34 @@
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
 
-const BEEP_SOURCE = require('../../../assets/sounds/cash-counter.m4a') as number;
-// Safety net a little above the 2 s sound, in case the finish event never comes.
-const MAX_WAIT_MS = 3000;
+const CASH_COUNTER_SOURCE = require('../../../assets/sounds/cash-counter.m4a') as number;
+const ATM_BEEP_SOURCE = require('../../../assets/sounds/atm-beep.m4a') as number;
+// Safety nets a little above each sound (2 s and 0.3 s), in case the finish event never comes.
+const CASH_COUNTER_MAX_WAIT_MS = 3000;
+const ATM_BEEP_MAX_WAIT_MS = 1000;
 
 type ActiveBeep = { player: AudioPlayer; finish: () => void };
 
 let active: ActiveBeep | null = null;
 let token = 0;
 
-/**
- * Plays the cash counter sound (about 2 s) and resolves once it has finished, been stopped,
- * or timed out.
- */
-export async function playBeep(): Promise<void> {
+/** Plays the cash counter sound (about 2 s); resolves once finished, stopped or timed out. */
+export function playCashCounter(): Promise<void> {
+  return playSound(CASH_COUNTER_SOURCE, CASH_COUNTER_MAX_WAIT_MS);
+}
+
+/** Plays the single ATM beep (300 ms); resolves once finished, stopped or timed out. */
+export function playAtmBeep(): Promise<void> {
+  return playSound(ATM_BEEP_SOURCE, ATM_BEEP_MAX_WAIT_MS);
+}
+
+async function playSound(source: number, maxWaitMs: number): Promise<void> {
   stopBeep();
   const current = ++token;
   await setAudioModeAsync({ playsInSilentMode: true });
-  // Stopped while the audio mode was being set: do not start a beep nobody wants.
+  // Stopped while the audio mode was being set: do not start a sound nobody wants.
   if (current !== token) return;
 
-  const player = createAudioPlayer(BEEP_SOURCE);
+  const player = createAudioPlayer(source);
   await new Promise<void>((resolve, reject) => {
     let timer: ReturnType<typeof setTimeout> | undefined;
     let subscription: { remove: () => void } | undefined;
@@ -44,7 +52,7 @@ export async function playBeep(): Promise<void> {
       subscription = player.addListener('playbackStatusUpdate', (status) => {
         if (status.didJustFinish) finish();
       });
-      timer = setTimeout(finish, MAX_WAIT_MS);
+      timer = setTimeout(finish, maxWaitMs);
       player.play();
     } catch (error) {
       if (!settled) cleanup();
@@ -53,7 +61,7 @@ export async function playBeep(): Promise<void> {
   });
 }
 
-/** Interrupts the beep in progress, if any, and releases its player. */
+/** Interrupts the sound in progress (counter or beep), if any, and releases its player. */
 export function stopBeep(): void {
   token += 1;
   const current = active;
