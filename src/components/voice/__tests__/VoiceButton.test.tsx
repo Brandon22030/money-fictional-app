@@ -49,6 +49,17 @@ describe('VoiceButton', () => {
     expect(screen.getByLabelText('Écouter')).toBeTruthy();
   });
 
+  it('renders the action variant by default and the tile variant on demand', async () => {
+    const { rerender } = await render(
+      <VoiceButton testID="voice" amountMinor={100} currency="EUR" language="fr" />,
+    );
+    expect(screen.getByLabelText('Écouter')).toBeTruthy();
+    await rerender(
+      <VoiceButton testID="voice" amountMinor={100} currency="EUR" language="fr" variant="tile" />,
+    );
+    expect(screen.getByLabelText('Écouter')).toBeTruthy();
+  });
+
   it('returns to the listen state when the speech ends', async () => {
     await render(
       <VoiceButton testID="voice" amountMinor={100} currency="USD" language="en" variant="tile" />,
