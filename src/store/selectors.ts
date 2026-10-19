@@ -27,15 +27,19 @@ export function useBalanceParts(): MoneyParts {
 }
 
 /**
- * True when at least one intention is more recent than the last visit of the History
- * screen (or History was never opened and there is any intention). Drives the bell badge.
+ * True when at least one user intention is more recent than the last visit of the History
+ * screen, or History was never opened and there is any intention (demo or fixture
+ * included). Drives the bell badge. After the first visit, demo intentions are ignored:
+ * their dates are recomputed every month, so they would bring the badge back without
+ * any action from the user.
  */
 export function useHasUnseenIntentions(): boolean {
   const transactions = useAllTransactions();
+  const userTransactions = useAppStore((state) => state.userTransactions);
   const lastHistoryVisitAt = useAppStore((state) => state.lastHistoryVisitAt);
   return useMemo(() => {
     if (lastHistoryVisitAt === null) return transactions.length > 0;
     const lastVisit = new Date(lastHistoryVisitAt).getTime();
-    return transactions.some((tx) => new Date(tx.createdAt).getTime() > lastVisit);
-  }, [transactions, lastHistoryVisitAt]);
+    return userTransactions.some((tx) => new Date(tx.createdAt).getTime() > lastVisit);
+  }, [transactions, userTransactions, lastHistoryVisitAt]);
 }
