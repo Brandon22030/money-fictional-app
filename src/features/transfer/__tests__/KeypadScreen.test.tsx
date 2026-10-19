@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, render, screen, within } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 
 import { MAX_BALANCE_MINOR } from "@/src/config/locale";
 import { formatMoney } from "@/src/domain/money";
@@ -206,5 +207,33 @@ describe("KeypadScreen", () => {
     await render(<KeypadScreen />);
     expect(screen.getByTestId("amount-integer")).toHaveTextContent("$0");
     expect(screen.queryByTestId("amount-suffix")).toBeNull();
+  });
+
+  it("gives the close handle a touch target of at least 44 x 44 and keeps its label", async () => {
+    await render(<KeypadScreen />);
+    const close = screen.getByTestId("keypad-close");
+    expect(close.props.accessibilityLabel).toBe("Fermer");
+    const style = StyleSheet.flatten(close.props.style);
+    const slop = close.props.hitSlop ?? {};
+    expect((style.width as number) + (slop.left ?? 0) + (slop.right ?? 0)).toBeGreaterThanOrEqual(44);
+    expect((style.height as number) + (slop.top ?? 0) + (slop.bottom ?? 0)).toBeGreaterThanOrEqual(44);
+  });
+
+  it("puts the card in a scroll view that fills the height, so Valider fits short screens", async () => {
+    mockParams = { mode: "receive" };
+    await render(<KeypadScreen />);
+    const scroll = screen.getByTestId("keypad-scroll");
+    expect(StyleSheet.flatten(scroll.props.contentContainerStyle).flexGrow).toBe(1);
+    expect(StyleSheet.flatten(scroll.props.style).flex).toBe(1);
+    // The whole card, keypad and Valider included, scrolls; nothing is sized from onLayout.
+    expect(within(scroll).getByTestId("keypad")).toBeTruthy();
+    expect(within(scroll).getByTestId("keypad-validate")).toBeTruthy();
+    expect(within(scroll).getByText("FICTIF - SIMULATION")).toBeTruthy();
+    expect(scroll.props.onLayout).toBeUndefined();
+
+    await typeDigits(["5"]);
+    await fireEvent.press(within(scroll).getByTestId("keypad-validate"));
+    expect(useAppStore.getState().balanceMinor).toBe(10005);
+    expect(mockBack).toHaveBeenCalled();
   });
 });

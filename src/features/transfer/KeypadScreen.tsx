@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { NumericKeypad } from '@/src/components/keypad/NumericKeypad';
 import { useAmountInput } from '@/src/components/keypad/useAmountInput';
@@ -103,7 +103,6 @@ export function KeypadScreen() {
 
   const money = formatMoney(minor, currency, language);
   const available = formatMoney(balanceMinor, currency, language).full;
-  const [cardHeight, setCardHeight] = useState(0);
 
   return (
     <Screen testID="screen-keypad" style={styles.screen}>
@@ -111,10 +110,11 @@ export function KeypadScreen() {
         testID="keypad-close"
         accessibilityRole="button"
         accessibilityLabel={t('close')}
-        hitSlop={16}
         onPress={close}
-        style={styles.handle}
-      />
+        style={styles.handleTarget}
+      >
+        <View style={styles.handle} />
+      </Pressable>
 
       <AppText variant="h2" style={styles.title} testID="keypad-title">
         {t(`modes.${mode}.title`)}
@@ -134,13 +134,16 @@ export function KeypadScreen() {
         </Text>
       )}
 
-      <View
+      {/* The card fills the free height (as in the mockup) and scrolls when the window or
+          the modal sheet is too short for it, so Valider always stays reachable. */}
+      <ScrollView
+        testID="keypad-scroll"
         style={styles.cardSlot}
-        onLayout={(event) => setCardHeight(event.nativeEvent.layout.height)}
+        contentContainerStyle={styles.cardScroll}
+        showsVerticalScrollIndicator={false}
+        alwaysBounceVertical={false}
       >
-        <NavyCard
-          contentStyle={[styles.card, { minHeight: cardHeight - CARD_BORDER }]}
-        >
+        <NavyCard fill contentStyle={styles.card}>
           <AmountText
             testID="keypad-amount"
             integer={money.integer}
@@ -190,27 +193,42 @@ export function KeypadScreen() {
           ) : null}
           <Text style={styles.notice}>{tCommon('simulationNotice')}</Text>
         </NavyCard>
-      </View>
+      </ScrollView>
     </Screen>
   );
 }
 
-// Width of the card border, deducted from the measured slot to get the content height.
-const CARD_BORDER = 2;
+// Minimum touch target (iOS HIG / Material) for the close handle.
+const HANDLE_TARGET = 44;
+const HANDLE_HEIGHT = 5;
+// Room around the card inside the scroll view so its shadow is not clipped. The scroll view
+// spreads by the same amounts over the screen padding and the gap above (up to the subtitle,
+// where scrolled content is clipped), so the card keeps its place.
+const SCREEN_BOTTOM = 28;
+const CARD_BOTTOM_GAP = 6;
+const SUBTITLE_GAP = 4;
+const CARD_SHADOW_TOP = layout.gap + SUBTITLE_GAP;
 
 const styles = StyleSheet.create({
   screen: {
     paddingHorizontal: layout.screenX,
-    paddingBottom: 28,
+    paddingBottom: SCREEN_BOTTOM,
     gap: layout.gap,
   },
-  handle: {
+  // 44 pt square-ish target centred on the 5 pt bar; negative margins keep the bar where it was.
+  handleTarget: {
     alignSelf: 'center',
+    width: HANDLE_TARGET * 2,
+    height: HANDLE_TARGET,
+    marginTop: 2 - (HANDLE_TARGET - HANDLE_HEIGHT) / 2,
+    marginBottom: 6 - (HANDLE_TARGET - HANDLE_HEIGHT) / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  handle: {
     width: 44,
-    height: 5,
+    height: HANDLE_HEIGHT,
     borderRadius: 3,
-    marginTop: 2,
-    marginBottom: 6,
     backgroundColor: 'rgba(15,42,85,0.35)',
   },
   title: {
@@ -220,14 +238,22 @@ const styles = StyleSheet.create({
     ...font(14, 'regular'),
     textAlign: 'center',
     color: colors.navy700,
-    marginBottom: 4,
+    marginBottom: SUBTITLE_GAP,
   },
   subtitleName: {
     ...font(14, 'bold'),
   },
   cardSlot: {
     flex: 1,
-    marginBottom: 6,
+    marginHorizontal: -layout.screenX,
+    marginTop: -CARD_SHADOW_TOP,
+    marginBottom: -SCREEN_BOTTOM,
+  },
+  cardScroll: {
+    flexGrow: 1,
+    paddingHorizontal: layout.screenX,
+    paddingTop: CARD_SHADOW_TOP,
+    paddingBottom: SCREEN_BOTTOM + CARD_BOTTOM_GAP,
   },
   card: {
     paddingVertical: 22,

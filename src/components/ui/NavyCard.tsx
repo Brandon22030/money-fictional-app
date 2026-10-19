@@ -9,6 +9,11 @@ import { glass, radius, shadow } from '@/src/theme';
 export type NavyCardProps = ViewProps & {
   style?: StyleProp<ViewStyle>;
   contentStyle?: StyleProp<ViewStyle>;
+  /**
+   * Grows the card and its content to the height given by the parent (flexGrow) instead of
+   * sizing them to the content, for a card that must reach the bottom of its container.
+   */
+  fill?: boolean;
 };
 
 // Backdrop blur of the mockup `.glass` (16px), calibrated against the web capture.
@@ -30,10 +35,10 @@ function Highlight() {
   );
 }
 
-export function NavyCard({ style, contentStyle, children, ...rest }: NavyCardProps) {
+export function NavyCard({ style, contentStyle, fill = false, children, ...rest }: NavyCardProps) {
   return (
-    <View {...rest} style={[styles.shadow, style]}>
-      <View style={styles.card}>
+    <View {...rest} style={[styles.shadow, fill ? styles.fill : null, style]}>
+      <View style={[styles.card, fill ? styles.fill : null]}>
         <BlurView intensity={CSS_BACKDROP_BLUR} tint="light" style={StyleSheet.absoluteFill} />
         <LinearGradient
           colors={[...glass.colors]}
@@ -42,13 +47,16 @@ export function NavyCard({ style, contentStyle, children, ...rest }: NavyCardPro
           style={StyleSheet.absoluteFill}
         />
         <Highlight />
-        <View style={contentStyle}>{children}</View>
+        <View style={[fill ? styles.fill : null, contentStyle]}>{children}</View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  fill: {
+    flexGrow: 1,
+  },
   shadow: {
     borderRadius: radius.lg,
     ...shadow.card,

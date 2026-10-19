@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react-native';
-import { Text } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 
+import { NavyCard } from '@/src/components/ui/NavyCard';
 import { Pill } from '@/src/components/ui/Pill';
 import { RoundIconButton } from '@/src/components/ui/RoundIconButton';
 import { TicketCard } from '@/src/components/ui/TicketCard';
@@ -53,5 +54,39 @@ describe('RoundIconButton', () => {
     await render(<RoundIconButton testID="menu" icon="menu" accessibilityLabel="Menu" />);
 
     expect(screen.queryByTestId('menu-badge')).toBeNull();
+  });
+});
+
+describe('NavyCard', () => {
+  function layers() {
+    const content = screen.getByText('Contenu').parent?.parent;
+    const card = content?.parent;
+    const outer = screen.getByTestId('navy');
+    return { outer, card, content };
+  }
+
+  it('sizes to its content by default', async () => {
+    await render(
+      <NavyCard testID="navy">
+        <Text>Contenu</Text>
+      </NavyCard>,
+    );
+    const { outer, card, content } = layers();
+    for (const layer of [outer, card, content]) {
+      expect(StyleSheet.flatten(layer?.props.style)?.flexGrow).toBeUndefined();
+    }
+  });
+
+  it('grows every layer to the parent height with fill', async () => {
+    await render(
+      <NavyCard testID="navy" fill contentStyle={{ padding: 20 }}>
+        <Text>Contenu</Text>
+      </NavyCard>,
+    );
+    const { outer, card, content } = layers();
+    for (const layer of [outer, card, content]) {
+      expect(StyleSheet.flatten(layer?.props.style)).toMatchObject({ flexGrow: 1 });
+    }
+    expect(StyleSheet.flatten(content?.props.style)).toMatchObject({ padding: 20 });
   });
 });
