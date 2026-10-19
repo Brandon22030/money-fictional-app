@@ -1,1 +1,5 @@
-{}
+{
+  "announce": "Your current bank balance is {{amount}}",
+  "listen": "Listen",
+  "stop": "Stop"
+}
