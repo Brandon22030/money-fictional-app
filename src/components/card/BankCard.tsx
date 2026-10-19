@@ -9,7 +9,7 @@ import { getVisualFixture } from '@/src/dev/visualFixture';
 import { bankCard, shadows } from '@/src/theme';
 
 import { CardBack } from './CardBack';
-import { CardFront } from './CardFront';
+import { CARD_FACE_PADDING, CardFront } from './CardFront';
 import { CardShine } from './CardShine';
 import { useCardFlip } from './useCardFlip';
 
@@ -159,7 +159,12 @@ const styles = StyleSheet.create({
     borderRadius: bankCard.radius,
   },
   content: { flex: 1 },
-  padded: { paddingTop: 20, paddingHorizontal: 22, paddingBottom: 30 },
+  // Shared with CardFront, whose fictional mention offsets depend on it.
+  padded: {
+    paddingTop: CARD_FACE_PADDING.top,
+    paddingHorizontal: CARD_FACE_PADDING.horizontal,
+    paddingBottom: CARD_FACE_PADDING.bottom,
+  },
   face: {
     flex: 1,
     borderRadius: bankCard.radius,

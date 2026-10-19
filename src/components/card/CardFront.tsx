@@ -10,6 +10,15 @@ import { EmvChip } from './EmvChip';
 import { GoldBrandName } from './GoldBrandName';
 import { NetworkLogo } from './NetworkLogo';
 
+/**
+ * Padding of the front face, applied by BankCard (`padded`). The fictional mention below is
+ * positioned against this padded content box, so its offsets are derived from it.
+ */
+export const CARD_FACE_PADDING = { top: 20, horizontal: 22, bottom: 30 } as const;
+
+/** Distance of the fictional mention box from the bottom edge of the card (calibrated on the mockup). */
+const FICTIONAL_BOTTOM = 8;
+
 export type CardFrontProps = {
   holderName: string;
   cardNumber: string;
@@ -77,12 +86,13 @@ const styles = StyleSheet.create({
   label: { ...font(8, 'regular'), letterSpacing: 1.4, color: cardText.label, marginBottom: 4 },
   value: { ...font(13, 'semiBold'), letterSpacing: 0.8, color: cardText.main },
   // C2: 11 px / semiBold / pearl kept for legibility, position of the mockup (absolute, bottom 10).
+  // Offsets cancel the face padding: full card width, FICTIONAL_BOTTOM from the card bottom.
   fictional: {
     ...font(11, 'semiBold'),
     position: 'absolute',
-    left: -22,
-    right: -22,
-    bottom: -22,
+    left: -CARD_FACE_PADDING.horizontal,
+    right: -CARD_FACE_PADDING.horizontal,
+    bottom: FICTIONAL_BOTTOM - CARD_FACE_PADDING.bottom,
     letterSpacing: 1.6,
     color: colors.goldPearl,
     textAlign: 'center',

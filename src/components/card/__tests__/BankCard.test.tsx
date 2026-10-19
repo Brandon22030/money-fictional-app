@@ -4,6 +4,7 @@ import { StyleSheet } from 'react-native';
 import i18n from '@/src/i18n';
 import { colors, fontFamily } from '@/src/theme';
 import { BankCard } from '@/src/components/card/BankCard';
+import { CARD_FACE_PADDING } from '@/src/components/card/CardFront';
 import { formatCardNumber } from '@/src/domain/card';
 
 const mockShineWidths: number[] = [];
@@ -49,6 +50,27 @@ describe('BankCard', () => {
 
     await fireEvent.press(screen.getByTestId('card'));
     expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it('spans the fictional mention over the full card width, whatever the face padding', async () => {
+    await render(<BankCard {...props} />);
+    const mention = screen.getByTestId('card-fictional-front', hidden);
+    // The padded content box that positions the mention.
+    let box = mention.parent;
+    while (box && StyleSheet.flatten(box.props.style)?.paddingHorizontal === undefined) {
+      box = box.parent;
+    }
+    const padding = StyleSheet.flatten(box?.props.style);
+    expect(padding).toMatchObject({
+      paddingTop: CARD_FACE_PADDING.top,
+      paddingHorizontal: CARD_FACE_PADDING.horizontal,
+      paddingBottom: CARD_FACE_PADDING.bottom,
+    });
+    const style = StyleSheet.flatten(mention.props.style);
+    expect(style.left).toBe(-CARD_FACE_PADDING.horizontal);
+    expect(style.right).toBe(-CARD_FACE_PADDING.horizontal);
+    // Same pixels as before the refactor: 8 pt above the card bottom edge.
+    expect((style.bottom as number) + CARD_FACE_PADDING.bottom).toBe(8);
   });
 
   it('shows the back with CVV, signature and fictional mention when flipped', async () => {
