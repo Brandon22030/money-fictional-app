@@ -114,6 +114,7 @@ export function SettingsScreen() {
             testID="settings-repeat"
             label={t('repeat.title')}
             hint={t('repeat.hint')}
+            help={t('repeat.help')}
             value={repeatAnnouncement}
             onChange={(next) => useAppStore.getState().setRepeatAnnouncement(next)}
           />

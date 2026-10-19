@@ -18,7 +18,8 @@
   },
   "repeat": {
     "title": "Repeat announcement",
-    "hint": "Repeats the balance announcement, with a short pause, until you press Stop."
+    "hint": "Repeats the balance announcement, with a short pause, until you press Stop.",
+    "help": "Tap Stop to end the loop."
   },
   "reset": {
     "button": "Reset",

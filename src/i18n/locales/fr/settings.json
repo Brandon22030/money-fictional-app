@@ -18,7 +18,8 @@
   },
   "repeat": {
     "title": "Répéter l'annonce",
-    "hint": "Répète l'annonce du solde, avec une courte pause, jusqu'à ce que vous appuyiez sur Arrêter."
+    "hint": "Répète l'annonce du solde, avec une courte pause, jusqu'à ce que vous appuyiez sur Arrêter.",
+    "help": "Appuyez sur Arrêter pour couper la boucle."
   },
   "reset": {
     "button": "Réinitialiser",

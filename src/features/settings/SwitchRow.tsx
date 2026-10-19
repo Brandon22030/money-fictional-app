@@ -1,11 +1,13 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from "react-native";
 
-import { AppText } from '@/src/components/ui';
-import { colors, font } from '@/src/theme';
+import { AppText } from "@/src/components/ui";
+import { colors, font } from "@/src/theme";
 
 export type SwitchRowProps = {
   label: string;
   hint: string;
+  /** Short visible help shown under the row (the hint is only read by screen readers). */
+  help?: string;
   value: boolean;
   onChange: (value: boolean) => void;
   testID?: string;
@@ -17,41 +19,67 @@ const KNOB = 22;
 const KNOB_INSET = 3;
 
 /** Glass row with a label and an on/off switch, sized like the holder field. */
-export function SwitchRow({ label, hint, value, onChange, testID }: SwitchRowProps) {
+export function SwitchRow({
+  label,
+  hint,
+  help,
+  value,
+  onChange,
+  testID,
+}: SwitchRowProps) {
   return (
-    <Pressable
-      testID={testID}
-      accessibilityRole="switch"
-      accessibilityLabel={label}
-      accessibilityHint={hint}
-      accessibilityState={{ checked: value }}
-      onPress={() => onChange(!value)}
-      style={styles.row}
-    >
-      <AppText style={styles.label}>{label}</AppText>
-      <View style={[styles.track, value ? styles.trackOn : null]}>
-        <View style={[styles.knob, value ? styles.knobOn : null]} />
-      </View>
-    </Pressable>
+    <View style={styles.container}>
+      <Pressable
+        testID={testID}
+        accessibilityRole="switch"
+        accessibilityLabel={label}
+        accessibilityHint={hint}
+        accessibilityState={{ checked: value }}
+        onPress={() => onChange(!value)}
+        style={styles.row}
+      >
+        <AppText style={styles.label}>{label}</AppText>
+        <View style={[styles.track, value ? styles.trackOn : null]}>
+          <View style={[styles.knob, value ? styles.knobOn : null]} />
+        </View>
+      </Pressable>
+      {help ? (
+        <AppText
+          style={styles.help}
+          testID={testID ? `${testID}-help` : undefined}
+        >
+          {help}
+        </AppText>
+      ) : null}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    gap: 6,
+  },
+  // Same style as the holder character count.
+  help: {
+    ...font(12.5, "regular"),
+    color: colors.textOnDarkMuted,
+    paddingHorizontal: 4,
+  },
   row: {
     height: 50,
     borderRadius: 16,
     backgroundColor: colors.glassFill,
     borderWidth: 1,
     borderColor: colors.glassBorder,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     gap: 12,
   },
   label: {
     flex: 1,
-    ...font(15, 'semiBold'),
+    ...font(15, "semiBold"),
     color: colors.textOnDark,
   },
   track: {
@@ -61,7 +89,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.glassFill,
     borderWidth: 1,
     borderColor: colors.glassBorder,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   trackOn: {
     backgroundColor: colors.accent,

@@ -78,6 +78,9 @@ describe('SettingsScreen', () => {
     expect(toggle.props.accessibilityState).toEqual({ checked: false });
     expect(screen.getByLabelText("Répéter l'annonce")).toBeTruthy();
     expect(toggle.props.accessibilityHint).toContain('Arrêter');
+    expect(screen.getByTestId('settings-repeat-help')).toHaveTextContent(
+      'Appuyez sur Arrêter pour couper la boucle.',
+    );
 
     await fireEvent.press(toggle);
     expect(useAppStore.getState().repeatAnnouncement).toBe(true);
@@ -93,6 +96,9 @@ describe('SettingsScreen', () => {
     await renderScreen();
     await fireEvent.press(screen.getByTestId('settings-language-en'));
     expect(await screen.findByLabelText('Repeat announcement')).toBeTruthy();
+    expect(screen.getByTestId('settings-repeat-help')).toHaveTextContent(
+      'Tap Stop to end the loop.',
+    );
   });
 
   it('resets only after confirmation', async () => {
