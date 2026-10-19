@@ -1,28 +1,33 @@
-import { Feather } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { NumericKeypad } from '@/src/components/keypad/NumericKeypad';
-import { useAmountInput } from '@/src/components/keypad/useAmountInput';
-import { AppText, Screen } from '@/src/components/ui';
-import { CURRENCIES } from '@/src/config/locale';
-import { findFavorite } from '@/src/data/favorites';
-import { isCurrencyPrefixed } from '@/src/domain/money';
-import type { IntentionKind } from '@/src/domain/types';
-import { useAppStore } from '@/src/store/useAppStore';
-import { colors, radius, spacing } from '@/src/theme';
+import { NumericKeypad } from "@/src/components/keypad/NumericKeypad";
+import { useAmountInput } from "@/src/components/keypad/useAmountInput";
+import {
+  AmountText,
+  AppText,
+  Icon,
+  NavyCard,
+  Screen,
+} from "@/src/components/ui";
+import { CURRENCIES } from "@/src/config/locale";
+import { findFavorite } from "@/src/data/favorites";
+import { formatMoney } from "@/src/domain/money";
+import type { IntentionKind } from "@/src/domain/types";
+import { useAppStore } from "@/src/store/useAppStore";
+import { colors, font, layout } from "@/src/theme";
 
-export type KeypadMode = 'set' | IntentionKind;
+export type KeypadMode = "set" | IntentionKind;
 
-type Notice = 'insufficient' | 'tooLarge';
+type Notice = "insufficient" | "tooLarge";
 
-const MODES: KeypadMode[] = ['set', 'receive', 'send', 'pay', 'withdraw'];
+const MODES: KeypadMode[] = ["set", "receive", "send", "pay", "withdraw"];
 
 function parseMode(value: string | string[] | undefined): KeypadMode {
   const raw = Array.isArray(value) ? value[0] : value;
-  return MODES.find((mode) => mode === raw) ?? 'set';
+  return MODES.find((mode) => mode === raw) ?? "set";
 }
 
 function firstParam(value: string | string[] | undefined): string | undefined {
@@ -31,9 +36,9 @@ function firstParam(value: string | string[] | undefined): string | undefined {
 }
 
 export function KeypadScreen() {
-  const { t } = useTranslation('transfer');
-  const { t: tKeypad } = useTranslation('keypad');
-  const { t: tCommon } = useTranslation('common');
+  const { t } = useTranslation("transfer");
+  const { t: tKeypad } = useTranslation("keypad");
+  const { t: tCommon } = useTranslation("common");
   const router = useRouter();
   const params = useLocalSearchParams<{ mode?: string; contact?: string }>();
 
@@ -48,10 +53,10 @@ export function KeypadScreen() {
   const setBalance = useAppStore((state) => state.setBalance);
   const applyIntention = useAppStore((state) => state.applyIntention);
 
-  const { display, minor, press } = useAmountInput({
+  const { minor, press } = useAmountInput({
     currency,
-    initialMinor: mode === 'set' ? balanceMinor : 0,
-    decimalSeparator: tKeypad('separator'),
+    initialMinor: mode === "set" ? balanceMinor : 0,
+    decimalSeparator: tKeypad("separator"),
   });
   const [notice, setNotice] = useState<Notice | null>(null);
 
@@ -60,7 +65,7 @@ export function KeypadScreen() {
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace('/');
+      router.replace("/");
     }
   };
 
@@ -70,11 +75,11 @@ export function KeypadScreen() {
   };
 
   // A balance of zero is a valid choice; an intention needs a positive amount.
-  const disabled = mode === 'set' ? false : minor <= 0;
+  const disabled = mode === "set" ? false : minor <= 0;
 
   const onValidate = () => {
     if (disabled) return;
-    if (mode === 'set') {
+    if (mode === "set") {
       setBalance(minor);
       close();
       return;
@@ -84,7 +89,7 @@ export function KeypadScreen() {
       minor,
       favorite
         ? {
-            labelKey: 'content:intentions.sharedWith',
+            labelKey: "content:intentions.sharedWith",
             labelParams: { contact: favorite.id },
           }
         : undefined,
@@ -92,141 +97,173 @@ export function KeypadScreen() {
     if (result.ok) {
       close();
     } else {
-      setNotice(result.reason === 'insufficient' ? 'insufficient' : 'tooLarge');
+      setNotice(result.reason === "insufficient" ? "insufficient" : "tooLarge");
     }
   };
 
-  const symbol = CURRENCIES[currency].symbol;
-  const prefixed = isCurrencyPrefixed(currency, language);
+  const money = formatMoney(minor, currency, language);
+  const available = formatMoney(balanceMinor, currency, language).full;
+  const [cardHeight, setCardHeight] = useState(0);
 
   return (
     <Screen testID="screen-keypad" style={styles.screen}>
-      <View style={styles.header}>
-        <Pressable
-          testID="keypad-close"
-          accessibilityRole="button"
-          accessibilityLabel={t('close')}
-          onPress={close}
-          style={styles.close}
-        >
-          <Feather name="x" size={22} color={colors.navy800} />
-        </Pressable>
-      </View>
-
-      <View style={styles.titles}>
-        <AppText variant="title" testID="keypad-title">
-          {t(`modes.${mode}.title`)}
-        </AppText>
-        <AppText variant="body" tone="onLightMuted" testID="keypad-subtitle">
-          {t(`modes.${mode}.subtitle`)}
-        </AppText>
-        {contactName ? (
-          <AppText variant="bodyStrong" testID="keypad-contact">
-            {t('contact', { name: contactName })}
-          </AppText>
-        ) : null}
-      </View>
-
-      <View style={styles.amountRow}>
-        {prefixed ? (
-          <AppText variant="title" tone="onLightMuted" testID="keypad-symbol-prefix">
-            {symbol}
-          </AppText>
-        ) : null}
-        <AppText variant="display" tabular testID="keypad-amount">
-          {display}
-        </AppText>
-        {prefixed ? null : (
-          <AppText variant="title" tone="onLightMuted" testID="keypad-symbol-suffix">
-            {` ${symbol}`}
-          </AppText>
-        )}
-      </View>
-
-      <View style={styles.messageSlot}>
-        {notice ? (
-          <AppText
-            variant="body"
-            tone="onLightMuted"
-            testID={notice === 'insufficient' ? 'keypad-insufficient' : 'keypad-too-large'}
-            accessibilityLiveRegion="polite"
-            style={styles.message}
-          >
-            {t(notice)}
-          </AppText>
-        ) : null}
-      </View>
-
-      <NumericKeypad
-        testID="keypad"
-        onKey={onKey}
-        decimalEnabled={CURRENCIES[currency].decimals > 0}
+      <Pressable
+        testID="keypad-close"
+        accessibilityRole="button"
+        accessibilityLabel={t("close")}
+        hitSlop={16}
+        onPress={close}
+        style={styles.handle}
       />
 
-      <Pressable
-        testID="keypad-validate"
-        accessibilityRole="button"
-        accessibilityLabel={t('validate')}
-        accessibilityState={{ disabled }}
-        disabled={disabled}
-        onPress={onValidate}
-        style={[styles.validate, disabled ? styles.validateDisabled : null]}
-      >
-        <AppText variant="bodyStrong" tone="onDark">
-          {t('validate')}
-        </AppText>
-      </Pressable>
-      <AppText variant="caption" tone="onLightMuted" style={styles.notice}>
-        {tCommon('simulationNotice')}
+      <AppText variant="h2" style={styles.title} testID="keypad-title">
+        {t(`modes.${mode}.title`)}
       </AppText>
+      {contactName ? (
+        <Text
+          testID="keypad-contact"
+          accessibilityLabel={t("contact", { name: contactName })}
+          style={styles.subtitle}
+        >
+          {`${t("contactPrefix")} `}
+          <Text style={styles.subtitleName}>{contactName}</Text>
+        </Text>
+      ) : (
+        <Text testID="keypad-subtitle" style={styles.subtitle}>
+          {t(`modes.${mode}.subtitle`)}
+        </Text>
+      )}
+
+      <View
+        style={styles.cardSlot}
+        onLayout={(event) => setCardHeight(event.nativeEvent.layout.height)}
+      >
+        <NavyCard
+          contentStyle={[styles.card, { minHeight: cardHeight - CARD_BORDER }]}
+        >
+          <AmountText
+            testID="keypad-amount"
+            integer={money.integer}
+            decimals={money.decimals}
+            suffix={money.suffix}
+            size={52}
+            style={styles.amount}
+          />
+          {mode === "set" ? null : (
+            <AppText tone="onDarkMuted" style={styles.available}>
+              {t("available", { amount: available })}
+            </AppText>
+          )}
+
+          <NumericKeypad
+            testID="keypad"
+            onKey={onKey}
+            decimalEnabled={CURRENCIES[currency].decimals > 0}
+          />
+
+          <Pressable
+            testID="keypad-validate"
+            accessibilityRole="button"
+            accessibilityLabel={t("validate")}
+            accessibilityState={{ disabled }}
+            disabled={disabled}
+            onPress={onValidate}
+            style={[styles.validate, disabled ? styles.validateDisabled : null]}
+          >
+            <Icon name="check" size={20} color={colors.navy900} />
+            <Text style={styles.validateLabel}>{t("validate")}</Text>
+          </Pressable>
+
+          {notice ? (
+            <AppText
+              tone="onDark"
+              testID={
+                notice === "insufficient"
+                  ? "keypad-insufficient"
+                  : "keypad-too-large"
+              }
+              accessibilityLiveRegion="polite"
+              style={styles.message}
+            >
+              {t(notice)}
+            </AppText>
+          ) : null}
+          <Text style={styles.notice}>{tCommon("simulationNotice")}</Text>
+        </NavyCard>
+      </View>
     </Screen>
   );
 }
 
+// Width of the card border, deducted from the measured slot to get the content height.
+const CARD_BORDER = 2;
+
 const styles = StyleSheet.create({
   screen: {
-    paddingHorizontal: spacing['2xl'],
-    paddingBottom: spacing['3xl'],
-    gap: spacing.lg,
+    paddingHorizontal: layout.screenX,
+    paddingBottom: 28,
+    gap: layout.gap,
   },
-  header: {
-    alignItems: 'flex-end',
+  handle: {
+    alignSelf: "center",
+    width: 44,
+    height: 5,
+    borderRadius: 3,
+    marginTop: 2,
+    marginBottom: 6,
+    backgroundColor: "rgba(15,42,85,0.35)",
   },
-  close: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.glassLight,
+  title: {
+    textAlign: "center",
   },
-  titles: {
-    alignItems: 'center',
-    gap: spacing.xs,
+  subtitle: {
+    ...font(14, "regular"),
+    textAlign: "center",
+    color: colors.navy700,
+    marginBottom: 4,
   },
-  amountRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'center',
+  subtitleName: {
+    ...font(14, "bold"),
   },
-  messageSlot: {
-    minHeight: 44,
-    justifyContent: 'center',
+  cardSlot: {
+    flex: 1,
+    marginBottom: 6,
   },
-  message: {
-    textAlign: 'center',
+  card: {
+    paddingVertical: 22,
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  amount: {
+    alignItems: "center",
+  },
+  available: {
+    ...font(12, "regular"),
+    textAlign: "center",
   },
   validate: {
-    height: 56,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.navy800,
+    height: 58,
+    borderRadius: 29,
+    marginTop: 12,
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.accent,
   },
   validateDisabled: {
     opacity: 0.4,
   },
+  validateLabel: {
+    ...font(16, "bold"),
+    color: colors.navy900,
+  },
+  message: {
+    textAlign: "center",
+  },
   notice: {
-    textAlign: 'center',
+    ...font(11, "semiBold"),
+    textAlign: "center",
+    color: colors.textOnDarkMuted,
   },
 });

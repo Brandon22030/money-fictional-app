@@ -11,7 +11,7 @@
       "subtitle": "Welcome what is coming your way"
     },
     "send": {
-      "title": "Send",
+      "title": "Send gratitude",
       "subtitle": "Give with joy"
     },
     "pay": {
@@ -23,7 +23,9 @@
       "subtitle": "Take what you need"
     }
   },
-  "contact": "For {{name}}",
+  "contact": "To: {{name}}",
+  "contactPrefix": "To:",
+  "available": "Available balance: {{amount}}",
   "insufficient": "This amount is above your current balance. Try a gentler amount.",
   "tooLarge": "This amount is above the simulation limit. Try a gentler amount."
 }

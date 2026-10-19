@@ -1,12 +1,11 @@
-import { Feather } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
-import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
+import * as Haptics from "expo-haptics";
+import { useTranslation } from "react-i18next";
+import { Pressable, StyleSheet, View } from "react-native";
 
-import { AppText } from '@/src/components/ui';
-import { colors, radius, spacing } from '@/src/theme';
+import { AppText, Icon } from "@/src/components/ui";
+import { colors, font, spacing } from "@/src/theme";
 
-import type { AmountKey } from './useAmountInput';
+import type { AmountKey } from "./useAmountInput";
 
 export type NumericKeypadProps = {
   onKey: (key: AmountKey) => void;
@@ -15,14 +14,18 @@ export type NumericKeypadProps = {
 };
 
 const ROWS: AmountKey[][] = [
-  ['1', '2', '3'],
-  ['4', '5', '6'],
-  ['7', '8', '9'],
-  ['decimal', '0', 'backspace'],
+  ["1", "2", "3"],
+  ["4", "5", "6"],
+  ["7", "8", "9"],
+  ["decimal", "0", "backspace"],
 ];
 
-export function NumericKeypad({ onKey, decimalEnabled, testID }: NumericKeypadProps) {
-  const { t } = useTranslation('keypad');
+export function NumericKeypad({
+  onKey,
+  decimalEnabled,
+  testID,
+}: NumericKeypadProps) {
+  const { t } = useTranslation("keypad");
 
   const handlePress = (key: AmountKey) => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -32,15 +35,15 @@ export function NumericKeypad({ onKey, decimalEnabled, testID }: NumericKeypadPr
   return (
     <View testID={testID} style={styles.grid}>
       {ROWS.map((row) => (
-        <View key={row.join('')} style={styles.row}>
+        <View key={row.join("")} style={styles.row}>
           {row.map((key) => {
-            const disabled = key === 'decimal' && !decimalEnabled;
+            const disabled = key === "decimal" && !decimalEnabled;
             const label =
-              key === 'decimal'
-                ? t('decimal')
-                : key === 'backspace'
-                  ? t('backspace')
-                  : t('digit', { digit: key });
+              key === "decimal"
+                ? t("decimal")
+                : key === "backspace"
+                  ? t("backspace")
+                  : t("digit", { digit: key });
             return (
               <Pressable
                 key={key}
@@ -56,11 +59,11 @@ export function NumericKeypad({ onKey, decimalEnabled, testID }: NumericKeypadPr
                   pressed ? styles.pressed : null,
                 ]}
               >
-                {key === 'backspace' ? (
-                  <Feather name="delete" size={24} color={colors.navy800} />
+                {key === "backspace" ? (
+                  <Icon name="back" size={26} color={colors.textOnDark} />
                 ) : (
-                  <AppText variant="h2" tabular>
-                    {key === 'decimal' ? t('separator') : key}
+                  <AppText tone="onDark" tabular style={styles.digit}>
+                    {key === "decimal" ? t("separator") : key}
                   </AppText>
                 )}
               </Pressable>
@@ -72,26 +75,26 @@ export function NumericKeypad({ onKey, decimalEnabled, testID }: NumericKeypadPr
   );
 }
 
-const KEY_SIZE = 72;
-
 const styles = StyleSheet.create({
   grid: {
-    gap: spacing.lg,
+    gap: spacing.md,
+    marginTop: 10,
   },
   row: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    gap: spacing.md,
   },
   key: {
-    width: KEY_SIZE,
-    height: KEY_SIZE,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.glassLight,
-    borderWidth: StyleSheet.hairlineWidth,
+    flex: 1,
+    height: 78,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.glassFill,
+    borderWidth: 1,
     borderColor: colors.glassBorder,
   },
+  digit: font(24, "semiBold"),
   disabled: {
     opacity: 0.35,
   },
