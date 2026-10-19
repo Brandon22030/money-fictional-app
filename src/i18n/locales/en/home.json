@@ -1,1 +1,14 @@
-{}
+{
+  "balanceLabel": "Available balance",
+  "today": "today",
+  "receive": "Receive",
+  "send": "Send",
+  "notifications": "History",
+  "menu": "Settings",
+  "editBalance": "Edit balance",
+  "affirmationTitle": "Affirmation of the day",
+  "favorites": "Favorites",
+  "recent": "Latest intentions",
+  "seeAll": "See all",
+  "empty": "No intentions yet"
+}
