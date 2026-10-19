@@ -1,47 +1,79 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
 
-import { colors, radius, shadow, spacing } from '@/src/theme';
+import { colors, font, shadows, ticket } from '@/src/theme';
+
+import { AppText } from './AppText';
+
+export type TicketVariant = 'default' | 'affirmation';
 
 export type TicketCardProps = ViewProps & {
+  variant?: TicketVariant;
+  tab?: string;
   style?: StyleProp<ViewStyle>;
+  contentStyle?: StyleProp<ViewStyle>;
 };
 
-export function TicketCard({ style, children, ...rest }: TicketCardProps) {
+export function TicketCard({
+  variant = 'default',
+  tab,
+  style,
+  contentStyle,
+  children,
+  ...rest
+}: TicketCardProps) {
+  const palette = ticket[variant];
+
   return (
-    <View {...rest} style={[styles.card, style]}>
-      <View style={[styles.notch, styles.notchLeft]} />
-      <View style={[styles.notch, styles.notchRight]} />
-      {children}
+    <View {...rest} style={[styles.shadow, style]}>
+      <LinearGradient
+        colors={[...palette.colors]}
+        start={palette.start}
+        end={palette.end}
+        style={styles.card}
+      >
+        <View style={[styles.content, contentStyle]}>{children}</View>
+        {tab ? (
+          <View testID="ticket-tab" style={styles.tab}>
+            <AppText variant="caption" style={styles.tabLabel}>
+              {tab}
+            </AppText>
+          </View>
+        ) : null}
+      </LinearGradient>
     </View>
   );
 }
 
-const NOTCH = 14;
-
 const styles = StyleSheet.create({
+  shadow: {
+    borderRadius: ticket.radius,
+    ...shadows.ticket,
+  },
   card: {
-    backgroundColor: colors.glassLight,
-    borderRadius: radius.lg,
-    padding: spacing.xl,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.glassBorder,
+    borderRadius: ticket.radius,
     overflow: 'hidden',
-    ...shadow.card,
-    shadowOpacity: 0.1,
+    borderWidth: ticket.borderWidth,
+    borderColor: ticket.borderColor,
   },
-  notch: {
+  content: {
+    paddingTop: 30,
+    paddingHorizontal: 16,
+    paddingBottom: 14,
+  },
+  tab: {
     position: 'absolute',
-    top: '50%',
-    marginTop: -NOTCH / 2,
-    width: NOTCH,
-    height: NOTCH,
-    borderRadius: NOTCH / 2,
-    backgroundColor: colors.skyMid,
+    top: 0,
+    left: 14,
+    paddingVertical: 5,
+    paddingHorizontal: 12,
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+    backgroundColor: colors.navy800,
   },
-  notchLeft: {
-    left: -NOTCH / 2,
-  },
-  notchRight: {
-    right: -NOTCH / 2,
+  tabLabel: {
+    ...font(11, 'bold'),
+    letterSpacing: 0.3,
+    color: colors.textOnDark,
   },
 });
