@@ -3,12 +3,16 @@ import { AppState, type NativeEventSubscription } from 'react-native';
 import type { Currency, Language } from '@/src/config/locale';
 
 import { setAnnouncementActive } from './announcementState';
-import { playBeep, stopBeep } from './beep';
+import { playAtmBeep, playCashCounter, stopBeep } from './beep';
 import { getVoiceProvider } from './registry';
 import { spokenAmount } from './spokenAmount';
 
 /** Pause between the end of the voice and the next sound when the announcement loops. */
 export const LOOP_PAUSE_MS = 2000;
+/** Silence between the end of the cash counter and the ATM beep. */
+export const COUNTER_TO_BEEP_MS = 150;
+/** Silence between the end of the ATM beep and the voice. */
+export const BEEP_TO_VOICE_MS = 250;
 
 export type AnnouncementSnapshot = {
   amountMinor: number;
@@ -61,7 +65,7 @@ function cancelPause(): void {
  *
  * "inactive" is deliberately ignored (Control Center, notification shade, app switcher). On iOS
  * a phone call can leave the app only inactive: the loop then keeps running, but the system
- * interrupts the audio session, so the beep and the voice are silenced until the call ends.
+ * interrupts the audio session, so the sounds and the voice are silenced until the call ends.
  * If the call moves the app to the background, the announcement stops as usual.
  */
 function watchAppState(): void {
@@ -76,18 +80,33 @@ function unwatchAppState(): void {
   appStateSubscription = null;
 }
 
-/** Beep, then speak the balance. A beep failure never prevents the voice. */
+/** Plays a sound; a failure never prevents the next step of the sequence. */
+async function playSoundSafely(play: () => Promise<void>): Promise<void> {
+  try {
+    await play();
+  } catch {
+    // The rest of the sequence (and the voice) still plays when a sound cannot.
+  }
+}
+
+/**
+ * Cash counter, silence, ATM beep, silence, then the voice. Each step starts only when the
+ * previous one is over, and a stop (generation change) ends the cycle at any step.
+ */
 async function playCycle(current: number, { read, t }: AnnounceBalanceParams): Promise<void> {
   const provider = getVoiceProvider();
   // Never overlap a previous announcement, from this button or another one.
   await provider.stop();
   if (current !== generation) return;
 
-  try {
-    await playBeep();
-  } catch {
-    // The voice still plays when the beep cannot.
-  }
+  await playSoundSafely(playCashCounter);
+  if (current !== generation) return;
+  await sleep(COUNTER_TO_BEEP_MS);
+  if (current !== generation) return;
+
+  await playSoundSafely(playAtmBeep);
+  if (current !== generation) return;
+  await sleep(BEEP_TO_VOICE_MS);
   if (current !== generation) return;
 
   const { amountMinor, currency, language } = read();
@@ -126,7 +145,7 @@ export async function announceBalance(params: AnnounceBalanceParams): Promise<vo
 }
 
 /**
- * Stops the current announcement: the beep, the voice and the pause before the next cycle.
+ * Stops the current announcement: the sounds, the voice, the silences and the pause before the next cycle.
  * Never rejects, so callers can fire and forget it (`void stopAnnouncement()`), for example
  * from the AppState listener: the announcement is already marked as stopped either way.
  */
