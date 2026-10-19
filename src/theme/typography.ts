@@ -2,17 +2,26 @@ import type { TextStyle } from 'react-native';
 import { fontFamily, fontSize, numbers } from './tokens';
 
 export type TextVariant = 'caption' | 'body' | 'bodyStrong' | 'title' | 'h2' | 'display';
+export type FontWeight = keyof typeof fontFamily;
+
+const NORMAL_LINE_HEIGHT = 1.366;
+
+export function font(size: number, weight: FontWeight = 'regular'): TextStyle {
+  return {
+    fontFamily: fontFamily[weight],
+    fontSize: size,
+    lineHeight: Math.round(size * NORMAL_LINE_HEIGHT),
+  };
+}
 
 export const typography: Record<TextVariant, TextStyle> = {
-  caption: { fontFamily: fontFamily.medium, fontSize: fontSize.caption, lineHeight: 16 },
-  body: { fontFamily: fontFamily.regular, fontSize: fontSize.body, lineHeight: 22 },
-  bodyStrong: { fontFamily: fontFamily.semiBold, fontSize: fontSize.body, lineHeight: 22 },
-  title: { fontFamily: fontFamily.bold, fontSize: fontSize.title, lineHeight: 26 },
-  h2: { fontFamily: fontFamily.bold, fontSize: fontSize.h2, lineHeight: 30 },
+  caption: font(fontSize.caption, 'medium'),
+  body: font(fontSize.body, 'regular'),
+  bodyStrong: font(fontSize.body, 'semiBold'),
+  title: font(fontSize.title, 'bold'),
+  h2: font(fontSize.h2, 'bold'),
   display: {
-    fontFamily: fontFamily.bold,
-    fontSize: fontSize.display,
-    lineHeight: 48,
+    ...font(fontSize.display, 'bold'),
     fontVariant: numbers.fontVariant,
   },
 };
