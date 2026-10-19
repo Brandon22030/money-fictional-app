@@ -1,1 +1,22 @@
-{}
+{
+  "close": "Fermer",
+  "validate": "Valider",
+  "modes": {
+    "set": {
+      "title": "Définir mon solde",
+      "subtitle": "Choisis le montant qui t'inspire"
+    },
+    "receive": {
+      "title": "Recevoir de l'abondance",
+      "subtitle": "Accueille ce qui arrive vers toi"
+    },
+    "send": { "title": "Envoyer", "subtitle": "Offre avec joie" },
+    "pay": { "title": "Payer", "subtitle": "Règle avec sérénité" },
+    "withdraw": {
+      "title": "Retirer",
+      "subtitle": "Prends ce dont tu as besoin"
+    }
+  },
+  "contact": "Pour {{name}}",
+  "insufficient": "Ce montant dépasse ton solde actuel. Essaie un montant un peu plus doux."
+}
