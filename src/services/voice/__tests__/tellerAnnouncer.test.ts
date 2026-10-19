@@ -11,8 +11,16 @@ import {
   stopAnnouncement,
 } from '@/src/services/voice';
 import type { VoiceProvider } from '@/src/services/voice';
+import { ExpoSpeechVoiceProvider } from '@/src/services/voice/ExpoSpeechVoiceProvider';
 import { useAnnouncementState } from '@/src/services/voice/announcementState';
 
+jest.mock('expo-speech', () => ({
+  VoiceQuality: { Default: 'Default', Enhanced: 'Enhanced' },
+  speak: jest.fn(),
+  stop: jest.fn(async () => undefined),
+  isSpeakingAsync: jest.fn(async () => false),
+  getAvailableVoicesAsync: jest.fn(async () => []),
+}));
 jest.mock('@/src/services/voice/beep', () => ({
   playCashCounter: jest.fn(),
   playAtmBeep: jest.fn(),
@@ -128,6 +136,55 @@ describe('tellerAnnouncer', () => {
     await jest.advanceTimersByTimeAsync(1);
     await pending;
     expect(events.at(-1)).toBe('speak announce:1 dollar:en');
+  });
+
+  it('prepares the voice during the counter, with the language of the cycle', async () => {
+    const provider = makeProvider(events);
+    provider.prepare = jest.fn(async ({ language }) => {
+      events.push(`prepare ${language}`);
+    });
+    setVoiceProvider(provider);
+
+    const pending = announceBalance(params('fr'));
+    await jest.advanceTimersByTimeAsync(SEQUENCE_MS);
+    await pending;
+
+    expect(provider.prepare).toHaveBeenCalledTimes(1);
+    expect(events.slice(0, 3)).toEqual(['stop', 'prepare fr', 'counter']);
+  });
+
+  it('prepare with the real provider during the counter: one voice lookup only', async () => {
+    const Speech = jest.requireMock('expo-speech') as {
+      getAvailableVoicesAsync: jest.Mock;
+      speak: jest.Mock;
+    };
+    const amelie = {
+      identifier: 'com.apple.voice.compact.fr-CA.Amelie',
+      name: 'Amélie',
+      language: 'fr-CA',
+      quality: 'Default',
+    };
+    Speech.getAvailableVoicesAsync.mockResolvedValue([amelie]);
+    Speech.speak.mockImplementation((_text: string, options: { onDone?: () => void }) =>
+      options.onDone?.(),
+    );
+    const counter = deferred();
+    (playCashCounter as jest.Mock).mockImplementation(() => counter.promise);
+    setVoiceProvider(new ExpoSpeechVoiceProvider());
+
+    const pending = announceBalance(params('fr'));
+    await settle();
+    // The lookup started during the counter, not after the beep.
+    expect(Speech.getAvailableVoicesAsync).toHaveBeenCalledTimes(1);
+    counter.release();
+    await jest.advanceTimersByTimeAsync(SEQUENCE_MS);
+    await pending;
+
+    expect(Speech.getAvailableVoicesAsync).toHaveBeenCalledTimes(1);
+    expect(Speech.speak).toHaveBeenCalledTimes(1);
+    expect(Speech.speak.mock.calls[0][1]).toEqual(
+      expect.objectContaining({ voice: amelie.identifier }),
+    );
   });
 
   it('still plays the rest of the sequence when a sound fails', async () => {

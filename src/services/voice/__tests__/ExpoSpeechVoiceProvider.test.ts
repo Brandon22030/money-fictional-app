@@ -59,6 +59,15 @@ describe('pickFrenchVoice', () => {
     expect(pickFrenchVoice([male, network])).toBeNull();
   });
 
+  it('matches a first name exactly, never inside a longer name', () => {
+    const florian = voice('com.example.voice.fr-FR.Florian', 'Florian', 'fr-FR');
+    expect(pickFrenchVoice([THOMAS, florian])).toBeNull();
+    const legacy = voice('com.apple.ttsbundle.Amelie-compact', 'Amélie', 'fr-CA');
+    expect(pickFrenchVoice([FLO, legacy])).toBe(legacy);
+    const enhancedName = voice('custom.id', 'Amélie (Enhanced)', 'fr-CA');
+    expect(pickFrenchVoice([FLO, enhancedName])).toBe(enhancedName);
+  });
+
   it('returns null when there is no female voice or no voice at all', () => {
     expect(pickFrenchVoice([THOMAS])).toBeNull();
     expect(pickFrenchVoice([])).toBeNull();
@@ -179,7 +188,7 @@ describe('ExpoSpeechVoiceProvider', () => {
     expect(calls().every((call) => call[1].voice === AMELIE.identifier)).toBe(true);
   });
 
-  it('retries once without the voice when speaking with it fails, then stops using it', async () => {
+  it('retries once without the voice when speaking with it fails, then chooses again next time', async () => {
     mockVoices([AMELIE]);
     const provider = new ExpoSpeechVoiceProvider();
     const done = provider.speak('bonjour', { language: 'fr' });
@@ -192,11 +201,76 @@ describe('ExpoSpeechVoiceProvider', () => {
     lastCallbacks().onDone?.();
     await expect(done).resolves.toBeUndefined();
 
+    // The voice is not given up for good: the next announcement selects it again.
     const next = provider.speak('bonjour', { language: 'fr' });
     await flush();
-    expect(calls()[2][1]).not.toHaveProperty('voice');
+    expect(Speech.getAvailableVoicesAsync).toHaveBeenCalledTimes(2);
+    expect(calls()[2][1]).toEqual(
+      expect.objectContaining({ voice: AMELIE.identifier, language: 'fr-CA' }),
+    );
     lastCallbacks().onDone?.();
     await next;
+  });
+
+  it('never speaks when stopped during the voice lookup', async () => {
+    let answer: (voices: Voice[]) => void = () => undefined;
+    (Speech.getAvailableVoicesAsync as jest.Mock).mockReturnValueOnce(
+      new Promise<Voice[]>((resolve) => (answer = resolve)),
+    );
+    const provider = new ExpoSpeechVoiceProvider();
+    const pending = provider.speak('bonjour', { language: 'fr' });
+    await flush();
+    await provider.stop();
+    answer([AMELIE]);
+    await expect(pending).resolves.toBeUndefined();
+    await flush();
+    expect(Speech.speak).not.toHaveBeenCalled();
+  });
+
+  it('prepare looks up the voice once, shared with a speak that starts meanwhile', async () => {
+    let answer: (voices: Voice[]) => void = () => undefined;
+    (Speech.getAvailableVoicesAsync as jest.Mock).mockReturnValueOnce(
+      new Promise<Voice[]>((resolve) => (answer = resolve)),
+    );
+    const provider = new ExpoSpeechVoiceProvider();
+    const prepared = provider.prepare({ language: 'fr' });
+    const done = provider.speak('bonjour', { language: 'fr' });
+    answer([AMELIE]);
+    await prepared;
+    await flush();
+    expect(Speech.getAvailableVoicesAsync).toHaveBeenCalledTimes(1);
+    expect(calls()[0][1]).toEqual(expect.objectContaining({ voice: AMELIE.identifier }));
+    lastCallbacks().onDone?.();
+    await done;
+  });
+
+  it('prepare does not look up the voice in English', async () => {
+    await new ExpoSpeechVoiceProvider().prepare({ language: 'en' });
+    expect(Speech.getAvailableVoicesAsync).not.toHaveBeenCalled();
+  });
+
+  it('stop while speaking with Amelie: onStopped resolves, one speak call, no retry', async () => {
+    mockVoices([AMELIE]);
+    const provider = new ExpoSpeechVoiceProvider();
+    const pending = provider.speak('bonjour', { language: 'fr' });
+    await flush();
+    await provider.stop();
+    lastCallbacks().onStopped?.();
+    await expect(pending).resolves.toBeUndefined();
+    await flush();
+    expect(calls()).toHaveLength(1);
+  });
+
+  it('onError then stop in the same window: no retry without the voice', async () => {
+    mockVoices([AMELIE]);
+    const provider = new ExpoSpeechVoiceProvider();
+    const pending = provider.speak('bonjour', { language: 'fr' });
+    await flush();
+    lastCallbacks().onError?.(new Error('interrupted'));
+    void provider.stop();
+    await expect(pending).resolves.toBeUndefined();
+    await flush();
+    expect(calls()).toHaveLength(1);
   });
 
   it('rejects when the retry without the voice fails too', async () => {

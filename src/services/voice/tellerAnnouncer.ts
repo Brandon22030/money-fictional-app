@@ -99,6 +99,8 @@ async function playCycle(current: number, { read, t }: AnnounceBalanceParams): P
   await provider.stop();
   if (current !== generation) return;
 
+  // Looks up the voice while the sounds play, so the voice follows the beep without delay.
+  void provider.prepare?.({ language: read().language });
   await playSoundSafely(playCashCounter);
   if (current !== generation) return;
   await sleep(COUNTER_TO_BEEP_MS);
