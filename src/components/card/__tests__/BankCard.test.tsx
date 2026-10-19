@@ -4,23 +4,6 @@ import i18n from '@/src/i18n';
 import { BankCard } from '@/src/components/card/BankCard';
 import { formatCardNumber } from '@/src/components/card/formatCardNumber';
 
-/* eslint-disable @typescript-eslint/no-require-imports -- jest.mock factory needs require */
-jest.mock('react-native-reanimated', () => {
-  const { View } = require('react-native');
-  return {
-    __esModule: true,
-    default: { View },
-    Easing: { inOut: () => undefined, cubic: undefined, quad: undefined },
-    useReducedMotion: () => false,
-    useSharedValue: (value: number) => ({ value }),
-    useAnimatedStyle: (factory: () => object) => factory(),
-    withTiming: (value: number) => value,
-    withDelay: (_ms: number, value: number) => value,
-    withRepeat: (value: number) => value,
-    cancelAnimation: () => undefined,
-  };
-});
-/* eslint-enable @typescript-eslint/no-require-imports */
 
 const props = {
   holderName: 'ÉLISE ADJOVI',
