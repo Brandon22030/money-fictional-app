@@ -7,3 +7,6 @@
 - Écrans en cadres 390 x 844 : Accueil, Carte (recto et verso), Abondance, Clavier (mode Envoyer), Historique avec recherche, Réglages.
 - La carte et le solde sont fictifs, sans valeur ni lien avec une banque. Le réseau "AURÉA" et la marque "Abonda" sont inventés. La mention "FICTIF - SIMULATION" figure au recto et au verso.
 - `mockup.png` : capture de la page complète.
+- Section "Logo et icône" : mascotte Abonda (pièce dorée souriante sur fond ciel vers marine). Sources et exports dans `assets/brand/`.
+- Barre de navigation : pilule flottante marine, onglet actif en pilule bleu ciel (icône + libellé), onglets inactifs en boutons ronds icône seule.
+- Carte : base marine avec touches or (tokens `colors.goldLight`, `goldBase`, `goldDeep`, `gradients.gold`).
