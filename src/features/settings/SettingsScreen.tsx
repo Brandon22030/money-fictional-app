@@ -6,7 +6,6 @@ import { Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react
 import { useTabBarClearance } from '@/src/components/navigation/tabBarLayout';
 import { AppText, Screen } from '@/src/components/ui';
 import { type Currency, type Language } from '@/src/config/locale';
-import i18n from '@/src/i18n';
 import { HOLDER_NAME_MAX_LENGTH, useAppStore } from '@/src/store/useAppStore';
 import { colors, radius, spacing } from '@/src/theme';
 
@@ -43,10 +42,8 @@ export function SettingsScreen() {
     label: t(`language.${value}`),
   }));
 
-  const changeLanguage = (next: Language) => {
-    useAppStore.getState().setLanguage(next);
-    void i18n.changeLanguage(next);
-  };
+  // i18next follows the store through useLanguageSync in the root layout.
+  const changeLanguage = (next: Language) => useAppStore.getState().setLanguage(next);
 
   const commitHolder = () => {
     if (holderDraft !== null) useAppStore.getState().setHolderName(holderDraft);

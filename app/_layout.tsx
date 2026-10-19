@@ -11,7 +11,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import i18n from '@/src/i18n';
+import { useLanguageSync } from '@/src/i18n/useLanguageSync';
 import { useAppStore } from '@/src/store/useAppStore';
 
 void SplashScreen.preventAutoHideAsync();
@@ -24,14 +24,9 @@ export default function RootLayout() {
     Manrope_700Bold,
   });
   const hasHydrated = useAppStore((state) => state.hasHydrated);
-  const language = useAppStore((state) => state.language);
   const ready = (fontsLoaded || fontError !== null) && hasHydrated;
 
-  useEffect(() => {
-    if (i18n.language !== language) {
-      void i18n.changeLanguage(language);
-    }
-  }, [language]);
+  useLanguageSync();
 
   useEffect(() => {
     if (ready) {

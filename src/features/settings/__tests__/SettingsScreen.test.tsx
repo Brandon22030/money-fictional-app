@@ -3,6 +3,7 @@ import { Alert } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import i18n from '@/src/i18n';
+import { useLanguageSync } from '@/src/i18n/useLanguageSync';
 import { useAppStore } from '@/src/store/useAppStore';
 
 import { SettingsScreen } from '../SettingsScreen';
@@ -20,9 +21,16 @@ const METRICS = {
   insets: { top: 0, left: 0, right: 0, bottom: 0 },
 };
 
-function renderScreen() {
+/** Stands in for the root layout, the only place that syncs i18next with the store. */
+function LanguageSync() {
+  useLanguageSync();
+  return null;
+}
+
+function renderScreen(withSync = true) {
   return render(
     <SafeAreaProvider initialMetrics={METRICS}>
+      {withSync ? <LanguageSync /> : null}
       <SettingsScreen />
     </SafeAreaProvider>,
   );
@@ -37,6 +45,13 @@ describe('SettingsScreen', () => {
 
     expect(await screen.findByText('Currency')).toBeTruthy();
     expect(useAppStore.getState().language).toBe('en');
+  });
+
+  it('only updates the store: changing i18next is left to the root sync', async () => {
+    await renderScreen(false);
+    await fireEvent.press(screen.getByTestId('settings-language-en'));
+    expect(useAppStore.getState().language).toBe('en');
+    expect(i18n.language).toBe('fr');
   });
 
   it('updates the currency in the store', async () => {
