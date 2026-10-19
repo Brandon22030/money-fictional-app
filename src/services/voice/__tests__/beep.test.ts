@@ -69,4 +69,18 @@ describe('beep', () => {
     await expect(playBeep()).rejects.toThrow('no audio');
     expect(player.remove).toHaveBeenCalledTimes(1);
   });
+
+  it('settles on its own after the safety timeout when the finish event never comes', async () => {
+    jest.useFakeTimers();
+    try {
+      const done = playBeep();
+      await jest.advanceTimersByTimeAsync(2999);
+      expect(player.remove).not.toHaveBeenCalled();
+      await jest.advanceTimersByTimeAsync(1);
+      await done;
+      expect(player.remove).toHaveBeenCalledTimes(1);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
 });
