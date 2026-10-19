@@ -1,6 +1,8 @@
 {
   "title": "History",
-  "searchPlaceholder": "Search a label or an amount",
+  "searchPlaceholder": "Search an intention",
   "searchLabel": "Search history",
-  "empty": "No intention matches your search."
+  "empty": "No intention matches your search.",
+  "today": "Today",
+  "yesterday": "Yesterday"
 }

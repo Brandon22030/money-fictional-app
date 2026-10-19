@@ -20,7 +20,7 @@ export function Screen({ children, style, testID }: ScreenProps) {
       <Image
         source={skyBackground}
         resizeMode="stretch"
-        style={StyleSheet.absoluteFill}
+        style={styles.background}
         accessibilityIgnoresInvertColors
       />
       <View
@@ -35,7 +35,17 @@ export function Screen({ children, style, testID }: ScreenProps) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    overflow: 'hidden',
     backgroundColor: colors.skyTop,
+  },
+  // Explicit size: on web, Image otherwise takes the PNG's intrinsic pixel size (1170x2532),
+  // which overrides the absolute insets and shows only the light top-left corner.
+  background: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
   },
   content: {
     flex: 1,
