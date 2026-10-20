@@ -81,6 +81,22 @@ L'export du banc est fait avec `EXPO_PUBLIC_VISUAL_FIXTURE=1` : le module `src/d
 
 Sortie : `.agents/tasks/MFA-004/shots/{mockup,app,compare}-<écran>.png`. Le rendu web ne sert qu'à la mesure, la cible reste le rendu natif. Écarts de rendu web connus : `expo-blur` et les ombres sont approximés par le navigateur, les polices et le crénage diffèrent légèrement, la barre d'état système (9:41, wifi, batterie) n'existe pas sur le web, et les safe areas sont nulles.
 
+## Lien permanent (EAS Update)
+
+L'app est publiée sur EAS Update (compte Expo `brownlock`, projet `abonda`) et s'ouvre dans Expo Go sans le Mac, y compris en 4G. Lien permanent à mettre dans un raccourci iOS (action "Ouvrir les URL") :
+
+```
+exp://u.expo.dev/e67cb40f-d16e-47c5-8bf0-d4d7bbe66f72?channel-name=production
+```
+
+Le lien charge toujours la dernière update du channel `production`. Après chaque fusion sur `main`, republier (uniquement depuis `main` à jour : `git checkout main && git pull`) :
+
+```
+npm run publish:update
+```
+
+Prérequis : être connecté à Expo (`npx eas-cli@^25 login`). Ne jamais avoir de variable `EXPO_PUBLIC_*` (par exemple `EXPO_PUBLIC_VISUAL_FIXTURE`) définie dans le shell au moment de publier, elle serait embarquée dans l'update. La `runtimeVersion` suit le SDK (`exposdk:57.0.0`) : une mise à jour de SDK demande de republier et d'utiliser un Expo Go compatible. Aucun build natif ni soumission store n'est utilisé. Avant tout build natif (EAS Build ou dev client), passer `runtimeVersion.policy` à `appVersion` ou `fingerprint` dans `app.json`.
+
 ## Maquette
 
 `docs/mockup/index.html` est la maquette statique des écrans et des tokens (voir `docs/mockup/README.md`).
