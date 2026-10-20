@@ -2,15 +2,11 @@
  * MFA-008 edge cases: audio session options, players released (no leak), and stop/restart
  * flows (stop during the voice, stop during the loop pause, then relaunch).
  */
-import * as Speech from "expo-speech";
-import { createAudioPlayer, setAudioModeAsync } from "expo-audio";
+import * as Speech from 'expo-speech';
+import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 
-import {
-  announceBalance,
-  setVoiceProvider,
-  stopAnnouncement,
-} from "@/src/services/voice";
-import { LOOP_PAUSE_MS } from "@/src/services/voice/tellerAnnouncer";
+import { announceBalance, setVoiceProvider, stopAnnouncement } from '@/src/services/voice';
+import { LOOP_PAUSE_MS } from '@/src/services/voice/tellerAnnouncer';
 
 type Options = { onDone?: () => void; onStopped?: () => void };
 type Player = {
@@ -19,8 +15,8 @@ type Player = {
   pause: jest.Mock;
 };
 
-jest.mock("expo-speech", () => ({
-  VoiceQuality: { Default: "Default", Enhanced: "Enhanced" },
+jest.mock('expo-speech', () => ({
+  VoiceQuality: { Default: 'Default', Enhanced: 'Enhanced' },
   speak: jest.fn(),
   stop: jest.fn(),
   isSpeakingAsync: jest.fn(async () => false),
@@ -33,13 +29,13 @@ let pending: { options: Options; timer: ReturnType<typeof setTimeout> }[] = [];
 const params = {
   read: () => ({
     amountMinor: 100,
-    currency: "EUR" as const,
-    language: "fr" as const,
+    currency: 'EUR' as const,
+    language: 'fr' as const,
   }),
-  t: () => "solde",
+  t: () => 'solde',
 };
 
-describe("voice audio session edge cases (MFA-008)", () => {
+describe('voice audio session edge cases (MFA-008)', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     jest.clearAllMocks();
@@ -47,20 +43,18 @@ describe("voice audio session edge cases (MFA-008)", () => {
     pending = [];
     setVoiceProvider(null);
     (Speech.getAvailableVoicesAsync as jest.Mock).mockResolvedValue([
-      { identifier: "a", name: "A", language: "fr-CA", quality: "Default" },
+      { identifier: 'a', name: 'A', language: 'fr-CA', quality: 'Default' },
     ]);
-    (Speech.speak as jest.Mock).mockImplementation(
-      (_t: string, options: Options) => {
-        const entry = {
-          options,
-          timer: setTimeout(() => {
-            pending = pending.filter((p) => p !== entry);
-            options.onDone?.();
-          }, 1500),
-        };
-        pending.push(entry);
-      },
-    );
+    (Speech.speak as jest.Mock).mockImplementation((_t: string, options: Options) => {
+      const entry = {
+        options,
+        timer: setTimeout(() => {
+          pending = pending.filter((p) => p !== entry);
+          options.onDone?.();
+        }, 1500),
+      };
+      pending.push(entry);
+    });
     (Speech.stop as jest.Mock).mockImplementation(async () => {
       const stopped = pending;
       pending = [];
@@ -77,17 +71,12 @@ describe("voice audio session edge cases (MFA-008)", () => {
           remove: jest.fn(),
           pause: jest.fn(),
           play: jest.fn(() => {
-            setTimeout(
-              () => listeners.forEach((l) => l({ didJustFinish: true })),
-              300,
-            );
+            setTimeout(() => listeners.forEach((l) => l({ didJustFinish: true })), 300);
           }),
-          addListener: jest.fn(
-            (_e: string, l: (s: { didJustFinish: boolean }) => void) => {
-              listeners.push(l);
-              return { remove: jest.fn() };
-            },
-          ),
+          addListener: jest.fn((_e: string, l: (s: { didJustFinish: boolean }) => void) => {
+            listeners.push(l);
+            return { remove: jest.fn() };
+          }),
         };
         players.push(player);
         return player;
@@ -101,24 +90,22 @@ describe("voice audio session edge cases (MFA-008)", () => {
     jest.useRealTimers();
   });
 
-  it("creates both the counter and the beep players with keepAudioSessionActive, in a mixing mode", async () => {
+  it('creates both the counter and the beep players with keepAudioSessionActive, in a mixing mode', async () => {
     const done = announceBalance(params);
     await jest.advanceTimersByTimeAsync(5000);
     await done;
 
     expect(players).toHaveLength(2);
-    expect(
-      players.every((p) => p.options?.keepAudioSessionActive === true),
-    ).toBe(true);
+    expect(players.every((p) => p.options?.keepAudioSessionActive === true)).toBe(true);
     expect(setAudioModeAsync).toHaveBeenCalledWith(
       expect.objectContaining({
         playsInSilentMode: true,
-        interruptionMode: "mixWithOthers",
+        interruptionMode: 'mixWithOthers',
       }),
     );
   });
 
-  it("releases every player of every loop cycle (no leak)", async () => {
+  it('releases every player of every loop cycle (no leak)', async () => {
     const done = announceBalance({
       ...params,
       loop: () => (Speech.speak as jest.Mock).mock.calls.length < 3,
@@ -130,7 +117,7 @@ describe("voice audio session edge cases (MFA-008)", () => {
     players.forEach((p) => expect(p.remove).toHaveBeenCalledTimes(1));
   });
 
-  it("a loop stopped in the middle of the voice ends, leaks no player and can be relaunched", async () => {
+  it('a loop stopped in the middle of the voice ends, leaks no player and can be relaunched', async () => {
     const loop = announceBalance({ ...params, loop: true });
     // counter 300 + 150 + beep 300 + 250 = 1000 ms, then the voice speaks.
     await jest.advanceTimersByTimeAsync(1200);
@@ -149,13 +136,11 @@ describe("voice audio session edge cases (MFA-008)", () => {
     await again;
     expect(Speech.speak).toHaveBeenCalledTimes(2);
     expect(players).toHaveLength(4);
-    expect(
-      players.slice(2).every((p) => p.options?.keepAudioSessionActive === true),
-    ).toBe(true);
+    expect(players.slice(2).every((p) => p.options?.keepAudioSessionActive === true)).toBe(true);
     players.forEach((p) => expect(p.remove).toHaveBeenCalledTimes(1));
   });
 
-  it("a stop during the loop pause starts nothing new", async () => {
+  it('a stop during the loop pause starts nothing new', async () => {
     const loop = announceBalance({ ...params, loop: true });
     await jest.advanceTimersByTimeAsync(1000 + 1500 + 500);
     expect(Speech.speak).toHaveBeenCalledTimes(1);
@@ -166,7 +151,7 @@ describe("voice audio session edge cases (MFA-008)", () => {
     expect(Speech.speak).toHaveBeenCalledTimes(1);
   });
 
-  it("a stop during the counter releases its player and plays neither beep nor voice", async () => {
+  it('a stop during the counter releases its player and plays neither beep nor voice', async () => {
     const done = announceBalance(params);
     await jest.advanceTimersByTimeAsync(100);
     await stopAnnouncement();

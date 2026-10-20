@@ -2,11 +2,13 @@
  * MFA-008 non-regression: on iPhone the voice spoke at the first announcement only.
  *
  * The real pieces run together (announcer, cash counter and beep players, Expo Speech provider);
- * only the native modules are mocked, with the iOS behaviour that caused the bug:
+ * only the native modules are mocked, modelling the ASSUMED iOS behaviour behind the bug
+ * (not verified on a device):
  * - expo-audio deactivates the shared app audio session when a player finishes or is paused,
  *   unless the player was created with `keepAudioSessionActive`;
- * - AVSpeechSynthesizer speaks through that shared session: once it has spoken, a later
- *   deactivation cuts its audio output, and it then keeps "speaking" (onStart, onDone) in silence.
+ * - AVSpeechSynthesizer is assumed to speak through that shared session: once it has spoken, a
+ *   later deactivation cuts its audio output, and it then keeps "speaking" (onStart, onDone)
+ *   in silence.
  */
 import * as Speech from 'expo-speech';
 import { createAudioPlayer } from 'expo-audio';

@@ -34,6 +34,9 @@ async function playSound(source: number, maxWaitMs: number): Promise<void> {
   // has spoken, every later deactivation cuts its audio output, so from the second announcement
   // on it kept "speaking" in silence. Keeping the session active (it mixes with other apps,
   // see setAudioModeAsync) leaves the voice audible at every announcement.
+  // The session stays active, which has no effect with mixWithOthers; if the mode ever becomes
+  // duckOthers or doNotMix, deactivate the session (setIsAudioActiveAsync(false)) at the end of
+  // the announcement, otherwise other apps stay ducked or silenced.
   const player = createAudioPlayer(source, { keepAudioSessionActive: true });
   await new Promise<void>((resolve, reject) => {
     let timer: ReturnType<typeof setTimeout> | undefined;
