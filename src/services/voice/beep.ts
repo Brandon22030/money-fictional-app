@@ -24,11 +24,17 @@ export function playAtmBeep(): Promise<void> {
 async function playSound(source: number, maxWaitMs: number): Promise<void> {
   stopBeep();
   const current = ++token;
-  await setAudioModeAsync({ playsInSilentMode: true });
+  // mixWithOthers (the default, made explicit): the session kept active never stops other apps.
+  await setAudioModeAsync({ playsInSilentMode: true, interruptionMode: 'mixWithOthers' });
   // Stopped while the audio mode was being set: do not start a sound nobody wants.
   if (current !== token) return;
 
-  const player = createAudioPlayer(source);
+  // iOS: by default expo-audio deactivates the app audio session when a player finishes or is
+  // paused. The voice (AVSpeechSynthesizer) speaks through that same shared session: once it
+  // has spoken, every later deactivation cuts its audio output, so from the second announcement
+  // on it kept "speaking" in silence. Keeping the session active (it mixes with other apps,
+  // see setAudioModeAsync) leaves the voice audible at every announcement.
+  const player = createAudioPlayer(source, { keepAudioSessionActive: true });
   await new Promise<void>((resolve, reject) => {
     let timer: ReturnType<typeof setTimeout> | undefined;
     let subscription: { remove: () => void } | undefined;
