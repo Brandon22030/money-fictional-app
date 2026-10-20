@@ -48,6 +48,19 @@
     "icon": "./assets/brand/icon.png",
     "web": {
       "favicon": "./assets/brand/favicon.png"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e67cb40f-d16e-47c5-8bf0-d4d7bbe66f72"
+      }
+    },
+    "owner": "brownlock",
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/e67cb40f-d16e-47c5-8bf0-d4d7bbe66f72"
     }
   }
 }
