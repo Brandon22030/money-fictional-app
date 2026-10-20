@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --max-warnings=0",
     "doctor": "expo install --check",
-    "publish:update": "npx eas-cli@latest update --branch production --environment production --auto --non-interactive",
+    "publish:update": "npx eas-cli@^25 update --channel production --environment production --auto --non-interactive",
     "visual:capture": "node scripts/visual/capture.mjs",
     "add": "expo install"
   },

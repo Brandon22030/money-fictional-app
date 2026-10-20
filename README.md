@@ -89,13 +89,13 @@ L'app est publiée sur EAS Update (compte Expo `brownlock`, projet `abonda`) et 
 exp://u.expo.dev/e67cb40f-d16e-47c5-8bf0-d4d7bbe66f72?channel-name=production
 ```
 
-Le lien charge toujours la dernière update du channel `production`. Après chaque fusion sur `main`, republier :
+Le lien charge toujours la dernière update du channel `production`. Après chaque fusion sur `main`, republier (uniquement depuis `main` à jour : `git checkout main && git pull`) :
 
 ```
 npm run publish:update
 ```
 
-Prérequis : être connecté à Expo (`npx eas-cli@latest login`). La `runtimeVersion` suit le SDK (`exposdk:57.0.0`) : une mise à jour de SDK demande de republier et d'utiliser un Expo Go compatible. Aucun build natif ni soumission store n'est utilisé.
+Prérequis : être connecté à Expo (`npx eas-cli@^25 login`). Ne jamais avoir de variable `EXPO_PUBLIC_*` (par exemple `EXPO_PUBLIC_VISUAL_FIXTURE`) définie dans le shell au moment de publier, elle serait embarquée dans l'update. La `runtimeVersion` suit le SDK (`exposdk:57.0.0`) : une mise à jour de SDK demande de republier et d'utiliser un Expo Go compatible. Aucun build natif ni soumission store n'est utilisé. Avant tout build natif (EAS Build ou dev client), passer `runtimeVersion.policy` à `appVersion` ou `fingerprint` dans `app.json`.
 
 ## Maquette
 
