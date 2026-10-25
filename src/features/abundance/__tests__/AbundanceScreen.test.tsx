@@ -26,9 +26,9 @@ async function renderScreen(balanceMajor: number) {
 }
 
 function ringCenterText(): string {
+  // The text is the only child of the svg Text element (a TSpan host instance carrying it in `content`).
   const [span] = screen.getByTestId('ring-center').children;
-  // The text is the only child of the svg Text element (a TSpan instance in RNTL 13).
-  return typeof span === 'string' ? span : (span.props.children as string);
+  return typeof span === 'string' ? span : (span.props.content as string);
 }
 
 describe('AbundanceScreen', () => {

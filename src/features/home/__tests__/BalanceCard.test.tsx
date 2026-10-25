@@ -1,5 +1,4 @@
 import { render, screen, within } from '@testing-library/react-native';
-import Svg from 'react-native-svg';
 
 import { BalanceCard, signedWholeUnits } from '@/src/features/home/BalanceCard';
 import { toMinor } from '@/src/domain/money';
@@ -93,8 +92,8 @@ describe('BalanceCard pills and actions', () => {
 
   it('shows the up icon in the percent pill only', async () => {
     await render(<BalanceCard />);
-    expect(screen.getByTestId('home-delta-percent').findAllByType(Svg)).toHaveLength(1);
-    expect(screen.getByTestId('home-delta-amount').findAllByType(Svg)).toHaveLength(0);
+    expect(screen.getByTestId('home-delta-percent').queryAll((node) => node.type === 'RNSVGSvgView')).toHaveLength(1);
+    expect(screen.getByTestId('home-delta-amount').queryAll((node) => node.type === 'RNSVGSvgView')).toHaveLength(0);
   });
 
   it('rounds the daily amount to whole units', async () => {

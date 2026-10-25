@@ -59,7 +59,7 @@ describe('RoundIconButton', () => {
 
 describe('NavyCard', () => {
   function layers() {
-    const content = screen.getByText('Contenu').parent?.parent;
+    const content = screen.getByText('Contenu').parent;
     const card = content?.parent;
     const outer = screen.getByTestId('navy');
     return { outer, card, content };

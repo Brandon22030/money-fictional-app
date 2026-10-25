@@ -199,7 +199,7 @@ describe("KeypadScreen", () => {
     mockParams = { mode: "receive" };
     await render(<KeypadScreen />);
     expect(screen.getByTestId("amount-suffix")).toHaveTextContent("FCFA");
-    screen.unmount();
+    await screen.unmount();
 
     useAppStore.getState().setLanguage("en");
     useAppStore.getState().setCurrency("USD");
