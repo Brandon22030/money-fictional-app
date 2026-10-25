@@ -19,7 +19,7 @@ Abonda est un outil de visualisation et de manifestation. L'utilisateur choisit 
 
 ## Stack
 
-- Expo (SDK 57), React Native et React, TypeScript
+- Expo (SDK 58), React Native et React, TypeScript
 - expo-router pour la navigation par onglets et la modale clavier
 - zustand pour l'état, AsyncStorage pour la persistance locale
 - react-native-reanimated, react-native-svg, expo-linear-gradient, expo-blur
@@ -95,7 +95,7 @@ Le lien charge toujours la dernière update du channel `production`. Après chaq
 npm run publish:update
 ```
 
-Prérequis : être connecté à Expo (`npx eas-cli@^25 login`). Ne jamais avoir de variable `EXPO_PUBLIC_*` (par exemple `EXPO_PUBLIC_VISUAL_FIXTURE`) définie dans le shell au moment de publier, elle serait embarquée dans l'update. La `runtimeVersion` suit le SDK (`exposdk:57.0.0`) : une mise à jour de SDK demande de republier et d'utiliser un Expo Go compatible. Aucun build natif ni soumission store n'est utilisé. Avant tout build natif (EAS Build ou dev client), passer `runtimeVersion.policy` à `appVersion` ou `fingerprint` dans `app.json`.
+Prérequis : être connecté à Expo (`npx eas-cli@^25 login`). Ne jamais avoir de variable `EXPO_PUBLIC_*` (par exemple `EXPO_PUBLIC_VISUAL_FIXTURE`) définie dans le shell au moment de publier, elle serait embarquée dans l'update. La `runtimeVersion` suit le SDK (`exposdk:58.0.0`) : une mise à jour de SDK demande de republier et d'utiliser un Expo Go compatible. Aucun build natif ni soumission store n'est utilisé. Avant tout build natif (EAS Build ou dev client), passer `runtimeVersion.policy` à `appVersion` ou `fingerprint` dans `app.json`.
 
 ## Maquette
 
