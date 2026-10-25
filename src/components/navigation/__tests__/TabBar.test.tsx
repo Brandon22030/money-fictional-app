@@ -12,16 +12,17 @@ import i18n from '@/src/i18n';
 const NAMES = ['index', 'card', 'abundance', 'history', 'settings'];
 
 function makeProps(index: number, emit = jest.fn(() => ({ defaultPrevented: false }))) {
-  const navigate = jest.fn();
+  const navigateToTab = jest.fn();
   return {
     props: {
       state: { index, routes: NAMES.map((name) => ({ key: `${name}-k`, name })) },
       descriptors: {},
-      navigation: { emit, navigate },
+      emitter: { emit },
+      navigateToTab,
       insets: { top: 0, bottom: 0, left: 0, right: 0 },
     } as unknown as BottomTabBarProps,
     emit,
-    navigate,
+    navigateToTab,
   };
 }
 
@@ -37,8 +38,8 @@ describe('TabBar', () => {
     jest.useFakeTimers();
   });
 
-  afterEach(() => {
-    act(() => {
+  afterEach(async () => {
+    await act(async () => {
       jest.runAllTimers();
     });
     jest.useRealTimers();
@@ -73,15 +74,15 @@ describe('TabBar', () => {
     expect(LABEL_MAX_FONT_SIZE_MULTIPLIER).toBe(1.2);
     expect(text.props.allowFontScaling).not.toBe(false);
     // Every box between the pill and the label may shrink, so the label gets the pill width.
-    const labelWrap = text.parent?.parent;
-    const content = labelWrap?.parent?.parent;
+    const labelWrap = text.parent;
+    const content = labelWrap?.parent;
     expect(StyleSheet.flatten(labelWrap?.props.style)).toMatchObject({ flexShrink: 1, minWidth: 0 });
     expect(StyleSheet.flatten(content?.props.style)).toMatchObject({ flexShrink: 1, minWidth: 0 });
     expect(StyleSheet.flatten(text.props.style).flexShrink ?? 1).not.toBe(0);
   });
 
   it('emits tabPress then navigates to the pressed inactive tab', async () => {
-    const { props, emit, navigate } = makeProps(0);
+    const { props, emit, navigateToTab } = makeProps(0);
     await render(<TabBar {...props} />);
     await fireEvent.press(screen.getByTestId('tab-history'));
     expect(emit).toHaveBeenCalledWith({
@@ -89,11 +90,12 @@ describe('TabBar', () => {
       target: 'history-k',
       canPreventDefault: true,
     });
-    expect(navigate).toHaveBeenCalledWith('history', undefined);
+    expect(navigateToTab).toHaveBeenCalledTimes(1);
+    expect(navigateToTab).toHaveBeenCalledWith('history-k');
   });
 
   it('does not navigate when the active tab is pressed', async () => {
-    const { props, emit, navigate } = makeProps(3);
+    const { props, emit, navigateToTab } = makeProps(3);
     await render(<TabBar {...props} />);
     await fireEvent.press(screen.getByTestId('tab-history'));
     expect(emit).toHaveBeenCalledWith({
@@ -101,17 +103,33 @@ describe('TabBar', () => {
       target: 'history-k',
       canPreventDefault: true,
     });
-    expect(navigate).not.toHaveBeenCalled();
+    expect(navigateToTab).not.toHaveBeenCalled();
   });
 
   it('does not navigate when tabPress is default prevented', async () => {
-    const { props, emit, navigate } = makeProps(
+    const { props, emit, navigateToTab } = makeProps(
       0,
       jest.fn(() => ({ defaultPrevented: true })),
     );
     await render(<TabBar {...props} />);
     await fireEvent.press(screen.getByTestId('tab-history'));
     expect(emit).toHaveBeenCalledTimes(1);
-    expect(navigate).not.toHaveBeenCalled();
+    expect(navigateToTab).not.toHaveBeenCalled();
+  });
+
+  it('emits tabPress and navigates with each inactive tab route key', async () => {
+    const { props, emit, navigateToTab } = makeProps(0);
+    await render(<TabBar {...props} />);
+    for (const name of NAMES.slice(1)) {
+      await fireEvent.press(screen.getByTestId(`tab-${name}`));
+      expect(emit).toHaveBeenLastCalledWith({
+        type: 'tabPress',
+        target: `${name}-k`,
+        canPreventDefault: true,
+      });
+      expect(navigateToTab).toHaveBeenLastCalledWith(`${name}-k`);
+    }
+    expect(emit).toHaveBeenCalledTimes(NAMES.length - 1);
+    expect(navigateToTab).toHaveBeenCalledTimes(NAMES.length - 1);
   });
 });
