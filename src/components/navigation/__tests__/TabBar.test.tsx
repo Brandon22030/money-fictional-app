@@ -11,15 +11,17 @@ import i18n from '@/src/i18n';
 
 const NAMES = ['index', 'card', 'abundance', 'history', 'settings'];
 
-function makeProps(index: number) {
+function makeProps(index: number, emit = jest.fn(() => ({ defaultPrevented: false }))) {
   const navigateToTab = jest.fn();
   return {
     props: {
       state: { index, routes: NAMES.map((name) => ({ key: `${name}-k`, name })) },
       descriptors: {},
+      emitter: { emit },
       navigateToTab,
       insets: { top: 0, bottom: 0, left: 0, right: 0 },
     } as unknown as BottomTabBarProps,
+    emit,
     navigateToTab,
   };
 }
@@ -79,28 +81,55 @@ describe('TabBar', () => {
     expect(StyleSheet.flatten(text.props.style).flexShrink ?? 1).not.toBe(0);
   });
 
-  it('delegates the press on a tab to navigateToTab with the route key', async () => {
-    const { props, navigateToTab } = makeProps(0);
+  it('emits tabPress then navigates to the pressed inactive tab', async () => {
+    const { props, emit, navigateToTab } = makeProps(0);
     await render(<TabBar {...props} />);
     await fireEvent.press(screen.getByTestId('tab-history'));
+    expect(emit).toHaveBeenCalledWith({
+      type: 'tabPress',
+      target: 'history-k',
+      canPreventDefault: true,
+    });
     expect(navigateToTab).toHaveBeenCalledTimes(1);
     expect(navigateToTab).toHaveBeenCalledWith('history-k');
   });
 
-  it('also delegates the press on the active tab, navigateToTab decides what to do', async () => {
-    const { props, navigateToTab } = makeProps(3);
+  it('does not navigate when the active tab is pressed', async () => {
+    const { props, emit, navigateToTab } = makeProps(3);
     await render(<TabBar {...props} />);
     await fireEvent.press(screen.getByTestId('tab-history'));
-    expect(navigateToTab).toHaveBeenCalledWith('history-k');
+    expect(emit).toHaveBeenCalledWith({
+      type: 'tabPress',
+      target: 'history-k',
+      canPreventDefault: true,
+    });
+    expect(navigateToTab).not.toHaveBeenCalled();
   });
 
-  it('delegates each tab press with its own route key', async () => {
-    const { props, navigateToTab } = makeProps(0);
+  it('does not navigate when tabPress is default prevented', async () => {
+    const { props, emit, navigateToTab } = makeProps(
+      0,
+      jest.fn(() => ({ defaultPrevented: true })),
+    );
+    await render(<TabBar {...props} />);
+    await fireEvent.press(screen.getByTestId('tab-history'));
+    expect(emit).toHaveBeenCalledTimes(1);
+    expect(navigateToTab).not.toHaveBeenCalled();
+  });
+
+  it('emits tabPress and navigates with each inactive tab route key', async () => {
+    const { props, emit, navigateToTab } = makeProps(0);
     await render(<TabBar {...props} />);
     for (const name of NAMES.slice(1)) {
       await fireEvent.press(screen.getByTestId(`tab-${name}`));
+      expect(emit).toHaveBeenLastCalledWith({
+        type: 'tabPress',
+        target: `${name}-k`,
+        canPreventDefault: true,
+      });
       expect(navigateToTab).toHaveBeenLastCalledWith(`${name}-k`);
     }
+    expect(emit).toHaveBeenCalledTimes(NAMES.length - 1);
     expect(navigateToTab).toHaveBeenCalledTimes(NAMES.length - 1);
   });
 });

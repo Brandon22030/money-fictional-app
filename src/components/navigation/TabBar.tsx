@@ -91,7 +91,7 @@ function TabItem({ testID, label, icon, focused, onPress }: TabItemProps) {
   );
 }
 
-export function TabBar({ state, navigateToTab, insets }: BottomTabBarProps) {
+export function TabBar({ state, emitter, navigateToTab, insets }: BottomTabBarProps) {
   const { t } = useTranslation('nav');
 
   return (
@@ -111,7 +111,16 @@ export function TabBar({ state, navigateToTab, insets }: BottomTabBarProps) {
             label={tab ? t(tab.labelKey) : route.name}
             icon={tab?.icon ?? 'home'}
             focused={state.index === index}
-            onPress={() => navigateToTab(route.key)}
+            onPress={() => {
+              const event = emitter.emit({
+                type: 'tabPress',
+                target: route.key,
+                canPreventDefault: true,
+              });
+              if (state.index !== index && !event.defaultPrevented) {
+                navigateToTab(route.key);
+              }
+            }}
           />
         );
       })}
